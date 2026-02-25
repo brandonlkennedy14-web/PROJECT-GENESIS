@@ -296,6 +296,7 @@
         let isLoopRunning = false;
         let isSaving = false;
         let lastSaveBounce = 0;
+        let lastSaveTime = 0; // NEW: Strict Temporal Firewall for Supabase
 
         // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED LCG) ---
         function getHyperPrecisionZeta(baseNum, x, y) {
@@ -348,6 +349,7 @@
         
         // Voids & Stability Tracking
         let stabilityHistory = [];
+        let stabilityLogArray = []; // NEW: Array Buffer to prevent DOM freezing
         let minOrbitRadius = Infinity;
 
         // --- DOM ELEMENTS ---
@@ -754,9 +756,14 @@
                 });
             }
 
+            // NEW: 10-Second Firewall to prevent Supabase API spam during tight orbits
             if (swarmHitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
-                lastSaveBounce = stats.bounces;
-                saveStateToCloud();
+                const now = Date.now();
+                if (now - lastSaveTime > 10000) { 
+                    lastSaveBounce = stats.bounces;
+                    lastSaveTime = now;
+                    saveStateToCloud();
+                }
             }
 
             // --- UI UPDATES ---
@@ -806,11 +813,18 @@
                         for(let i=1; i<stabilityHistory.length; i++) intervals.push(stabilityHistory[i] - stabilityHistory[i-1]);
                         const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
                         const isStable = variance < 10;
-                        stabilityLog.innerHTML = `
+                        
+                        // NEW: Array buffering prevents the browser DOM from crashing
+                        const logHTML = `
                             <div class="${isStable ? 'text-lime-400 font-bold bg-lime-900/20' : 'text-gray-500'} p-1 border-b border-gray-800">
                                 Global Bounces: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '- ORBIT DETECTED' : ''}
                             </div>
-                        ` + stabilityLog.innerHTML;
+                        `;
+                        
+                        stabilityLogArray.unshift(logHTML);
+                        if (stabilityLogArray.length > 30) stabilityLogArray.pop(); // Cap at 30 items
+                        
+                        if (stabilityLog) stabilityLog.innerHTML = stabilityLogArray.join('');
                     }
                 }
 
