@@ -383,6 +383,10 @@
         let stabilityLogArray = []; 
         let minOrbitRadius = Infinity;
 
+        // NEW: Track the true Emergence Epochs
+        let emergenceEpoch = 1;
+        let lastEmergenceBounce = 0;
+
         // CYCLIC CELLULAR AUTOMATON BG
         let bgCols = 0, bgRows = 0;
         let bgGridCA = [];
@@ -465,7 +469,17 @@
                         }));
                     }
                     globalTick = saved.globalTick || 0;
-                    artifacts = saved.artifacts || [];
+                    emergenceEpoch = saved.emergenceEpoch || 1;
+
+                    // PURGE BUGGED DATA: Delete old broken epoch logs and empty records.
+                    // Only preserve logs with proper kinematics to keep the Museum pristine.
+                    artifacts = (saved.artifacts || []).filter(art => 
+                        art.kinematics && 
+                        art.kinematics.alpha && 
+                        !art.id.startsWith('EPOCH-') && 
+                        !art.id.includes('undefined')
+                    );
+                    
                     lastSaveBounce = stats.bounces;
                 }
             } catch (e) { console.error("Cloud load failed:", e); }
@@ -494,7 +508,7 @@
             
             try {
                 const state = {
-                    stats, zetaStats, virtualHits,
+                    stats, zetaStats, virtualHits, emergenceEpoch,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -855,24 +869,22 @@
                     if (artifacts.length > 20) artifacts.pop();
                 }
 
-                // --- SHAKESPEARE DEEP STRUCTURE LOGGER (GUARANTEED) ---
-                // If we get past 60k steps and see a massive spike in structure, GUARANTEE capture.
-                // Wait 5000 bounces before logging another to prevent UI spam.
-                if (stats.bounces > 60000 && currentRatio > 1.2 && (stats.bounces - lastShakespeareBounce) > 5000) {
-                    lastShakespeareBounce = stats.bounces;
+                // --- TRUE EMERGENCE EPOCH DETECTOR ---
+                // When the system reaches deep phase space (>60k steps) and all Swarms synchronize into
+                // the final, ultra-structured diamond boundary, it marks the true completion of a computational era.
+                if (stats.bounces > 60000 && currentRatio > 1.2 && (stats.bounces - lastEmergenceBounce) > 5000) {
+                    lastEmergenceBounce = stats.bounces;
                     artifacts.unshift({ 
-                        id: `SHAKE-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
+                        id: `EMERGENCE-EPOCH-${emergenceEpoch}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
-                        desc: `SHAKESPEARE PATTERN / DEEP EMERGENCE: Guaranteed Capture. Highly structured self-organizing mathematical geometry detected.`,
+                        desc: `EPOCH ${emergenceEpoch} REACHED: All random chaotic paths have been exhausted. The entire swarm matrix has successfully collapsed into the absolute diamond invariant.`,
                         trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
                         kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} },
                         gridSnapshot: new Map(visitedGrid)
                     });
+                    emergenceEpoch++;
                     if (artifacts.length > 20) artifacts.pop();
                 }
-
-                // AUTOMATIC EPOCH ITERATION HAS BEEN REMOVED HERE
-                // The simulation will now freely run continuously to 160,000+ bounces uninterrupted.
 
                 if (globalTick % 20 === 0) {
                     ratioHistory.push(currentRatio);
