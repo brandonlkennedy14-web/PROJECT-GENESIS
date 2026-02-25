@@ -33,8 +33,8 @@
             <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Rulial Mechanics v2</h2>
         </div>
         <div class="text-right font-mono text-xs text-gray-500">
-            STATUS: <span class="text-lime-500 animate-pulse">ONLINE</span><br/>
-            ENGINE: RULIAD_KINEMATICS_X1
+            STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING CLOUD...</span><br/>
+            ENGINE: RULIAD_KINEMATICS_X1 (MULTIWAY)
         </div>
     </header>
 
@@ -198,15 +198,15 @@
                         </div>
                     </div>
 
-                    <!-- RANK TAB (LEADERBOARD) -->
+                    <!-- RANK TAB (GLOBAL LEADERBOARD) -->
                     <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-400 p-4 bg-gray-900 border border-emerald-800 rounded overflow-hidden">
-                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">NOVELTY LEADERBOARD (TOP ZETA CONFIGS)</h3>
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">GLOBAL NOVELTY LEADERBOARD</h3>
                         <div class="flex justify-between text-[10px] text-gray-500 mb-2 px-1">
-                            <span>RANK / BOUNCE</span>
+                            <span>RANK / USER ID / BOUNCE</span>
                             <span>ZETA SCORE (ζ)</span>
                         </div>
                         <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-1 pr-2">
-                            <span class="text-gray-600">Awaiting high-precision configurations...</span>
+                            <span class="text-gray-600">Syncing multiway data stream...</span>
                         </div>
                     </div>
 
@@ -220,55 +220,48 @@
         </div>
     </div>
 
-    <!-- ENGINE SCRIPT -->
-    <script>
+    <!-- ENGINE SCRIPT & CLOUD SYNC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // --- CONSTANTS & CONFIG ---
         const BOX_SIZE = 1;
         const CORNER_TOLERANCE = 0.05;
         const INITIAL_SPEED = 0.015;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'genesis-ruliad-v2';
+
+        // --- FIREBASE CLOUD STATE ---
+        let app, auth, db, currentUser;
+        let isLoopRunning = false;
+        let isSaving = false;
+        let lastSaveBounce = 0;
 
         // --- HYPER-PRECISION ZETA GENERATOR ---
-        // Generates a deterministic 101-decimal-place string based on grid variance
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
-            // Use X and Y coordinates as a geometric seed for the trailing digits
             let seed = Math.abs(Math.sin(x * 12.9898 + y * 78.233)) * 43758.5453;
-            while(str.length < 103) { // 2 chars for "0." + 101 decimal digits = 103
+            while(str.length < 103) { 
                 seed = Math.abs(Math.sin(seed) * 43758.5453);
                 str += Math.floor((seed % 1) * 1e10).toString().padStart(10, '0');
             }
             return str.substring(0, 103);
         }
 
-        // --- STATE ---
+        // --- SIMULATION STATE ---
         let activeTab = 'LOG';
         let speed = 5;
         let trailLength = 800;
         
-        let stats = {
-            bounces: 0,
-            cornerHits: 0,
-            windingNumber: 0,
-            lyapunovProxy: 0.0,
-            freeConfigs: 180360
-        };
-
-        let agent = {
-            x: 0.1,
-            y: 0.2,
-            vx: INITIAL_SPEED * 0.8,
-            vy: INITIAL_SPEED * 1.2,
-            theta: Math.atan2(0.2, 0.1),
-            accumulatedTheta: 0,
-            trail: []
-        };
+        let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
+        let agent = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), accumulatedTheta: 0, trail: [] };
         let eventLog = [];
 
-        // --- NEW SYSTEMS STATE ---
-        let visitedGrid = new Map(); // Spatial hashing for avoidance
-        let globalTick = 0; // Tracks absolute time for temporal rendering
+        let visitedGrid = new Map();
+        let globalTick = 0; 
         let artifacts = [];
-        let leaderboard = []; // Stores top high-precision configs
+        let globalLeaderboard = []; // Multiway shared leaderboard
         let zetaStats = { high: 0, low: 0, steers: 0 };
         let brainLog = [];
         let realityLog = [];
@@ -290,7 +283,6 @@
         const hyperDim = document.getElementById('hyper-dim');
         const hyperErgodicity = document.getElementById('hyper-ergodicity');
 
-        // New DOM Elements
         const eyesCanvas = document.getElementById('eyesCanvas');
         const brainSteers = document.getElementById('brain-steers');
         const brainLogEl = document.getElementById('brain-log');
@@ -299,6 +291,7 @@
         const zetaHighEl = document.getElementById('zeta-high');
         const zetaLowEl = document.getElementById('zeta-low');
         const leaderboardContainer = document.getElementById('leaderboard-container');
+        const saveStatusEl = document.getElementById('save-status');
 
         // --- SETUP TABS ---
         const tabs = ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG', 'RANK'];
@@ -307,7 +300,7 @@
         function renderTabButtons() {
             tabHeaders.innerHTML = tabs.map(tab => `
                 <button
-                    onclick="switchTab('${tab}')"
+                    onclick="window.switchTab('${tab}')"
                     class="px-3 py-2 flex-shrink-0 transition-colors ${
                         activeTab === tab 
                             ? 'bg-black text-white border-t-2 border-cyan-500' 
@@ -319,33 +312,119 @@
             `).join('');
         }
 
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             activeTab = tab;
             renderTabButtons();
             
-            // Hide all
-            document.getElementById('tab-EYES').classList.add('hidden');
-            document.getElementById('tab-BRAIN').classList.add('hidden');
-            document.getElementById('tab-REALITY').classList.add('hidden');
-            document.getElementById('tab-MUSEUM').classList.add('hidden');
-            document.getElementById('tab-HYPER').classList.add('hidden');
-            document.getElementById('tab-ZETA').classList.add('hidden');
-            document.getElementById('tab-LOG').classList.add('hidden');
-            document.getElementById('tab-RANK').classList.add('hidden');
-            document.getElementById('tab-OTHER').classList.add('hidden');
+            ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG', 'RANK', 'OTHER'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+            });
 
-            // Show active
             if (tabs.includes(tab)) {
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
+                if (tab === 'RANK') renderLeaderboardUI();
             } else {
                 document.getElementById('tab-OTHER').classList.remove('hidden');
                 document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE CONNECTED ELSEWHERE ]`;
             }
+        };
+
+        // --- CLOUD SYNC LOGIC (MULTIWAY PUBLIC & PRIVATE) ---
+        async function loadStateFromCloud() {
+            if (!currentUser || !db) return;
+            try {
+                // 1. Load private state (visited grid, exact coordinate positioning)
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sim_data', 'primary_save');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    stats = data.stats || stats;
+                    agent = { ...agent, ...data.agent, trail: [] }; 
+                    globalTick = data.globalTick || 0;
+                    artifacts = data.artifacts || [];
+                    zetaStats = data.zetaStats || zetaStats;
+                    
+                    if (data.visitedGrid) {
+                        try {
+                            const parsedGrid = JSON.parse(data.visitedGrid);
+                            visitedGrid = new Map(parsedGrid);
+                        } catch(e) { visitedGrid = new Map(); }
+                    }
+                    lastSaveBounce = stats.bounces;
+                }
+            } catch (e) {
+                console.error("Private cloud load failed", e);
+            }
+        }
+
+        function setupGlobalLeaderboardListener() {
+            if (!currentUser || !db) return;
+            // 2. Set up realtime public listening for global multi-user competition
+            const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_state', 'leaderboard');
+            onSnapshot(publicDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    globalLeaderboard = docSnap.data().entries || [];
+                    if (activeTab === 'RANK') renderLeaderboardUI();
+                }
+            }, (error) => {
+                console.error("Global leaderboard sync error:", error);
+            });
+        }
+
+        async function saveStateToCloud() {
+            if (!currentUser || !db || isSaving) return;
+            isSaving = true;
+            saveStatusEl.innerText = 'SYNCING REALITY...';
+            saveStatusEl.classList.replace('text-lime-500', 'text-yellow-500');
+            
+            try {
+                const state = {
+                    stats,
+                    agent: { 
+                        x: agent.x, y: agent.y, vx: agent.vx, vy: agent.vy, 
+                        theta: agent.theta, accumulatedTheta: agent.accumulatedTheta
+                    },
+                    globalTick,
+                    artifacts,
+                    zetaStats,
+                    visitedGrid: JSON.stringify(Array.from(visitedGrid.entries()))
+                };
+                
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sim_data', 'primary_save');
+                await setDoc(docRef, state);
+                
+                saveStatusEl.innerText = 'MULTIWAY CLOUD SYNCED';
+                saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
+            } catch (e) {
+                console.error("Cloud save failed", e);
+                saveStatusEl.innerText = 'SYNC ERROR';
+                saveStatusEl.classList.replace('text-yellow-500', 'text-red-500');
+            }
+            isSaving = false;
+        }
+
+        // --- UI RENDER HELPERS ---
+        function renderLeaderboardUI() {
+            if (globalLeaderboard.length === 0) {
+                leaderboardContainer.innerHTML = `<span class="text-gray-600">No public configurations cataloged yet.</span>`;
+                return;
+            }
+            leaderboardContainer.innerHTML = globalLeaderboard.map((entry, index) => {
+                const isMe = currentUser && entry.uid === currentUser.uid;
+                return `
+                <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-1 bg-emerald-900/10' : ''}">
+                    <div class="flex justify-between w-full">
+                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1}</div>
+                        <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : entry.uid}</div>
+                        <div class="text-emerald-600 text-[9px]">[T=${entry.bounce}]</div>
+                    </div>
+                    <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
+                </div>
+            `}).join('');
         }
 
         // --- INITIALIZATION ---
-        function init() {
-            // Resize canvas to fit container
+        function setupUI() {
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width;
@@ -359,7 +438,6 @@
             window.addEventListener('resize', resize);
             resize();
 
-            // Set up UI listeners
             speedInput.addEventListener('input', (e) => {
                 speed = parseInt(e.target.value);
                 speedLabel.innerText = `x${speed}`;
@@ -369,10 +447,8 @@
                 trailLabel.innerText = `${trailLength} steps`;
             });
 
-            // Init Zeta Grid
             zetaGrid.innerHTML = Array.from({ length: 64 }).map(() => `<div class="rounded-sm transition-colors duration-100"></div>`).join('');
-
-            // Init Hyper Scatter (Static mock map)
+            
             const scatter = document.getElementById('hyper-scatter');
             scatter.innerHTML = Array.from({ length: 40 }).map((_, i) => `
                 <div class="absolute w-1 h-1 bg-cyan-500 rounded-full opacity-50" 
@@ -381,8 +457,7 @@
             `).join('');
 
             renderTabButtons();
-            switchTab(activeTab);
-            requestAnimationFrame(loop);
+            window.switchTab(activeTab);
         }
 
         // --- PHYSICS LOOP ---
@@ -390,7 +465,6 @@
             let newEvents = [];
             let hitBoundary = false;
 
-            // Sub-stepping for simulation speed (Sonic Drive)
             for (let step = 0; step < speed; step++) {
                 let nextX = agent.x + agent.vx;
                 let nextY = agent.y + agent.vy;
@@ -399,7 +473,6 @@
                 let isCornerX = false;
                 let isCornerY = false;
 
-                // Specular Reflection Matrix (Square Boundary)
                 if (nextX >= BOX_SIZE) { nextX = BOX_SIZE; agent.vx *= -1; bouncedX = true; }
                 if (nextX <= -BOX_SIZE) { nextX = -BOX_SIZE; agent.vx *= -1; bouncedX = true; }
                 if (nextY >= BOX_SIZE) { nextY = BOX_SIZE; agent.vy *= -1; bouncedY = true; }
@@ -409,7 +482,6 @@
                     hitBoundary = true;
                     stats.bounces++;
                     
-                    // CORNER HIT DETECTION (Nils Bergland Logic)
                     isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
                     isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
                     
@@ -421,10 +493,8 @@
                     }
                 }
 
-                // WINDING NUMBER CALCULATION
                 let nextTheta = Math.atan2(nextY, nextX);
                 let dTheta = nextTheta - agent.theta;
-                // Handle wraparound
                 if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
                 if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
                 
@@ -432,13 +502,11 @@
                 agent.theta = nextTheta;
                 stats.windingNumber = agent.accumulatedTheta / (2 * Math.PI);
 
-                // Update positions
                 agent.x = nextX;
                 agent.y = nextY;
-                globalTick++; // Advance absolute time
+                globalTick++; 
 
-                // Spatial Hashing & High-Precision Zeta Calculation (Avoid remapping)
-                const gridSegments = 20; // 20x20 Macro Grid
+                const gridSegments = 20; 
                 const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
                 const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
                 const gridKey = `${gridX},${gridY}`;
@@ -446,15 +514,11 @@
                 const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
                 visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
 
-                // 1. Calculate Macro Density Base (Drops as density increases)
                 let baseZeta = Math.max(0.0, 1.0 - (cellData.density / 15.0));
-                
-                // 2. Add Micro-Variance
                 let fracX = Math.abs((agent.x + BOX_SIZE) * gridSegments - gridX - 0.5); 
                 let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
-                let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; // Scales up to ~0.09999
+                let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
                 
-                // Calculate numeric value for thresholds, and hyper-string for leaderboards
                 let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
                 let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
                 
@@ -462,11 +526,9 @@
                     zetaStats.high++;
                 } else {
                     zetaStats.low++;
-                    // BLADE AVOIDANCE LOGIC: We are remapping! Perturb trajectory.
                     zetaStats.steers++;
                     const currentAngle = Math.atan2(agent.vy, agent.vx);
                     const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
-                    // Perturb by small angle to seek new configs
                     const steerAngle = currentAngle + (Math.random() - 0.5) * 0.2; 
                     agent.vx = Math.cos(steerAngle) * speedMag;
                     agent.vy = Math.sin(steerAngle) * speedMag;
@@ -480,63 +542,69 @@
                     realityLog.push(`{ x: ${agent.x.toFixed(4)}, y: ${agent.y.toFixed(4)} }<br/><span class="text-[7px] text-cyan-500 break-all leading-none">ζ: ${currentZetaStr}</span>`);
                 }
 
-                // LEADERBOARD LOGIC: Record top high-precision novelty hits on boundary impact
-                if ((bouncedX || bouncedY) && currentZetaNum > 0.6) {
-                    leaderboard.push({
-                        bounce: stats.bounces,
-                        zetaStr: currentZetaStr,
-                        x: agent.x,
-                        y: agent.y
-                    });
-                    // String localeCompare works perfectly for 0.xxxxx strings of equal length
-                    leaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
-                    if (leaderboard.length > 20) leaderboard.pop();
+                // MULTI-USER GLOBAL LEADERBOARD LOGIC
+                if ((bouncedX || bouncedY) && currentZetaNum > 0.6 && currentUser && db) {
+                    // Determine if this score beats the global array limits
+                    let isGlobalTop = false;
+                    if (globalLeaderboard.length < 20) {
+                        isGlobalTop = true;
+                    } else {
+                        const lowest = globalLeaderboard[globalLeaderboard.length - 1];
+                        if (currentZetaStr.localeCompare(lowest.zetaStr) > 0) {
+                            isGlobalTop = true;
+                        }
+                    }
+
+                    if (isGlobalTop) {
+                        // Push locally to immediately reflect, and save directly to public collection
+                        globalLeaderboard.push({
+                            uid: currentUser.uid,
+                            bounce: stats.bounces, 
+                            zetaStr: currentZetaStr, 
+                            x: agent.x, 
+                            y: agent.y 
+                        });
+                        globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
+                        if (globalLeaderboard.length > 20) globalLeaderboard.pop();
+                        
+                        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_state', 'leaderboard');
+                        setDoc(publicDocRef, { entries: globalLeaderboard }).catch(console.error);
+                    }
                 }
 
-                // ARTIFACT STORAGE (Museum) - Store exceptionally rare moments
                 if ((bouncedX || bouncedY) && currentZetaNum > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
-                    artifacts.unshift({
-                        id: `ART-${Math.floor(Math.random()*10000)}`,
-                        bounce: stats.bounces,
-                        zetaStr: currentZetaStr,
-                        desc: 'Novel Phase Space Config'
-                    });
+                    artifacts.unshift({ id: `ART-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, zetaStr: currentZetaStr, desc: 'Novel Phase Space Config' });
                 }
                 if ((bouncedX || bouncedY) && isCornerX && isCornerY) {
-                    artifacts.unshift({
-                        id: `ART-CRN-${Math.floor(Math.random()*10000)}`,
-                        bounce: stats.bounces,
-                        zetaStr: currentZetaStr,
-                        desc: 'Precision Corner Singularity'
-                    });
+                    artifacts.unshift({ id: `ART-CRN-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, zetaStr: currentZetaStr, desc: 'Precision Corner Singularity' });
                 }
-                // Cap artifacts
                 if (artifacts.length > 20) artifacts.pop();
 
-                // Trail Memory (Smith Logic)
                 agent.trail.push({ x: agent.x, y: agent.y, zeta: currentZetaNum });
                 if (agent.trail.length > trailLength) {
                     agent.trail.shift();
                 }
             }
 
-            // --- UI UPDATES (Throttled/Conditional) ---
-            
-            // Log Tab update
+            // AUTO-SAVE LOGIC (Private State)
+            if (hitBoundary && (stats.bounces - lastSaveBounce >= 100)) {
+                lastSaveBounce = stats.bounces;
+                saveStateToCloud();
+            }
+
+            // --- UI UPDATES ---
             if (newEvents.length > 0) {
-                eventLog = [...newEvents.reverse(), ...eventLog].slice(0, 50); // Keep last 50
+                eventLog = [...newEvents.reverse(), ...eventLog].slice(0, 50); 
                 if (activeTab === 'LOG') {
                     logContainer.innerHTML = eventLog.map((log, i) => {
-                        const opacityClass = `opacity-${Math.max(20, 100 - (i * 5))}`; // approximation
                         const highlight = log.includes('CORNER') ? 'text-magenta-400 font-bold bg-gray-900' : '';
                         return `<div class="${highlight}" style="opacity: ${1 - Math.min(i*0.05, 0.8)}">${log}</div>`;
                     }).join('');
                 }
             }
 
-            // Stats update
             if (hitBoundary || Math.random() < 0.05) {
-                stats.lyapunovProxy = Math.abs(stats.windingNumber * 0.0142); // Mock proxy
+                stats.lyapunovProxy = Math.abs(stats.windingNumber * 0.0142); 
                 statWinding.innerText = stats.windingNumber.toFixed(3);
                 statCorners.innerText = stats.cornerHits;
                 statBounces.innerText = stats.bounces;
@@ -558,7 +626,7 @@
                 }
 
                 if (activeTab === 'REALITY') {
-                    if (realityLog.length > 10) realityLog = realityLog.slice(-10); // Reduced to fit massive numbers
+                    if (realityLog.length > 10) realityLog = realityLog.slice(-10); 
                     realityGridLog.innerHTML = realityLog.map(msg => `<div class="mb-2 border-b border-orange-900/50 pb-1">${msg}</div>`).join('');
                 }
 
@@ -573,17 +641,9 @@
                     `).join('');
                 }
 
-                if (activeTab === 'RANK') {
-                    leaderboardContainer.innerHTML = leaderboard.map((entry, index) => `
-                        <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''}">
-                            <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} &nbsp;[T=${entry.bounce}]</div>
-                            <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight">ζ: ${entry.zetaStr}</div>
-                        </div>
-                    `).join('');
-                }
+                if (activeTab === 'RANK') renderLeaderboardUI();
             }
 
-            // Zeta Grid update
             if (activeTab === 'ZETA') {
                 const cells = zetaGrid.children;
                 for (let i = 0; i < 64; i++) {
@@ -601,31 +661,26 @@
             const cy = h / 2;
             const scale = Math.min(w, h) / 2 * 0.9;
 
-            // Clear background
             ctx.fillStyle = '#050505';
             ctx.fillRect(0, 0, w, h);
 
-            // Draw Square Boundary
             ctx.strokeStyle = '#33ff00';
             ctx.lineWidth = 2;
             ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
 
-            // Draw Corners (Highlight hit zones)
             ctx.fillStyle = 'rgba(255, 0, 128, 0.3)';
             const cSize = scale * CORNER_TOLERANCE * 2;
-            ctx.fillRect(cx - scale - cSize/2, cy - scale - cSize/2, cSize, cSize); // TL
-            ctx.fillRect(cx + scale - cSize/2, cy - scale - cSize/2, cSize, cSize); // TR
-            ctx.fillRect(cx - scale - cSize/2, cy + scale - cSize/2, cSize, cSize); // BL
-            ctx.fillRect(cx + scale - cSize/2, cy + scale - cSize/2, cSize, cSize); // BR
+            ctx.fillRect(cx - scale - cSize/2, cy - scale - cSize/2, cSize, cSize); 
+            ctx.fillRect(cx + scale - cSize/2, cy - scale - cSize/2, cSize, cSize); 
+            ctx.fillRect(cx - scale - cSize/2, cy + scale - cSize/2, cSize, cSize); 
+            ctx.fillRect(cx + scale - cSize/2, cy + scale - cSize/2, cSize, cSize); 
 
-            // Draw Trail (Smith Memory) with ZETA COLOURS
             if (agent.trail.length > 1) {
                 for (let i = 1; i < agent.trail.length; i++) {
                     ctx.beginPath();
                     ctx.moveTo(cx + agent.trail[i-1].x * scale, cy + agent.trail[i-1].y * scale);
                     ctx.lineTo(cx + agent.trail[i].x * scale, cy + agent.trail[i].y * scale);
                     
-                    // Colour logic: Zeta 1.0 (Novel) -> Cyan (180). Zeta 0.0 (Old) -> Red/Magenta (300)
                     let z = agent.trail[i].zeta;
                     let hue = 300 - (z * 120); 
                     ctx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.8)`;
@@ -634,7 +689,6 @@
                 }
             }
 
-            // Draw Agent
             ctx.beginPath();
             ctx.arc(cx + agent.x * scale, cy + agent.y * scale, 4, 0, 2 * Math.PI);
             ctx.fillStyle = '#ffffff';
@@ -642,15 +696,14 @@
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#00ffff';
             ctx.closePath();
-            ctx.shadowBlur = 0; // reset
+            ctx.shadowBlur = 0; 
 
-            // Draw EYES Heatmap if active (Ruliad Temporal Block Style)
             if (activeTab === 'EYES' && eyesCanvas) {
                 const eCtx = eyesCanvas.getContext('2d');
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
                 const ew = eyesCanvas.width;
                 const eh = eyesCanvas.height;
-                const gridSize = 40; // 40x40 grid mapping
+                const gridSize = 40; 
                 const cellW = ew / gridSize; 
                 const cellH = eh / gridSize;
                 
@@ -659,28 +712,72 @@
                     const age = globalTick - cell.lastVisit;
                     
                     let color;
-                    // 4 Colours encoding time/age of the block
-                    if (age < 150) color = '#00ffff';      // 1. CYAN (Hot/Present)
-                    else if (age < 600) color = '#ff00ff'; // 2. MAGENTA (Recent)
-                    else if (age < 2400) color = '#ff8800';// 3. ORANGE (Older)
-                    else color = '#220044';                // 4. DEEP PURPLE (Fossilized Structure)
+                    if (age < 150) color = '#00ffff';      
+                    else if (age < 600) color = '#ff00ff'; 
+                    else if (age < 2400) color = '#ff8800';
+                    else color = '#220044';                
                     
                     eCtx.fillStyle = color;
-                    // Ruliad Style: -2px inset for distinct, discrete blocks
                     eCtx.fillRect((gx/gridSize)*ew + 1, (gy/gridSize)*eh + 1, cellW - 2, cellH - 2);
                 });
             }
         }
 
-        // --- MAIN GAME LOOP ---
+        // --- MAIN BOOT SEQUENCE ---
         function loop() {
             updatePhysics();
             renderCanvas();
             requestAnimationFrame(loop);
         }
 
-        // Boot
-        window.onload = init;
+        async function initFirebaseAndStart() {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    // 1. Authenticate FIRST
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+
+                    // 2. Wait for user object and sync cloud data
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            currentUser = user;
+                            await loadStateFromCloud();
+                            setupGlobalLeaderboardListener(); // Init Multiway Listening
+                            
+                            saveStatusEl.innerText = 'MULTIWAY SYNCED';
+                            saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
+                            
+                            if (!isLoopRunning) {
+                                isLoopRunning = true;
+                                setupUI();
+                                requestAnimationFrame(loop);
+                            }
+                        }
+                    });
+                } else {
+                    throw new Error("No Firebase config found in environment.");
+                }
+            } catch (e) {
+                console.warn("Running locally (Cloud Sync Unavailable):", e);
+                saveStatusEl.innerText = 'LOCAL ONLY (UNSAVED)';
+                saveStatusEl.classList.replace('text-yellow-500', 'text-gray-500');
+                if (!isLoopRunning) {
+                    isLoopRunning = true;
+                    setupUI();
+                    requestAnimationFrame(loop);
+                }
+            }
+        }
+
+        window.onload = initFirebaseAndStart;
     </script>
 </body>
 </html>
