@@ -12,7 +12,7 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
+            background-color: #000000;
             color: #d1d5db;
         }
         .font-mono {
@@ -21,49 +21,77 @@
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,255,255,0.6); }
 
-        /* Modal Blur */
+        /* Munker-White Illusion Global Overlay */
+        .munker-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+            /* Precise alternating luminance bars to shift perceived neon hues */
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.45) 0px,
+                rgba(0, 0, 0, 0.45) 2px,
+                rgba(255, 255, 255, 0.15) 2px,
+                rgba(255, 255, 255, 0.15) 4px
+            );
+            mix-blend-mode: hard-light;
+        }
+
+        /* Glassmorphism for Ruliad Integration */
         .glass-panel {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 255, 255, 0.3);
+            background: rgba(10, 10, 15, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+        }
+        
+        .glass-sub-panel {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
-<body class="min-h-screen p-4 flex flex-col selection:bg-cyan-900 relative">
+<body class="min-h-screen p-4 flex flex-col selection:bg-cyan-900 relative text-shadow-sm">
+
+    <!-- GLOBAL RULIAD MATRIX BACKGROUND & MUNKER ILLUSION -->
+    <canvas id="globalBgCanvas" class="fixed inset-0 w-full h-full -z-10 opacity-40"></canvas>
+    <div class="munker-overlay"></div>
 
     <!-- HEADER -->
-    <header class="flex justify-between items-end border-b border-gray-700 pb-2 mb-4">
+    <header class="flex justify-between items-end border-b border-cyan-900/50 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
             <h1 class="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Multiway Swarm Architecture v4</h2>
+            <h2 class="text-sm font-mono text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Munker-Ruliad Illusion Engine</h2>
         </div>
         <div class="flex items-center gap-6">
-            <div class="text-right font-mono text-xs text-gray-500">
-                STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
+            <div class="text-right font-mono text-xs text-gray-400">
+                STATUS: <span class="text-yellow-400 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
                 ENGINE: RULIAD_KINEMATICS_X7 (HIVE MIND)
             </div>
             <!-- BUY ME A COFFEE TIP JAR -->
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
-               class="bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-xs font-bold font-mono tracking-widest flex items-center gap-2">
+               class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-xs font-bold font-mono tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.3)]">
                 <span>☕</span> TIP JAR
             </a>
         </div>
     </header>
 
     <!-- MAIN GRID -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
         
         <!-- LEFT PANE: CANVAS & CONTROLS -->
         <div class="lg:col-span-2 flex flex-col gap-4">
             
             <!-- SIMULATION VIEWPORT -->
-            <div class="relative w-full h-[500px] bg-black border border-gray-800 rounded shadow-[0_0_30px_rgba(0,255,255,0.05)] overflow-hidden" id="canvas-container">
+            <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_40px_rgba(0,255,255,0.1)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
-                <div class="absolute top-2 left-2 text-[10px] font-mono text-gray-500 select-none pointer-events-none">
+                <div class="absolute top-2 left-2 text-[10px] font-mono text-cyan-100/70 select-none pointer-events-none bg-black/40 px-2 py-1 rounded">
                     GEOMETRY: SQUARE_STRICT<br/>
                     MODE: 7-SWARM COLLECTIVE (14 AGENTS)<br/>
                     <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (SHARED KNOWLEDGE)</span>
@@ -71,18 +99,18 @@
             </div>
 
             <!-- SIMULATION CONTROLS -->
-            <div class="grid grid-cols-2 gap-4 bg-gray-900 p-4 border border-gray-800 rounded font-mono text-xs">
-                <div>
-                    <label class="flex justify-between text-gray-400 mb-1">
+            <div class="grid grid-cols-2 gap-4 glass-panel p-4 rounded-lg font-mono text-xs">
+                <div class="glass-sub-panel p-3 rounded">
+                    <label class="flex justify-between text-cyan-100 mb-1">
                         <span>SONIC DRIVE (Time Δt)</span>
-                        <span class="text-cyan-400" id="speedLabel">x5</span>
+                        <span class="text-cyan-400 font-bold" id="speedLabel">x5</span>
                     </label>
                     <input type="range" id="speedInput" min="1" max="50" value="5" class="w-full accent-cyan-500" />
                 </div>
-                <div>
-                    <label class="flex justify-between text-gray-400 mb-1">
-                        <span>SMITH TRAIL MEMORY (PER AGENT)</span>
-                        <span class="text-magenta-400" id="trailLabel">200 steps</span>
+                <div class="glass-sub-panel p-3 rounded">
+                    <label class="flex justify-between text-magenta-100 mb-1">
+                        <span>SMITH TRAIL MEMORY</span>
+                        <span class="text-magenta-400 font-bold" id="trailLabel">200 steps</span>
                     </label>
                     <input type="range" id="trailInput" min="10" max="800" value="200" class="w-full accent-magenta-500" />
                 </div>
@@ -93,121 +121,116 @@
         <div class="flex flex-col gap-4 h-full">
             
             <!-- MACRO OBSERVABLES DASHBOARD -->
-            <div class="bg-gray-900 p-4 border border-gray-800 rounded grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs relative overflow-hidden">
-                <div class="col-span-2 border-b border-gray-800 pb-1 mb-1 text-gray-500 font-bold tracking-widest flex justify-between">
-                    <span>SYSTEM MACROSTATES (COLLECTIVE)</span>
-                    <span class="text-cyan-500">PEAK DIVERGENCE: <span id="statDivergence">0.000</span></span>
+            <div class="glass-panel p-4 rounded-lg grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs relative overflow-hidden">
+                <div class="col-span-2 border-b border-cyan-800/50 pb-2 mb-1 text-cyan-300 font-bold tracking-widest flex justify-between">
+                    <span>SYSTEM MACROSTATES</span>
+                    <span class="text-cyan-400">PEAK DIVERGENCE: <span id="statDivergence" class="text-white">0.000</span></span>
                 </div>
                 
-                <div class="flex flex-col">
-                    <span class="text-gray-500">AGG. WINDING ($W$)</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded">
+                    <span class="text-gray-400 text-[10px]">AGG. WINDING ($W$)</span>
                     <span class="text-xl text-cyan-400 font-bold" id="statWinding">0.000</span>
                 </div>
                 
-                <div class="flex flex-col">
-                    <span class="text-gray-500">CORNER HITS (ε)</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded">
+                    <span class="text-gray-400 text-[10px]">CORNER HITS (ε)</span>
                     <span class="text-xl text-magenta-400 font-bold" id="statCorners">0</span>
                 </div>
 
-                <div class="flex flex-col">
-                    <span class="text-gray-500">SWARM IMPACTS</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded">
+                    <span class="text-gray-400 text-[10px]">SWARM IMPACTS</span>
                     <span class="text-lg text-white" id="statBounces">0</span>
                 </div>
 
-                <div class="flex flex-col">
-                    <span class="text-gray-500">FREE CONFIGS</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded">
+                    <span class="text-gray-400 text-[10px]">FREE CONFIGS</span>
                     <span class="text-lg text-white" id="statConfigs">180,360</span>
                 </div>
             </div>
 
             <!-- QUADRATIC REALITY MATRIX TABS -->
-            <div class="flex-1 flex flex-col border border-gray-800 rounded overflow-hidden bg-black min-h-[300px]">
-                <div class="flex bg-gray-900 border-b border-gray-800 text-[10px] font-mono overflow-x-auto" id="tab-headers">
+            <div class="flex-1 flex flex-col glass-panel rounded-lg overflow-hidden min-h-[300px]">
+                <div class="flex glass-sub-panel border-b border-cyan-800/50 text-[10px] font-mono overflow-x-auto" id="tab-headers">
                     <!-- Tab buttons generated by JS -->
                 </div>
                 
-                <div class="flex-1 p-2 relative">
-                    <!-- SUPER BRAIN TAB (NEW) -->
-                    <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col font-mono text-xs text-blue-400 p-4 bg-gray-900 border border-blue-800 rounded">
-                        <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">HIVE-MIND CROSS-REFERENCE</h3>
+                <div class="flex-1 p-3 relative">
+                    <!-- SUPER BRAIN TAB -->
+                    <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col font-mono text-xs text-blue-200">
+                        <h3 class="text-blue-300 mb-2 border-b border-blue-800/50 pb-1 font-bold">HIVE-MIND CROSS-REFERENCE</h3>
                         <div class="flex-1 overflow-y-auto space-y-3">
-                            <div class="bg-black border border-blue-900 p-2">
-                                <p class="text-gray-500 font-bold mb-1">COLLECTIVE INVARIANTS</p>
-                                <div class="flex justify-between"><span class="text-gray-400">Energy (Velocity Mag):</span> <span class="text-lime-400 font-bold">ABSOLUTE CONSERVATION</span></div>
-                                <div class="flex justify-between mt-1"><span class="text-gray-400">Phase Space Volume:</span> <span class="text-lime-400 font-bold">LIOUVILLE PRESERVED (Alpha)</span></div>
-                                <div class="flex justify-between mt-1"><span class="text-gray-400">Corner Topology limits:</span> <span class="text-lime-400 font-bold">BOUNDED</span></div>
+                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1">COLLECTIVE INVARIANTS</p>
+                                <div class="flex justify-between"><span class="text-gray-300">Energy (Velocity):</span> <span class="text-lime-400 font-bold">CONSERVATION</span></div>
+                                <div class="flex justify-between mt-1"><span class="text-gray-300">Phase Volume:</span> <span class="text-lime-400 font-bold">LIOUVILLE (Alpha)</span></div>
                             </div>
-                            <div class="bg-black border border-blue-900 p-2">
-                                <p class="text-gray-500 font-bold mb-1">SWARM VARIANTS (DIVERGENCE SPREAD)</p>
-                                <div id="swarm-divergence-bars" class="space-y-1">
-                                    <!-- Dynamic Bars -->
-                                </div>
+                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1">SWARM VARIANTS (SPREAD)</p>
+                                <div id="swarm-divergence-bars" class="space-y-1"></div>
                             </div>
-                            <div class="bg-black border border-blue-900 p-2">
-                                <p class="text-gray-500 font-bold mb-1">COLLECTIVE VOID DETECTION</p>
-                                <div class="flex justify-between"><span class="text-gray-400">Shared Caustic Radius:</span> <span id="super-void" class="text-cyan-400 font-bold">0.000</span></div>
-                                <p class="text-[9px] text-gray-500 mt-1">If Swarm 1 enters a region, Swarms 2-7 inherit the structural knowledge and actively map around it.</p>
+                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1">VOID DETECTION</p>
+                                <div class="flex justify-between"><span class="text-gray-300">Shared Caustic Radius:</span> <span id="super-void" class="text-cyan-400 font-bold">0.000</span></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- EYES TAB -->
-                    <div id="tab-EYES" class="hidden h-full flex flex-col font-mono text-xs text-blue-400 p-4 bg-gray-900 border border-blue-800 rounded">
-                        <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">SENSORY RECEPTORS (COMBINED HEATMAP)</h3>
-                        <div class="flex-1 relative bg-black border border-blue-900 overflow-hidden">
-                            <canvas id="eyesCanvas" class="absolute inset-0 w-full h-full opacity-80"></canvas>
+                    <div id="tab-EYES" class="hidden h-full flex flex-col font-mono text-xs text-blue-400">
+                        <h3 class="text-blue-200 mb-2 border-b border-blue-800/50 pb-1 font-bold">SENSORY RECEPTORS (HEATMAP)</h3>
+                        <div class="flex-1 relative glass-sub-panel overflow-hidden rounded">
+                            <canvas id="eyesCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <!-- STABILITY / ORBITS TAB -->
-                    <div id="tab-STABILITY" class="hidden h-full flex flex-col font-mono text-xs text-indigo-400 p-4 bg-gray-900 border border-indigo-800 rounded">
-                        <h3 class="text-indigo-200 mb-2 border-b border-indigo-800 pb-1">ORBITAL STABILITY METRICS</h3>
+                    <div id="tab-STABILITY" class="hidden h-full flex flex-col font-mono text-xs text-indigo-300">
+                        <h3 class="text-indigo-200 mb-2 border-b border-indigo-800/50 pb-1 font-bold">ORBITAL STABILITY METRICS</h3>
                         <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="stability-log">
-                            <div class="text-gray-500">Calculating periodic orbital variance across swarm...</div>
+                            <div class="text-gray-400">Calculating periodic orbital variance...</div>
                         </div>
                     </div>
 
                     <!-- VOIDS TAB -->
-                    <div id="tab-VOIDS" class="hidden h-full flex flex-col font-mono text-xs text-teal-400 p-4 bg-gray-900 border border-teal-800 rounded">
-                        <h3 class="text-teal-200 mb-2 border-b border-teal-800 pb-1">CAUSTIC VOID TOPOLOGY</h3>
+                    <div id="tab-VOIDS" class="hidden h-full flex flex-col font-mono text-xs text-teal-300">
+                        <h3 class="text-teal-200 mb-2 border-b border-teal-800/50 pb-1 font-bold">CAUSTIC VOID TOPOLOGY</h3>
                         <div class="grid grid-cols-2 gap-2 mb-2">
-                            <div class="bg-black border border-teal-900 p-2">
-                                <p class="text-gray-500">Void Structure</p>
-                                <p class="text-white" id="void-structure">Analyzing...</p>
+                            <div class="glass-sub-panel border-teal-900/50 p-2 rounded">
+                                <p class="text-gray-400">Void Structure</p>
+                                <p class="text-white font-bold" id="void-structure">Analyzing...</p>
                             </div>
-                            <div class="bg-black border border-teal-900 p-2">
-                                <p class="text-gray-500">Min. Radius (r)</p>
-                                <p class="text-teal-400" id="void-radius">0.000</p>
+                            <div class="glass-sub-panel border-teal-900/50 p-2 rounded">
+                                <p class="text-gray-400">Min. Radius (r)</p>
+                                <p class="text-teal-400 font-bold" id="void-radius">0.000</p>
                             </div>
                         </div>
-                        <div class="text-gray-400 mt-2">Structured voids (circles) indicate a whispering gallery effect and conserved angular momentum. Random voids indicate chaotic multiway dispersion.</div>
                     </div>
 
                     <!-- MUSEUM TAB -->
-                    <div id="tab-MUSEUM" class="hidden h-full flex flex-col font-mono text-xs text-yellow-400 p-4 bg-gray-900 border border-yellow-800 rounded">
-                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800 pb-1">ARTIFACT STORAGE (CLICK TO RENDER)</h3>
+                    <div id="tab-MUSEUM" class="hidden h-full flex flex-col font-mono text-xs text-yellow-300">
+                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/50 pb-1 font-bold">ARTIFACT STORAGE (CLICK TO RENDER)</h3>
                         <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery">
                             <!-- Artifact Cards -->
                         </div>
                     </div>
 
                     <!-- HYPER TAB -->
-                    <div id="tab-HYPER" class="hidden h-full flex flex-col font-mono text-xs text-cyan-400 p-4 bg-gray-900 border border-cyan-800 rounded">
-                        <h3 class="text-cyan-200 mb-2 border-b border-cyan-800 pb-1">BRANCHIAL SPACE / PHASE DIMENSIONALITY</h3>
+                    <div id="tab-HYPER" class="hidden h-full flex flex-col font-mono text-xs text-cyan-300">
+                        <h3 class="text-cyan-200 mb-2 border-b border-cyan-800/50 pb-1 font-bold">PHASE DIMENSIONALITY</h3>
                         <div class="flex-1 grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-gray-400">Effective Dimension $d$</p>
-                                <p class="text-2xl text-lime-400" id="hyper-dim">1.0000</p>
+                            <div class="glass-sub-panel p-2 rounded">
+                                <p class="text-gray-400">Effective Dim $d$</p>
+                                <p class="text-2xl text-lime-400 font-bold" id="hyper-dim">1.0000</p>
                             </div>
-                            <div>
-                                <p class="text-gray-400">Phase-Space Ergodicity</p>
-                                <div class="w-full bg-gray-800 h-4 mt-1 rounded overflow-hidden">
+                            <div class="glass-sub-panel p-2 rounded">
+                                <p class="text-gray-400">Ergodicity</p>
+                                <div class="w-full bg-black/50 h-4 mt-1 rounded overflow-hidden">
                                     <div id="hyper-ergodicity" class="bg-magenta-500 h-full" style="width: 0%; background-color: #ff00ff"></div>
                                 </div>
                             </div>
                             <div class="col-span-2 mt-2">
-                                <p class="text-gray-400 mb-1">Poincaré Section (x, θ) Map</p>
-                                <div class="w-full h-32 bg-black border border-cyan-900 relative overflow-hidden">
+                                <p class="text-gray-300 mb-1">Poincaré Section (x, θ) Map</p>
+                                <div class="w-full h-32 glass-sub-panel relative overflow-hidden rounded">
                                     <canvas id="hyperCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                                 </div>
                             </div>
@@ -215,38 +238,38 @@
                     </div>
 
                     <!-- ZETA TAB -->
-                    <div id="tab-ZETA" class="hidden h-full flex flex-col font-mono text-xs text-magenta-400 p-4 bg-gray-900 border border-magenta-800 rounded">
-                        <h3 class="text-magenta-200 mb-2 border-b border-magenta-800 pb-1">BLADE ALGORITHMIC HEURISTICS</h3>
+                    <div id="tab-ZETA" class="hidden h-full flex flex-col font-mono text-xs text-magenta-300">
+                        <h3 class="text-magenta-200 mb-2 border-b border-magenta-800/50 pb-1 font-bold">BLADE ALGORITHMIC HEURISTICS</h3>
                         <div class="grid grid-cols-2 gap-4 mb-2">
-                            <div class="bg-black border border-magenta-900 p-2">
-                                <p class="text-gray-400">High Zeta Found (&gt; 0.5)</p>
-                                <p class="text-xl text-cyan-400" id="zeta-high">0</p>
+                            <div class="glass-sub-panel p-2 rounded">
+                                <p class="text-gray-400">High Zeta (&gt; 0.5)</p>
+                                <p class="text-xl text-cyan-400 font-bold" id="zeta-high">0</p>
                             </div>
-                            <div class="bg-black border border-magenta-900 p-2">
-                                <p class="text-gray-400">Low Zeta Found (&lt; 0.5)</p>
-                                <p class="text-xl text-red-400" id="zeta-low">0</p>
+                            <div class="glass-sub-panel p-2 rounded">
+                                <p class="text-gray-400">Low Zeta (&lt; 0.5)</p>
+                                <p class="text-xl text-red-400 font-bold" id="zeta-low">0</p>
                             </div>
                         </div>
-                        <p class="mb-2 text-gray-400 mt-2">Quadratic Reality Tensor Matrix (Swarm 1 View)</p>
-                        <div class="flex-1 relative bg-black border border-magenta-900 min-h-[150px]">
+                        <p class="mb-2 text-gray-300 mt-2">Quadratic Reality Tensor Matrix (Swarm 1)</p>
+                        <div class="flex-1 relative glass-sub-panel min-h-[150px] rounded">
                             <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <!-- RANK TAB (GLOBAL LEADERBOARD) -->
-                    <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-400 p-4 bg-gray-900 border border-emerald-800 rounded overflow-hidden">
-                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">CROSS-REF GLOBAL LEADERBOARD</h3>
-                        <div class="flex justify-between text-[10px] text-gray-500 mb-2 px-1">
+                    <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-300">
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800/50 pb-1 font-bold">CROSS-REF GLOBAL LEADERBOARD</h3>
+                        <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-1">
                             <span>RANK / TYPE / UID</span>
                             <span>ZETA SCORE (ζ)</span>
                         </div>
                         <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-1 pr-2">
-                            <span class="text-gray-600">Syncing multiway data stream...</span>
+                            <span class="text-gray-500">Syncing multiway data stream...</span>
                         </div>
                     </div>
 
                     <!-- FALLBACK TAB -->
-                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 border border-gray-800 bg-gray-900 rounded text-center p-4">
+                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 glass-sub-panel rounded text-center p-4">
                         <span id="other-tab-name"></span>
                     </div>
                 </div>
@@ -256,27 +279,27 @@
     </div>
 
     <!-- ARTIFACT RENDER MODAL -->
-    <div id="artifactModal" class="fixed inset-0 z-50 hidden items-center justify-center p-8 bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded shadow-2xl overflow-hidden">
-            <div class="bg-gray-900 border-b border-cyan-800 p-4 flex justify-between items-center">
-                <h2 class="text-cyan-400 font-mono font-bold tracking-widest" id="modal-title">ARTIFACT RENDER</h2>
-                <button onclick="closeModal()" class="text-red-500 hover:text-red-400 font-mono text-xl font-bold px-2">&times;</button>
+    <div id="artifactModal" class="fixed inset-0 z-50 hidden items-center justify-center p-8 bg-black/60 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded-xl shadow-[0_0_100px_rgba(0,255,255,0.2)] overflow-hidden">
+            <div class="bg-gray-900/80 border-b border-cyan-800/50 p-4 flex justify-between items-center">
+                <h2 class="text-cyan-400 font-mono font-bold tracking-widest text-lg" id="modal-title">ARTIFACT RENDER</h2>
+                <button onclick="closeModal()" class="text-red-500 hover:text-red-300 font-mono text-2xl font-bold px-2 transition-colors">&times;</button>
             </div>
-            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black relative">
-                <div class="flex flex-col border border-gray-800 rounded bg-gray-900 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800 p-2 z-10 text-center font-mono text-xs text-gray-400">
-                        2D TRAJECTORY SPACE (SWARM OVERLAY)
+            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/40 relative">
+                <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800/50 p-2 z-10 text-center font-mono text-xs text-cyan-200 font-bold tracking-widest">
+                        2D TRAJECTORY SPACE
                     </div>
                     <canvas id="modalTrajCanvas" class="w-full h-full"></canvas>
                 </div>
-                <div class="flex flex-col border border-gray-800 rounded bg-gray-900 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800 p-2 z-10 text-center font-mono text-xs text-gray-400">
+                <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800/50 p-2 z-10 text-center font-mono text-xs text-magenta-200 font-bold tracking-widest">
                         RULIAD BLOCK PATTERN
                     </div>
                     <canvas id="modalRuliadCanvas" class="w-full h-full"></canvas>
                 </div>
             </div>
-            <div class="bg-gray-900 p-4 border-t border-cyan-800 text-xs font-mono text-gray-400" id="modal-desc">
+            <div class="bg-gray-900/80 p-4 border-t border-cyan-800/50 text-xs font-mono text-gray-300" id="modal-desc">
                 Data description.
             </div>
         </div>
@@ -296,7 +319,7 @@
         let isLoopRunning = false;
         let isSaving = false;
         let lastSaveBounce = 0;
-        let lastSaveTime = 0; // NEW: Strict Temporal Firewall for Supabase
+        let lastSaveTime = 0; 
 
         // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED LCG) ---
         function getHyperPrecisionZeta(baseNum, x, y) {
@@ -315,14 +338,13 @@
         // --- MULTIWAY SWARM STATE ---
         let activeTab = 'SUPER_BRAIN';
         let speed = 5;
-        let trailLength = 200; // Lower default to handle 14 agents
+        let trailLength = 200; 
         
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
         let zetaStats = { high: 0, low: 0, steers: 0 };
         
         // Initialize 7 Swarm Groups
         let fleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
-            // Distribute start positions to explore different configs
             const angle = (i / NUM_SWARMS) * Math.PI * 2;
             const r = 0.3;
             const sx = Math.cos(angle) * r;
@@ -340,16 +362,14 @@
             };
         });
 
-        let eventLog = [];
-        let visitedGrid = new Map(); // Shared Knowledge Grid
+        let visitedGrid = new Map(); 
         let hyperGrid = new Map(); 
         let globalTick = 0; 
         let artifacts = [];
         let globalLeaderboard = []; 
         
-        // Voids & Stability Tracking
         let stabilityHistory = [];
-        let stabilityLogArray = []; // NEW: Array Buffer to prevent DOM freezing
+        let stabilityLogArray = []; 
         let minOrbitRadius = Infinity;
 
         // --- DOM ELEMENTS ---
@@ -365,9 +385,11 @@
         const statBounces = document.getElementById('statBounces');
         const statDivergence = document.getElementById('statDivergence');
         
+        const globalBgCanvas = document.getElementById('globalBgCanvas');
         const eyesCanvas = document.getElementById('eyesCanvas');
         const hyperCanvas = document.getElementById('hyperCanvas');
         const zetaCanvas = document.getElementById('zetaCanvas');
+        
         const museumGallery = document.getElementById('museum-gallery');
         const leaderboardContainer = document.getElementById('leaderboard-container');
         const saveStatusEl = document.getElementById('save-status');
@@ -383,7 +405,6 @@
         const superVoidEl = document.getElementById('super-void');
         const swarmDivergenceBars = document.getElementById('swarm-divergence-bars');
 
-        // Modal Elements
         const artifactModal = document.getElementById('artifactModal');
         const modalTitle = document.getElementById('modal-title');
         const modalDesc = document.getElementById('modal-desc');
@@ -400,11 +421,11 @@
                     onclick="window.switchTab('${tab}')"
                     class="px-3 py-2 flex-shrink-0 transition-colors ${
                         activeTab === tab 
-                            ? 'bg-black text-white border-t-2 border-cyan-500' 
-                            : 'text-gray-500 hover:text-gray-300 border-t-2 border-transparent'
+                            ? 'bg-black/80 text-white border-t-2 border-cyan-400 font-bold shadow-[0_-5px_15px_rgba(0,255,255,0.2)]' 
+                            : 'text-gray-400 hover:text-cyan-200 border-t-2 border-transparent'
                     }"
                 >
-                    ${tab}
+                    ${tab.replace('_', ' ')}
                 </button>
             `).join('');
         }
@@ -424,7 +445,7 @@
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
             } else {
                 document.getElementById('tab-OTHER').classList.remove('hidden');
-                document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE ARCHIVED ]\nConsolidated into Dual-Sim layout.`;
+                document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE ARCHIVED ]`;
             }
         };
 
@@ -502,7 +523,7 @@
         // --- UI RENDER HELPERS ---
         function renderLeaderboardUI() {
             if (globalLeaderboard.length === 0) {
-                leaderboardContainer.innerHTML = `<span class="text-gray-600">No public configurations cataloged yet.</span>`;
+                leaderboardContainer.innerHTML = `<span class="text-gray-500">No public configurations cataloged yet.</span>`;
                 return;
             }
             leaderboardContainer.innerHTML = globalLeaderboard.map((entry, index) => {
@@ -510,12 +531,12 @@
                 const displayUid = entry.uid.split('-')[0] + '...';
                 const color = entry.type === 'ALPHA' ? 'text-cyan-400' : 'text-magenta-400';
                 return `
-                <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-1 bg-emerald-900/10' : ''}">
+                <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/30 px-2 rounded' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-2 bg-emerald-900/20' : ''}">
                     <div class="flex justify-between w-full items-center">
                         <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[8px] ml-1">[SWRM-${entry.swarmId} ${entry.type}]</span></div>
-                        <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : displayUid}</div>
+                        <div class="text-[9px] text-gray-400 font-bold">${isMe ? '<span class="text-lime-400 drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]">YOU</span>' : displayUid}</div>
                     </div>
-                    <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
+                    <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1 opacity-90">ζ: ${entry.zetaStr}</div>
                 </div>
             `}).join('');
         }
@@ -525,7 +546,7 @@
             if (!art) return;
             
             modalTitle.innerText = `ARTIFACT // ${art.id}`;
-            modalDesc.innerHTML = `<span class="text-cyan-400">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-400">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-400">Beta Zeta:</span> ${art.zetaStrBeta}<br/>Discovered at T=${art.bounce}. ${art.desc}`;
+            modalDesc.innerHTML = `<span class="text-cyan-400 font-bold">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-300">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-300">Beta Zeta:</span> ${art.zetaStrBeta}<br/><span class="text-gray-400">Discovered at T=${art.bounce}. ${art.desc}</span>`;
             artifactModal.classList.remove('hidden');
             artifactModal.classList.add('flex');
 
@@ -540,18 +561,33 @@
             
             tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
             
+            // Draw Trails using color protocol
             if (art.trailAlpha && art.trailAlpha.length > 1) {
-                tCtx.beginPath(); tCtx.moveTo(cx + art.trailAlpha[0].x * scale, cy + art.trailAlpha[0].y * scale);
-                for (let i=1; i<art.trailAlpha.length; i++) tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
-                tCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)'; tCtx.stroke();
+                tCtx.globalAlpha = 0.8;
+                for (let i=1; i<art.trailAlpha.length; i++) {
+                    tCtx.beginPath(); 
+                    tCtx.moveTo(cx + art.trailAlpha[i-1].x * scale, cy + art.trailAlpha[i-1].y * scale);
+                    tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
+                    tCtx.strokeStyle = getRuliadColor(art.tick - art.trailAlpha[i].tick);
+                    tCtx.lineWidth = 1.5;
+                    tCtx.stroke();
+                }
+                tCtx.globalAlpha = 1.0;
             }
             if (art.trailBeta && art.trailBeta.length > 1) {
-                tCtx.beginPath(); tCtx.moveTo(cx + art.trailBeta[0].x * scale, cy + art.trailBeta[0].y * scale);
-                for (let i=1; i<art.trailBeta.length; i++) tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
-                tCtx.strokeStyle = 'rgba(255, 0, 255, 0.7)'; tCtx.stroke();
+                tCtx.globalAlpha = 0.8;
+                for (let i=1; i<art.trailBeta.length; i++) {
+                    tCtx.beginPath(); 
+                    tCtx.moveTo(cx + art.trailBeta[i-1].x * scale, cy + art.trailBeta[i-1].y * scale);
+                    tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
+                    tCtx.strokeStyle = getRuliadColor(art.tick - art.trailBeta[i].tick);
+                    tCtx.lineWidth = 1.5;
+                    tCtx.stroke();
+                }
+                tCtx.globalAlpha = 1.0;
             }
 
-            rCtx.fillStyle = '#000'; rCtx.fillRect(0, 0, w, h);
+            rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
             if (art.gridSnapshot) {
                 const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
                 art.gridSnapshot.forEach((cell, key) => {
@@ -573,9 +609,10 @@
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width; canvas.height = rect.height;
-                [eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
+                
+                [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
                     if(c && c.parentElement) {
-                        const r = c.parentElement.getBoundingClientRect();
+                        const r = c.parentElement === document.body ? {width: window.innerWidth, height: window.innerHeight} : c.parentElement.getBoundingClientRect();
                         if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
                     }
                 });
@@ -597,7 +634,6 @@
             let bounced = false;
             let cornerHit = false;
 
-            // EXACT PHASE SPACE FOLDING
             if (nextX > BOX_SIZE) { nextX = BOX_SIZE - (nextX - BOX_SIZE); agent.vx *= -1; bounced = true; } 
             else if (nextX < -BOX_SIZE) { nextX = -BOX_SIZE + (-BOX_SIZE - nextX); agent.vx *= -1; bounced = true; }
             if (nextY > BOX_SIZE) { nextY = BOX_SIZE - (nextY - BOX_SIZE); agent.vy *= -1; bounced = true; } 
@@ -615,7 +651,6 @@
             agent.x = nextX;
             agent.y = nextY;
 
-            // HIVE-MIND SHARED KNOWLEDGE GRID
             const gridSegments = 20; 
             const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
             const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
@@ -635,7 +670,6 @@
             if (currentZetaNum >= 0.5) zetaStats.high++;
             else zetaStats.low++;
 
-            // TRUE POINCARE SECTION
             if (bounced) {
                 let nextTheta = agent.theta;
                 if (nextX !== 0 || nextY !== 0) nextTheta = Math.atan2(nextY, nextX);
@@ -654,7 +688,6 @@
                 hyperGrid.set(hyperKey, { density: hyperCellData.density + 1, lastVisit: globalTick });
             }
 
-            // BLADE HEURISTIC (Steer away from shared knowledge map)
             if (isBetaObserver && currentZetaNum < 0.5) {
                 const currentAngle = Math.atan2(agent.vy, agent.vx);
                 const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
@@ -663,7 +696,8 @@
                 agent.vy = Math.sin(steerAngle) * speedMag;
             }
 
-            agent.trail.push({ x: agent.x, y: agent.y });
+            // ADDED: tick tracking for color rendering on trails
+            agent.trail.push({ x: agent.x, y: agent.y, tick: globalTick });
             if (agent.trail.length > trailLength) agent.trail.shift();
 
             return { bounced, cornerHit, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
@@ -703,7 +737,6 @@
                             };
                         }
 
-                        // Evaluate Multiway Leaderboard for this specific swarm agent
                         if (supabaseClient) {
                             [ {r: alphaRes, t: 'ALPHA'}, {r: betaRes, t: 'BETA'} ].forEach(evalAgent => {
                                 if (evalAgent.r.zetaNum > 0.6) {
@@ -737,10 +770,8 @@
                 });
             }
 
-            // Aggregate Winding (Track Swarm 0 as representative)
             stats.windingNumber = fleet[0].alpha.accumulatedTheta / (2 * Math.PI);
 
-            // ARTIFACT STORAGE
             if (triggerArtifact && artifactGroup && artifacts.length < 20) {
                 artifacts.unshift({ 
                     id: `ART-${Math.floor(Math.random()*10000)}`, 
@@ -756,7 +787,6 @@
                 });
             }
 
-            // NEW: 10-Second Firewall to prevent Supabase API spam during tight orbits
             if (swarmHitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
                 const now = Date.now();
                 if (now - lastSaveTime > 10000) { 
@@ -770,7 +800,7 @@
             if (swarmHitBoundary || Math.random() < 0.05) {
                 statBounces.innerText = stats.bounces;
                 statDivergence.innerText = maxDivergence.toFixed(4);
-                statDivergence.className = maxDivergence > 0.5 ? 'text-red-500' : 'text-cyan-500';
+                statDivergence.className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
                 statWinding.innerText = stats.windingNumber.toFixed(3);
                 statCorners.innerText = stats.cornerHits;
 
@@ -779,9 +809,9 @@
                     if (swarmDivergenceBars) {
                         swarmDivergenceBars.innerHTML = fleet.map(g => `
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] w-12 text-gray-500">SWRM ${g.id+1}</span>
-                                <div class="flex-1 bg-gray-800 h-2 rounded"><div class="bg-blue-500 h-full transition-all" style="width: ${Math.min(100, g.divergence * 50)}%"></div></div>
-                                <span class="text-[9px] text-blue-400 w-10 text-right">${g.divergence.toFixed(3)}</span>
+                                <span class="text-[9px] w-12 text-gray-400">SWRM ${g.id+1}</span>
+                                <div class="flex-1 bg-black/50 h-2 rounded border border-gray-800"><div class="bg-blue-500 h-full transition-all" style="width: ${Math.min(100, g.divergence * 50)}%; box-shadow: 0 0 10px rgba(0,100,255,0.8);"></div></div>
+                                <span class="text-[9px] text-blue-300 w-10 text-right">${g.divergence.toFixed(3)}</span>
                             </div>
                         `).join('');
                     }
@@ -799,10 +829,10 @@
 
                 if (activeTab === 'MUSEUM') {
                     museumGallery.innerHTML = artifacts.map(art => `
-                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer border border-yellow-600 bg-yellow-900/20 hover:bg-yellow-900/40 p-2 rounded flex flex-col transition-colors">
-                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-gray-500 ml-1">SWRM ${art.triggerSwarm}</span></div>
-                            <div class="text-[7px] text-cyan-400 break-all leading-tight mt-1">α: ${art.zetaStrAlpha}</div>
-                            <div class="text-[7px] text-magenta-400 break-all leading-tight mt-1">β: ${art.zetaStrBeta}</div>
+                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/30 border-yellow-600/50 p-2 rounded flex flex-col transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,0,0.3)]">
+                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-yellow-500/80 ml-1">SWRM ${art.triggerSwarm}</span></div>
+                            <div class="text-[7px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha}</div>
+                            <div class="text-[7px] text-magenta-300 break-all leading-tight mt-1">β: ${art.zetaStrBeta}</div>
                         </div>
                     `).join('');
                 }
@@ -814,16 +844,14 @@
                         const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
                         const isStable = variance < 10;
                         
-                        // NEW: Array buffering prevents the browser DOM from crashing
                         const logHTML = `
-                            <div class="${isStable ? 'text-lime-400 font-bold bg-lime-900/20' : 'text-gray-500'} p-1 border-b border-gray-800">
-                                Global Bounces: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '- ORBIT DETECTED' : ''}
+                            <div class="${isStable ? 'text-lime-300 font-bold bg-lime-900/30' : 'text-gray-400'} p-1 border-b border-gray-800/50">
+                                Global: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '⚡ ORBIT' : ''}
                             </div>
                         `;
                         
                         stabilityLogArray.unshift(logHTML);
-                        if (stabilityLogArray.length > 30) stabilityLogArray.pop(); // Cap at 30 items
-                        
+                        if (stabilityLogArray.length > 30) stabilityLogArray.pop(); 
                         if (stabilityLog) stabilityLog.innerHTML = stabilityLogArray.join('');
                     }
                 }
@@ -833,10 +861,10 @@
                     if (voidStructure) {
                         if (minOrbitRadius > 0.1) {
                             voidStructure.innerText = "STRUCTURED (Caustic)";
-                            voidStructure.className = "text-lime-400";
+                            voidStructure.className = "text-lime-400 font-bold drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]";
                         } else {
                             voidStructure.innerText = "CHAOTIC (Origin crossed)";
-                            voidStructure.className = "text-red-400";
+                            voidStructure.className = "text-red-400 font-bold";
                         }
                     }
                 }
@@ -845,12 +873,15 @@
             }
         }
 
-        // --- RULIAD COLOR PROTOCOL ---
+        // --- RULIAD COLOR PROTOCOL (7-TIER THERMAL/NEON UPGRADE) ---
         function getRuliadColor(age, maxAge = 2400) {
-            if (age < maxAge * 0.06) return '#00ffff';      // CYAN (Present/Hot)
-            if (age < maxAge * 0.25) return '#ff00ff';      // MAGENTA (Recent)
-            if (age < maxAge * 1.00) return '#ff8800';      // ORANGE (Older/Decaying)
-            return '#220044';                               // DEEP PURPLE (Fossilized)
+            if (age < 5) return '#ffffff';                  // 1. WHITE (Instant / Flash)
+            if (age < maxAge * 0.02) return '#00ffff';      // 2. CYAN (Plasma)
+            if (age < maxAge * 0.05) return '#00ff88';      // 3. NEON GREEN (Very Hot)
+            if (age < maxAge * 0.12) return '#ffff00';      // 4. YELLOW (Hot)
+            if (age < maxAge * 0.25) return '#ff8800';      // 5. ORANGE (Warm)
+            if (age < maxAge * 0.60) return '#ff00ff';      // 6. MAGENTA (Cooling)
+            return '#220044';                               // 7. DEEP PURPLE (Fossilized)
         }
 
         // --- RENDER LOOP ---
@@ -858,32 +889,58 @@
             const w = canvas.width; const h = canvas.height;
             const cx = w / 2; const cy = h / 2; const scale = Math.min(w, h) / 2 * 0.9;
 
-            ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, w, h);
-            ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 2; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
+            // Clear with slight trailing fade
+            ctx.fillStyle = 'rgba(5, 5, 10, 0.6)'; 
+            ctx.fillRect(0, 0, w, h);
+            
+            ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 1; 
+            ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
 
-            // Render all 7 Swarms (14 Agents)
+            // --- HIGH PERFORMANCE COLORED TRAIL BATCHING ---
+            // Instead of 2800 stroke calls, we group all line segments by their exact color and draw them in batches.
+            const colorBatches = {};
+            
             fleet.forEach(group => {
-                // Alpha Trail (White/Cyan)
-                if (group.alpha.trail.length > 1) {
-                    ctx.beginPath(); ctx.moveTo(cx + group.alpha.trail[0].x * scale, cy + group.alpha.trail[0].y * scale);
-                    for (let i = 1; i < group.alpha.trail.length; i++) ctx.lineTo(cx + group.alpha.trail[i].x * scale, cy + group.alpha.trail[i].y * scale);
-                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)'; ctx.lineWidth = 1.0; ctx.stroke();
-                }
-                // Beta Trail (Magenta)
-                if (group.beta.trail.length > 1) {
-                    ctx.beginPath(); ctx.moveTo(cx + group.beta.trail[0].x * scale, cy + group.beta.trail[0].y * scale);
-                    for (let i = 1; i < group.beta.trail.length; i++) ctx.lineTo(cx + group.beta.trail[i].x * scale, cy + group.beta.trail[i].y * scale);
-                    ctx.strokeStyle = 'rgba(255, 0, 255, 0.2)'; ctx.lineWidth = 1.0; ctx.stroke();
-                }
+                [group.alpha, group.beta].forEach(agent => {
+                    if (agent.trail.length > 1) {
+                        for (let i = 1; i < agent.trail.length; i++) {
+                            const age = globalTick - agent.trail[i].tick;
+                            const color = getRuliadColor(age);
+                            if (!colorBatches[color]) colorBatches[color] = [];
+                            colorBatches[color].push({
+                                x1: cx + agent.trail[i-1].x * scale,
+                                y1: cy + agent.trail[i-1].y * scale,
+                                x2: cx + agent.trail[i].x * scale,
+                                y2: cy + agent.trail[i].y * scale
+                            });
+                        }
+                    }
+                });
+            });
 
-                ctx.beginPath(); ctx.arc(cx + group.alpha.x * scale, cy + group.alpha.y * scale, 2, 0, 2 * Math.PI);
+            ctx.globalAlpha = 0.9;
+            ctx.lineWidth = 1.5;
+            for (const color in colorBatches) {
+                ctx.beginPath();
+                colorBatches[color].forEach(line => {
+                    ctx.moveTo(line.x1, line.y1);
+                    ctx.lineTo(line.x2, line.y2);
+                });
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Draw Agents
+            fleet.forEach(group => {
+                ctx.beginPath(); ctx.arc(cx + group.alpha.x * scale, cy + group.alpha.y * scale, 2.5, 0, 2 * Math.PI);
                 ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
                 
-                ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 2, 0, 2 * Math.PI);
+                ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 2.5, 0, 2 * Math.PI);
                 ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
             });
 
-            // 1. Draw EYES Heatmap (Combined Spatial Density)
+            // 1. Draw EYES Heatmap (Sensory Receptors with Bitwise Fractal Flashing)
             if (activeTab === 'EYES' && eyesCanvas) {
                 const eCtx = eyesCanvas.getContext('2d');
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
@@ -893,7 +950,26 @@
                 visitedGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
                     const age = globalTick - cell.lastVisit;
-                    eCtx.fillStyle = getRuliadColor(age);
+                    
+                    // --- CRAZY FRACTAL FLASHING LOGIC ---
+                    let displayAge = age;
+                    
+                    // Only nodes that have been somewhat mapped will begin to flash and pulse
+                    if (cell.density > 2) {
+                        // Create a cellular-automata Sierpinski pattern using Bitwise XOR combined with live time
+                        const timeMod = Math.floor(globalTick * 0.15); 
+                        const magicHash = (gx ^ gy ^ timeMod) % 25;
+                        
+                        if (magicHash === 0) {
+                            displayAge = 2; // Hard Flash White
+                        } else if (magicHash < 3) {
+                            displayAge = 40; // Flash Neon Green
+                        } else if (cell.density > 8 && (gx * gy + timeMod) % 15 === 0) {
+                            displayAge = 200; // Deep Yellow/Orange pulsing
+                        }
+                    }
+                    
+                    eCtx.fillStyle = getRuliadColor(displayAge);
                     eCtx.fillRect((gx/gridSize)*ew + 1, (gy/gridSize)*eh + 1, cellW - 2, cellH - 2);
                 });
             }
@@ -914,7 +990,7 @@
                 });
             }
 
-            // 3. Draw ZETA Tensor Matrix (Representative Swarm 0)
+            // 3. Draw ZETA Tensor Matrix
             if (activeTab === 'ZETA' && zetaCanvas) {
                 const zCtx = zetaCanvas.getContext('2d');
                 zCtx.clearRect(0, 0, zetaCanvas.width, zetaCanvas.height);
@@ -929,6 +1005,42 @@
                         
                         zCtx.fillStyle = getRuliadColor(simulatedAge);
                         zCtx.fillRect((ix/zGridSize)*zw + 1, (iy/zGridSize)*zh + 1, zCellW - 2, zCellH - 2);
+                    }
+                }
+            }
+
+            // 4. GLOBAL BACKGROUND RULIAD GENERATOR
+            if (globalBgCanvas) {
+                const bgCtx = globalBgCanvas.getContext('2d');
+                const bgW = bgCtx.canvas.width; const bgH = bgCtx.canvas.height;
+                
+                // Do not clear the canvas entirely, allow a slight trail effect to make the background feel alive
+                bgCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                bgCtx.fillRect(0, 0, bgW, bgH);
+
+                const bgCell = 40; 
+                const cols = Math.ceil(bgW / bgCell);
+                const rows = Math.ceil(bgH / bgCell);
+                const tShift = Math.floor(globalTick * 0.02);
+
+                // Draw a small subset of random blocks every frame for performance
+                for(let i=0; i<30; i++) {
+                    const gx = Math.floor(Math.random() * cols);
+                    const gy = Math.floor(Math.random() * rows);
+                    
+                    // Bitwise cellular automata logic for background pattern
+                    const hash = (gx ^ gy ^ tShift) % 30;
+                    let age = 3000; // Default fossilized
+                    
+                    if (hash === 0) age = 2; // White spark
+                    else if (hash < 3) age = 40; // Green node
+                    else if ((gx * gy) % 17 === 0) age = 200; // Orange cluster
+                    else if ((gx + gy + tShift) % 9 === 0) age = 800; // Magenta sweep
+
+                    if (age < 3000) {
+                        // Append 44 to hex for low opacity blending
+                        bgCtx.fillStyle = getRuliadColor(age) + '44'; 
+                        bgCtx.fillRect(gx * bgCell, gy * bgCell, bgCell - 2, bgCell - 2);
                     }
                 }
             }
