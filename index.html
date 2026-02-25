@@ -67,12 +67,12 @@
     <header class="flex justify-between items-end border-b border-cyan-900/80 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
             <h1 class="text-3xl font-black tracking-widest text-white glitch-text">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Munker-White CA Engine v8</h2>
+            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Virtual Topology Free-Comp v9</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right text-xs text-gray-400">
                 STATUS: <span class="text-yellow-400 animate-pulse font-bold" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: AUTONOMOUS EXHAUSTION ITERATION
+                ENGINE: AUTONOMOUS EXHAUSTION & INVERSION
             </div>
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
                class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-sm font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.4)]">
@@ -90,7 +90,7 @@
             <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.15)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/80 px-2 py-1 rounded border border-cyan-900/50">
-                    GEOMETRY: SQUARE_STRICT<br/>
+                    GEOMETRY: SQUARE_STRICT <span class="text-gray-500">+ VIRTUAL CIRCLE + VIRTUAL DIAMOND</span><br/>
                     MODE: INVERSION MAPPING (14 AGENTS)<br/>
                     <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span>
                 </div>
@@ -138,10 +138,11 @@
                     <span class="text-xl text-white mt-1" id="statBounces">0</span>
                 </div>
 
-                <!-- NEW SEARCH EPOCH TRACKER -->
-                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/20">
-                    <span class="text-lime-300 text-[11px] tracking-widest font-bold">SEARCH EPOCH</span>
-                    <span class="text-2xl text-lime-400 font-bold mt-1 shadow-lime" id="statEpoch">1</span>
+                <!-- SEARCH EPOCH TRACKER -->
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/20 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-lime-500/10 animate-pulse"></div>
+                    <span class="text-lime-300 text-[11px] tracking-widest font-bold relative z-10">SEARCH EPOCH</span>
+                    <span class="text-2xl text-lime-400 font-bold mt-1 shadow-lime relative z-10" id="statEpoch">1</span>
                 </div>
             </div>
 
@@ -152,10 +153,11 @@
                     <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col text-sm text-blue-200">
                         <h3 class="text-blue-300 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">HIVE-MIND CROSS-REFERENCE</h3>
                         <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                            <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
-                                <p class="text-blue-400 font-bold mb-1 tracking-widest">COLLECTIVE INVARIANTS</p>
-                                <div class="flex justify-between"><span class="text-gray-300">Energy (Velocity):</span> <span class="text-lime-400 font-bold">CONSERVATION</span></div>
-                                <div class="flex justify-between mt-1"><span class="text-gray-300">Phase Volume:</span> <span class="text-lime-400 font-bold">LIOUVILLE (Alpha)</span></div>
+                            <!-- FREE COMP TRACKING -->
+                            <div class="glass-sub-panel border-lime-900/80 p-2 rounded bg-lime-900/10">
+                                <p class="text-lime-400 font-bold mb-1 tracking-widest">FREE COMP: VIRTUAL TOPOLOGIES</p>
+                                <div class="flex justify-between"><span class="text-gray-300">Virtual Circle ($r=1$) Hits:</span> <span id="virt-circle" class="text-lime-300 font-bold">0</span></div>
+                                <div class="flex justify-between mt-1"><span class="text-gray-300">Virtual Diamond ($|x|+|y|=1$):</span> <span id="virt-diamond" class="text-lime-300 font-bold">0</span></div>
                             </div>
                             <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
                                 <p class="text-blue-400 font-bold mb-1 tracking-widest">SWARM VARIANTS (SPREAD)</p>
@@ -168,17 +170,16 @@
                         </div>
                     </div>
 
-                    <!-- NEW STRUCTURE RATIO TAB -->
+                    <!-- STRUCTURE RATIO TAB -->
                     <div id="tab-STRUCTURE_RATIO" class="hidden h-full flex flex-col text-sm text-purple-300">
                         <h3 class="text-purple-200 mb-2 border-b border-purple-800/80 pb-1 font-bold tracking-widest">MORPHOLOGICAL RATIO (Φ)</h3>
                         <div class="flex-1 flex flex-col gap-2">
-                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events (Corners/Inversions/Orbits) against Chaotic Dispersion (Divergence &gt; 0.3). Flatlines reveal invariants.</p>
+                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events (Corners/Inversions) against Chaotic Dispersion. Flatlines reveal invariants.</p>
                             <div class="glass-sub-panel p-2 rounded grid grid-cols-3 gap-2 text-center text-xs">
                                 <div><span class="text-gray-400 text-[10px]">STRUCTURED</span><br><span id="val-structured" class="text-lime-400 font-bold">0</span></div>
                                 <div><span class="text-gray-400 text-[10px]">RATIO (Φ)</span><br><span id="val-ratio" class="text-purple-400 font-bold text-lg">0.000</span></div>
                                 <div><span class="text-gray-400 text-[10px]">CHAOTIC</span><br><span id="val-chaotic" class="text-red-400 font-bold">0</span></div>
                             </div>
-                            <!-- NEW EMERGENCE TREND TRACKER -->
                             <div class="mt-1 text-center text-[10px] font-bold tracking-widest text-cyan-500 bg-black/50 p-1 rounded border border-cyan-900/50" id="chaos-trend">
                                 EMERGENCE TREND: GATHERING DATA...
                             </div>
@@ -202,8 +203,9 @@
                         </div>
                     </div>
 
+                    <!-- VOIDS TAB WITH LIVE CONVERGENCE CHART -->
                     <div id="tab-VOIDS" class="hidden h-full flex flex-col text-sm text-teal-300">
-                        <h3 class="text-teal-200 mb-2 border-b border-teal-800/80 pb-1 font-bold tracking-widest">CAUSTIC VOID TOPOLOGY</h3>
+                        <h3 class="text-teal-200 mb-2 border-b border-teal-800/80 pb-1 font-bold tracking-widest">CAUSTIC VOID CONVERGENCE</h3>
                         <div class="grid grid-cols-2 gap-2 mb-2">
                             <div class="glass-sub-panel border-teal-900/80 p-2 rounded">
                                 <p class="text-gray-400 text-xs">Void Structure</p>
@@ -214,11 +216,15 @@
                                 <p class="text-teal-400 font-bold text-xl" id="void-radius">0.000</p>
                             </div>
                         </div>
+                        <p class="text-[9px] text-gray-400 mb-1">Live tracking of the shared caustic radius convergence over time.</p>
+                        <div class="flex-1 relative glass-sub-panel rounded overflow-hidden">
+                            <canvas id="causticCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
+                        </div>
                     </div>
 
                     <div id="tab-MUSEUM" class="hidden h-full flex flex-col text-sm text-yellow-300">
                         <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest">INVERSION SHAPE ARTIFACTS</h3>
-                        <p class="text-[10px] text-gray-400 mb-2">Logging structural inversions (origin crossing) and corner singularities.</p>
+                        <p class="text-[10px] text-gray-400 mb-2">Logging structural inversions, corner singularities, and Epoch Summaries.</p>
                         <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery"></div>
                     </div>
 
@@ -285,7 +291,7 @@
                 <button onclick="closeModal()" class="text-red-500 hover:text-red-300 text-3xl font-bold px-2 transition-colors leading-none">&times;</button>
             </div>
             
-            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/60 relative">
+            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/60 relative" id="modal-canvases-container">
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-cyan-800/80 p-2 z-10 text-center text-xs text-cyan-300 font-bold tracking-widest flex justify-between px-4">
                         <span>2D TRAJECTORY SPACE</span>
@@ -321,15 +327,20 @@
         let lastSaveTime = 0; 
         let lastCollectiveSyncTime = 0;
 
-        // AUTO-ITERATION (EPOCH) TRACKING
+        // AUTO-ITERATION & INVERSION TRACKING
         let searchEpoch = 1;
         let baseAngleShift = 0;
-        let lastHighZetaBounce = 0; // Tracks phase space exhaustion
+        let isEpochInverted = false;
+        let lastHighZetaBounce = 0;
 
-        // MORPHOLOGICAL RATIO TRACKING
+        // MULTI-TOPOLOGY VIRTUAL TRACKING
+        let virtualHits = { circle: 0, diamond: 0 };
+
+        // MORPHOLOGICAL RATIO & CAUSTIC TRACKING
         let structuredEvents = 0;
         let chaoticEvents = 0;
-        let ratioHistory = []; // Array of calculated ratio values
+        let ratioHistory = []; 
+        let causticHistory = []; 
 
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
@@ -350,15 +361,16 @@
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
         let zetaStats = { high: 0, low: 0, steers: 0 };
         
-        function initializeFleet(angleShift) {
+        function initializeFleet(angleShift, invertBasis = false) {
+            const multiplier = invertBasis ? -1 : 1;
             return Array.from({ length: NUM_SWARMS }, (_, i) => {
                 const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
                 const r = 0.3;
-                const sx = Math.cos(angle) * r;
-                const sy = Math.sin(angle) * r;
+                const sx = Math.cos(angle) * r * multiplier;
+                const sy = Math.sin(angle) * r * multiplier;
                 const stheta = angle + Math.PI/4; 
-                const vx = Math.cos(stheta) * INITIAL_SPEED;
-                const vy = Math.sin(stheta) * INITIAL_SPEED;
+                const vx = Math.cos(stheta) * INITIAL_SPEED * multiplier;
+                const vy = Math.sin(stheta) * INITIAL_SPEED * multiplier;
 
                 return {
                     id: i,
@@ -369,7 +381,7 @@
             });
         }
         
-        let fleet = initializeFleet(baseAngleShift);
+        let fleet = initializeFleet(baseAngleShift, isEpochInverted);
 
         let visitedGrid = new Map(); 
         let hyperGrid = new Map(); 
@@ -420,6 +432,7 @@
         const hyperCanvas = document.getElementById('hyperCanvas');
         const zetaCanvas = document.getElementById('zetaCanvas');
         const ratioCanvas = document.getElementById('ratioCanvas');
+        const causticCanvas = document.getElementById('causticCanvas');
         
         const tabs = ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
 
@@ -440,7 +453,7 @@
             }
         };
 
-        // --- CLOUD SYNC LOGIC (NO GRID PAYLOADS FOR DB STABILITY) ---
+        // --- CLOUD SYNC LOGIC (NO GRID PAYLOADS) ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
@@ -453,6 +466,8 @@
                     zetaStats = saved.zetaStats || zetaStats;
                     searchEpoch = saved.searchEpoch || 1;
                     baseAngleShift = saved.baseAngleShift || 0;
+                    isEpochInverted = saved.isEpochInverted || false;
+                    virtualHits = saved.virtualHits || virtualHits;
                     
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
                         fleet = saved.fleet.map((g, i) => ({
@@ -492,7 +507,7 @@
             
             try {
                 const state = {
-                    stats, zetaStats, searchEpoch, baseAngleShift,
+                    stats, zetaStats, searchEpoch, baseAngleShift, isEpochInverted, virtualHits,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -540,7 +555,7 @@
         let modalLocalGrid = new Map();
 
         function playModal() {
-            if (!modalArt) return;
+            if (!modalArt || !modalArt.trailAlpha) return;
             
             const tCtx = document.getElementById('modalTrajCanvas').getContext('2d');
             const rCtx = document.getElementById('modalRuliadCanvas').getContext('2d');
@@ -563,7 +578,6 @@
             const maxLen = Math.max(aTrail.length, bTrail.length);
 
             if (modalTick < maxLen) {
-                // Alpha
                 if (modalTick > 0 && modalTick < aTrail.length) {
                     const p1 = aTrail[modalTick-1]; const p2 = aTrail[modalTick];
                     tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
@@ -572,7 +586,6 @@
                     const gx = Math.floor((p2.x + BOX_SIZE) * 20); const gy = Math.floor((p2.y + BOX_SIZE) * 20);
                     modalLocalGrid.set(`${gx},${gy}`, modalTick);
                 }
-                // Beta
                 if (modalTick > 0 && modalTick < bTrail.length) {
                     const p1 = bTrail[modalTick-1]; const p2 = bTrail[modalTick];
                     tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
@@ -582,12 +595,11 @@
                     modalLocalGrid.set(`${gx},${gy}`, modalTick);
                 }
 
-                // Render reconstructed Ruliad blocks
                 rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
                 modalLocalGrid.forEach((visitTick, key) => {
                     const [gx, gy] = key.split(',').map(Number);
                     const age = modalTick - visitTick;
-                    rCtx.fillStyle = getRuliadColorState(age * 5); // Scale age to look cool in short loop
+                    rCtx.fillStyle = getRuliadColorState(age * 5);
                     rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
                 });
 
@@ -607,7 +619,6 @@
             modalArt = art;
             document.getElementById('modal-title').innerText = `ARTIFACT // ${art.id}`;
             
-            // Generate Reproducibility Manifest (Calculator layout)
             const k = art.kinematics;
             const kinHTML = k ? `
                 <div class="bg-black/80 p-2 rounded border border-gray-700 text-[10px] text-gray-400">
@@ -617,7 +628,7 @@
                     <div class="mt-1"><span class="text-magenta-400">BETA X:</span> ${k.beta.x.toFixed(8)} | <span class="text-magenta-400">Y:</span> ${k.beta.y.toFixed(8)}</div>
                     <div><span class="text-magenta-400">BETA Vx:</span> ${k.beta.vx.toFixed(8)} | <span class="text-magenta-400">Vy:</span> ${k.beta.vy.toFixed(8)}</div>
                 </div>
-            ` : `<div class="text-gray-600">Kinematics manifest not available for epoch shifts.</div>`;
+            ` : `<div class="bg-black/80 p-2 rounded border border-gray-700 text-xs text-gray-500 flex items-center justify-center font-bold">EPOCH METADATA PAYLOAD</div>`;
 
             document.getElementById('modal-desc').innerHTML = `
                 <div class="grid grid-cols-2 gap-4">
@@ -625,7 +636,7 @@
                         <div class="text-cyan-400 font-bold mb-1 border-b border-cyan-800 tracking-widest">TRIGGER: ${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</div>
                         <div class="text-gray-300">α Zeta: <span class="text-cyan-300">${art.zetaStrAlpha.substring(0,25)}...</span></div>
                         <div class="text-gray-300">β Zeta: <span class="text-magenta-300">${art.zetaStrBeta.substring(0,25)}...</span></div>
-                        <div class="text-yellow-400 font-bold mt-2 text-xs uppercase">${art.desc}</div>
+                        <div class="text-yellow-400 font-bold mt-2 text-xs uppercase border border-yellow-500/50 p-1 bg-yellow-900/20">${art.desc}</div>
                     </div>
                     ${kinHTML}
                 </div>
@@ -634,15 +645,23 @@
             document.getElementById('artifactModal').classList.remove('hidden');
             document.getElementById('artifactModal').classList.add('flex');
 
-            const tCtx = document.getElementById('modalTrajCanvas');
-            tCtx.width = tCtx.parentElement.clientWidth;
-            tCtx.height = tCtx.parentElement.clientHeight - 30; 
-            document.getElementById('modalRuliadCanvas').width = tCtx.width; 
-            document.getElementById('modalRuliadCanvas').height = tCtx.height;
-
-            modalTick = 0;
-            cancelAnimationFrame(modalAnimId);
-            playModal();
+            if (art.triggerSwarm !== 'ALL') {
+                document.getElementById('modal-canvases-container').classList.remove('hidden');
+                document.getElementById('modal-canvases-container').classList.add('grid');
+                const tCtx = document.getElementById('modalTrajCanvas');
+                tCtx.width = tCtx.parentElement.clientWidth;
+                tCtx.height = tCtx.parentElement.clientHeight - 30; 
+                document.getElementById('modalRuliadCanvas').width = tCtx.width; 
+                document.getElementById('modalRuliadCanvas').height = tCtx.height;
+                modalTick = 0;
+                cancelAnimationFrame(modalAnimId);
+                playModal();
+            } else {
+                // Hide canvases for Epoch summaries
+                document.getElementById('modal-canvases-container').classList.add('hidden');
+                document.getElementById('modal-canvases-container').classList.remove('grid');
+                cancelAnimationFrame(modalAnimId);
+            }
         }
 
         window.closeModal = function() {
@@ -655,7 +674,7 @@
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width; canvas.height = rect.height;
-                [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas, ratioCanvas].forEach(c => {
+                [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas, ratioCanvas, causticCanvas].forEach(c => {
                     if(c && c.parentElement) {
                         const r = c.parentElement === document.body ? {width: window.innerWidth, height: window.innerHeight} : c.parentElement.getBoundingClientRect();
                         if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
@@ -689,12 +708,21 @@
                 cornerHit = isCornerX && isCornerY;
             }
 
+            // FREE COMP: VIRTUAL TOPOLOGY HIT DETECTION
+            const prevR2 = agent.prevX*agent.prevX + agent.prevY*agent.prevY;
+            const nextR2 = nextX*nextX + nextY*nextY;
+            if (prevR2 < 1 && nextR2 >= 1) virtualHits.circle++;
+
+            const prevD = Math.abs(agent.prevX) + Math.abs(agent.prevY);
+            const nextD = Math.abs(nextX) + Math.abs(nextY);
+            if (prevD < 1 && nextD >= 1) virtualHits.diamond++;
+
+            // Caustic tracking
             const radius = Math.sqrt(nextX*nextX + nextY*nextY);
             if (radius < minOrbitRadius) minOrbitRadius = radius;
 
             agent.x = nextX; agent.y = nextY;
 
-            // Mathematical Origin Crossing (Inversion)
             let originCross = false;
             if (Math.sign(agent.x) !== Math.sign(agent.prevX) && Math.sign(agent.y) !== Math.sign(agent.prevY)) {
                 originCross = true;
@@ -751,7 +779,7 @@
 
             for (let step = 0; step < speed; step++) {
                 globalTick++; 
-                if(globalTick % 5 === 0) updateBgGrid(); // Update CA Background
+                if(globalTick % 5 === 0) updateBgGrid(); 
                 
                 fleet.forEach(group => {
                     const alphaRes = moveAgent(group.alpha, false);
@@ -762,7 +790,6 @@
                         group.bounces++;
                         stats.bounces++; 
                         
-                        // TRACKING FOR RATIO / EXHAUSTION
                         if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) {
                             lastHighZetaBounce = stats.bounces;
                             zetaStats.high++;
@@ -797,17 +824,13 @@
                         }
                     }
                     
-                    // SHAPE INVERSION MAPPING: Trigger artifact on geometric events
                     if (!triggerArtifact) {
                         if (alphaRes.cornerHit || betaRes.cornerHit) {
-                            triggerArtifact = true;
-                            artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped.";
+                            triggerArtifact = true; artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped.";
                         } else if (alphaRes.originCross || betaRes.originCross) {
-                            triggerArtifact = true;
-                            artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing.";
+                            triggerArtifact = true; artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing.";
                         }
                         if (triggerArtifact) {
-                            // Save exact kinematics for reproducibility!
                             artifactGroup = { 
                                 id: group.id, zetaStrAlpha: alphaRes.zetaStr, zetaStrBeta: betaRes.zetaStr,
                                 trailAlpha: [...group.alpha.trail], trailBeta: [...group.beta.trail],
@@ -822,33 +845,41 @@
                     group.divergence = Math.sqrt(Math.pow(group.alpha.x - group.beta.x, 2) + Math.pow(group.alpha.y - group.beta.y, 2));
                     if (group.divergence > maxDivergence) maxDivergence = group.divergence;
                     
-                    // Ratio tracking: High divergence counts as chaotic event
                     if (swarmHitBoundary && group.divergence > 0.3) chaoticEvents++;
                 });
 
-                // --- EPOCH ITERATION (AUTO-EXHAUSTION) ---
-                // Wait for a massive 81,003 boundary bounces without novelty to allow for deep phase-space re-emergence
+                // --- EPOCH ITERATION (AUTO-EXHAUSTION & INVERSION) ---
                 if (stats.bounces > 1000 && (stats.bounces - lastHighZetaBounce) > 81003) {
-                    searchEpoch++;
-                    baseAngleShift += 0.000137; // Infinitesimal Epsilon Shift
-                    lastHighZetaBounce = stats.bounces; // Reset tracker
                     
-                    fleet = initializeFleet(baseAngleShift);
-
+                    // Create massive Epoch Summary artifact
+                    let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
                     artifacts.unshift({ 
                         id: `EPOCH-${searchEpoch}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: "0", zetaStrBeta: "0",
-                        desc: `PHASE SPACE EXHAUSTED AT 81,003 GAP. Shifting initial configurations by ε=+0.000137.`,
-                        trailAlpha: [], trailBeta: [], kinematics: null, gridSnapshot: null
+                        desc: `EPOCH ${searchEpoch} COMPLETE.<br/>Final Caustic: ${minOrbitRadius.toFixed(4)}<br/>Virtual Circle Hits: ${virtualHits.circle}<br/>Virtual Diamond Hits: ${virtualHits.diamond}<br/>Final Morph Ratio: ${currentRatio.toFixed(4)}`,
+                        trailAlpha: null, trailBeta: null, kinematics: null, gridSnapshot: null
                     });
                     if (artifacts.length > 20) artifacts.pop();
+
+                    searchEpoch++;
+                    baseAngleShift += 0.000137; 
+                    isEpochInverted = !isEpochInverted; // Toggle Basis Inversion
+                    lastHighZetaBounce = stats.bounces; 
+                    minOrbitRadius = Infinity; // Reset caustic for new epoch
+                    
+                    fleet = initializeFleet(baseAngleShift, isEpochInverted);
                 }
 
-                // Plot ratio history periodically
                 if (globalTick % 20 === 0) {
                     let ratio = chaoticEvents === 0 ? structuredEvents : structuredEvents / chaoticEvents;
                     ratioHistory.push(ratio);
                     if (ratioHistory.length > 300) ratioHistory.shift();
+                }
+                
+                if (globalTick % 50 === 0) {
+                    // Prevent Infinity from breaking the chart
+                    causticHistory.push(minOrbitRadius === Infinity ? 1.414 : minOrbitRadius);
+                    if (causticHistory.length > 300) causticHistory.shift();
                 }
             }
 
@@ -881,7 +912,9 @@
                 document.getElementById('statEpoch').innerText = searchEpoch;
 
                 if (activeTab === 'SUPER_BRAIN') {
-                    if (document.getElementById('super-void')) document.getElementById('super-void').innerText = minOrbitRadius.toFixed(4);
+                    if (document.getElementById('super-void')) document.getElementById('super-void').innerText = minOrbitRadius === Infinity ? '1.414' : minOrbitRadius.toFixed(4);
+                    if (document.getElementById('virt-circle')) document.getElementById('virt-circle').innerText = virtualHits.circle.toLocaleString();
+                    if (document.getElementById('virt-diamond')) document.getElementById('virt-diamond').innerText = virtualHits.diamond.toLocaleString();
                     if (document.getElementById('swarm-divergence-bars')) {
                         document.getElementById('swarm-divergence-bars').innerHTML = fleet.map(g => `
                             <div class="flex items-center gap-2 mb-1">
@@ -899,12 +932,10 @@
                     let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
                     document.getElementById('val-ratio').innerText = currentRatio.toFixed(4);
 
-                    // LIVE RE-EMERGENCE TREND ANALYSIS
                     const trendEl = document.getElementById('chaos-trend');
                     if (trendEl && ratioHistory.length > 20) {
                         const recentAvg = ratioHistory.slice(-10).reduce((a,b)=>a+b,0)/10;
                         const oldAvg = ratioHistory.slice(0, 10).reduce((a,b)=>a+b,0)/10;
-                        
                         if (recentAvg > oldAvg * 1.05) {
                             trendEl.innerText = "EMERGENCE TREND: ⇧ RE-EMERGING (MORE STRUCTURED)";
                             trendEl.className = "mt-1 text-center text-[10px] font-bold tracking-widest text-lime-400 bg-lime-900/20 p-1 rounded border border-lime-800/50";
@@ -931,10 +962,10 @@
 
                 if (activeTab === 'MUSEUM') {
                     document.getElementById('museum-gallery').innerHTML = artifacts.map(art => `
-                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-yellow-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(255,255,0,0.1)] hover:shadow-[0_0_20px_rgba(255,255,0,0.4)]">
+                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-${art.triggerSwarm === 'ALL' ? 'lime' : 'yellow'}-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(255,255,0,0.1)] hover:shadow-[0_0_20px_rgba(255,255,0,0.4)]">
                             <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-yellow-400/80 ml-1">${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</span></div>
                             <div class="text-[9px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha.substring(0,25)}...</div>
-                            <div class="text-[10px] text-gray-400 font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split(':')[0]}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split('<br/>')[0].split(':')[0]}</div>
                         </div>
                     `).join('');
                 }
@@ -954,7 +985,7 @@
 
                 if (activeTab === 'VOIDS') {
                     const vr = document.getElementById('void-radius');
-                    if (vr) vr.innerText = minOrbitRadius.toFixed(4);
+                    if (vr) vr.innerText = minOrbitRadius === Infinity ? '1.414' : minOrbitRadius.toFixed(4);
                 }
             }
         }
@@ -977,7 +1008,14 @@
             const cx = w / 2; const cy = h / 2; const scale = Math.min(w, h) / 2 * 0.9;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, w, h);
+            
+            // Draw Main Square
             ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 1; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
+            
+            // Draw Virtual Free Comp Boundaries Faintly
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)'; 
+            ctx.beginPath(); ctx.arc(cx, cy, scale, 0, Math.PI*2); ctx.stroke(); // Virtual Circle
+            ctx.beginPath(); ctx.moveTo(cx, cy - scale); ctx.lineTo(cx + scale, cy); ctx.lineTo(cx, cy + scale); ctx.lineTo(cx - scale, cy); ctx.closePath(); ctx.stroke(); // Virtual Diamond
 
             const colorBatches = {};
             fleet.forEach(group => {
@@ -1018,11 +1056,30 @@
                         if (i===0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
                     }
                     rCtx.strokeStyle = '#ff00ff'; rCtx.lineWidth = 2; rCtx.stroke();
-                    // Fill gradient
                     rCtx.lineTo(rw, rh); rCtx.lineTo(0, rh);
                     const grad = rCtx.createLinearGradient(0,0,0,rh);
                     grad.addColorStop(0, 'rgba(255,0,255,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
                     rCtx.fillStyle = grad; rCtx.fill();
+                }
+            }
+
+            if (activeTab === 'VOIDS' && causticCanvas) {
+                const cCtx = causticCanvas.getContext('2d');
+                const cw = causticCanvas.width; const ch = causticCanvas.height;
+                cCtx.clearRect(0, 0, cw, ch);
+                if (causticHistory.length > 1) {
+                    cCtx.beginPath();
+                    for (let i=0; i<causticHistory.length; i++) {
+                        const x = (i / 300) * cw;
+                        // Radius goes from 0 to sqrt(2) approx 1.414
+                        const y = ch - (causticHistory[i] / 1.414) * ch;
+                        if (i===0) cCtx.moveTo(x, y); else cCtx.lineTo(x, y);
+                    }
+                    cCtx.strokeStyle = '#00ffff'; cCtx.lineWidth = 2; cCtx.stroke();
+                    cCtx.lineTo(cw, ch); cCtx.lineTo(0, ch);
+                    const grad = cCtx.createLinearGradient(0,0,0,ch);
+                    grad.addColorStop(0, 'rgba(0,255,255,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    cCtx.fillStyle = grad; cCtx.fill();
                 }
             }
 
@@ -1077,7 +1134,6 @@
                 }
             }
 
-            // LIVE CYCLIC CELLULAR AUTOMATON BACKGROUND (Wolfram Style Reacting 2D Grid)
             if (globalBgCanvas && bgCols > 0) {
                 const bgCtx = globalBgCanvas.getContext('2d');
                 const bgW = bgCtx.canvas.width; const bgH = bgCtx.canvas.height;
