@@ -138,12 +138,7 @@
                     <span class="text-xl text-white mt-1" id="statBounces">0</span>
                 </div>
 
-                <!-- SEARCH EPOCH TRACKER -->
-                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/20 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-lime-500/10 animate-pulse"></div>
-                    <span class="text-lime-300 text-[11px] tracking-widest font-bold relative z-10">SEARCH EPOCH</span>
-                    <span class="text-2xl text-lime-400 font-bold mt-1 shadow-lime relative z-10" id="statEpoch">1</span>
-                </div>
+                <!-- SEARCH EPOCH TRACKER REMOVED FOR CONTINUOUS DEEP RUNS -->
             </div>
 
             <div class="flex-1 flex flex-col glass-panel rounded-lg overflow-hidden min-h-[300px]">
@@ -327,12 +322,6 @@
         let lastSaveTime = 0; 
         let lastCollectiveSyncTime = 0;
 
-        // AUTO-ITERATION & INVERSION TRACKING
-        let searchEpoch = 1;
-        let baseAngleShift = 0;
-        let isEpochInverted = false;
-        let lastHighZetaBounce = 0;
-
         // MULTI-TOPOLOGY VIRTUAL TRACKING
         let virtualHits = { circle: 0, diamond: 0 };
 
@@ -363,16 +352,15 @@
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
         let zetaStats = { high: 0, low: 0, steers: 0 };
         
-        function initializeFleet(angleShift, invertBasis = false) {
-            const multiplier = invertBasis ? -1 : 1;
+        function initializeFleet() {
             return Array.from({ length: NUM_SWARMS }, (_, i) => {
-                const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
+                const angle = (i / NUM_SWARMS) * Math.PI * 2;
                 const r = 0.3;
-                const sx = Math.cos(angle) * r * multiplier;
-                const sy = Math.sin(angle) * r * multiplier;
+                const sx = Math.cos(angle) * r;
+                const sy = Math.sin(angle) * r;
                 const stheta = angle + Math.PI/4; 
-                const vx = Math.cos(stheta) * INITIAL_SPEED * multiplier;
-                const vy = Math.sin(stheta) * INITIAL_SPEED * multiplier;
+                const vx = Math.cos(stheta) * INITIAL_SPEED;
+                const vy = Math.sin(stheta) * INITIAL_SPEED;
 
                 return {
                     id: i,
@@ -383,7 +371,7 @@
             });
         }
         
-        let fleet = initializeFleet(baseAngleShift, isEpochInverted);
+        let fleet = initializeFleet();
 
         let visitedGrid = new Map(); 
         let hyperGrid = new Map(); 
@@ -455,7 +443,7 @@
             }
         };
 
-        // --- CLOUD SYNC LOGIC ---
+        // --- CLOUD SYNC LOGIC (NO GRID PAYLOADS FOR DB STABILITY) ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
@@ -466,9 +454,6 @@
                     const saved = data.state_data;
                     stats = saved.stats || stats;
                     zetaStats = saved.zetaStats || zetaStats;
-                    searchEpoch = saved.searchEpoch || 1;
-                    baseAngleShift = saved.baseAngleShift || 0;
-                    isEpochInverted = saved.isEpochInverted || false;
                     virtualHits = saved.virtualHits || virtualHits;
                     
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
@@ -509,7 +494,7 @@
             
             try {
                 const state = {
-                    stats, zetaStats, searchEpoch, baseAngleShift, isEpochInverted, virtualHits,
+                    stats, zetaStats, virtualHits,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -555,6 +540,10 @@
         let modalTick = 0;
         let modalAnimId = null;
         let modalLocalGrid = new Map();
+
+        // NEW: Strict debouncers for guaranteed artifact logging without UI spam
+        let lastShakespeareBounce = 0;
+        let lastKamBounce = 0;
 
         function playModal() {
             if (!modalArt || !modalArt.trailAlpha) return;
@@ -756,29 +745,10 @@
                 hyperGrid.set(`${hyperX},${hyperTheta}`, { density: 1, lastVisit: globalTick });
             }
 
-            // EINSTEIN UPGRADE 2: True Tensor Gradient Descent for Beta Agents
             if (isBetaObserver && currentZetaNum < 0.5) {
-                const lookAhead = 0.08; // Probing the phase space ahead
-                const leftTheta = agent.theta - 0.25;
-                const rightTheta = agent.theta + 0.25;
-
-                // Project "Whiskers" to feel the grid density
-                const leftX = Math.floor((agent.x + Math.cos(leftTheta)*lookAhead + BOX_SIZE) * gridSegments);
-                const leftY = Math.floor((agent.y + Math.sin(leftTheta)*lookAhead + BOX_SIZE) * gridSegments);
-                const rightX = Math.floor((agent.x + Math.cos(rightTheta)*lookAhead + BOX_SIZE) * gridSegments);
-                const rightY = Math.floor((agent.y + Math.sin(rightTheta)*lookAhead + BOX_SIZE) * gridSegments);
-
-                const leftDensity = (visitedGrid.get(`${leftX},${leftY}`) || {density:0}).density;
-                const rightDensity = (visitedGrid.get(`${rightX},${rightY}`) || {density:0}).density;
-
-                let steerAngle = agent.theta;
-                
-                // Intelligently steer AWAY from high density (Machine Learning heuristic)
-                if (leftDensity > rightDensity) steerAngle += 0.15; 
-                else if (rightDensity > leftDensity) steerAngle -= 0.15; 
-                else steerAngle += (Math.random() - 0.5) * 0.1; // Quantum jitter fallback
-
+                const currentAngle = Math.atan2(agent.vy, agent.vx);
                 const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
+                const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; 
                 agent.vx = Math.cos(steerAngle) * speedMag;
                 agent.vy = Math.sin(steerAngle) * speedMag;
             }
@@ -804,14 +774,7 @@
                     const alphaRes = moveAgent(group.alpha, false);
                     const betaRes = moveAgent(group.beta, true);
                     
-                    // True Caustic Breathing: Track minimum distance to origin over a rolling window
-                    const rAlpha = Math.sqrt(group.alpha.x**2 + group.alpha.y**2);
-                    const rBeta = Math.sqrt(group.beta.x**2 + group.beta.y**2);
-                    recentRadii.push(Math.min(rAlpha, rBeta));
-                    if (recentRadii.length > 300) recentRadii.shift(); // 300-tick rolling window
-                    
-                    // The true caustic is the closest they've gotten to the center recently
-                    currentTickCaustic = Math.min(...recentRadii);
+                    currentTickCaustic = Math.min(currentTickCaustic, Math.sqrt(group.alpha.x**2 + group.alpha.y**2), Math.sqrt(group.beta.x**2 + group.beta.y**2));
 
                     if (alphaRes.bounced || betaRes.bounced) {
                         swarmHitBoundary = true;
@@ -819,7 +782,6 @@
                         stats.bounces++; 
                         
                         if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) {
-                            lastHighZetaBounce = stats.bounces;
                             zetaStats.high++;
                         } else {
                             zetaStats.low++;
@@ -879,9 +841,9 @@
                 let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
 
                 // --- EINSTEIN UPGRADE 1: KAM THEOREM (GOLDEN RATIO) DETECTOR ---
-                // In Hamiltonian mechanics, the Golden Ratio (1.618) is the most irrational number, and thus the final
-                // boundary to break before absolute chaos. If our ratio hits it precisely, we found the ultimate invariant.
-                if (stats.bounces > 20000 && Math.abs(currentRatio - 1.61803) < 0.005 && stats.bounces % 100 === 0 && Math.random() < 0.2) {
+                // Guaranteed capture using a mathematical debounce instead of random chance
+                if (stats.bounces > 20000 && Math.abs(currentRatio - 1.61803) < 0.005 && (stats.bounces - lastKamBounce) > 5000) {
+                    lastKamBounce = stats.bounces;
                     artifacts.unshift({ 
                         id: `KAM-TORUS-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
@@ -893,12 +855,15 @@
                     if (artifacts.length > 20) artifacts.pop();
                 }
 
-                // --- SHAKESPEARE DEEP STRUCTURE LOGGER ---
-                if (stats.bounces > 61000 && currentRatio > 1.2 && stats.bounces % 500 === 0 && Math.random() < 0.1) {
+                // --- SHAKESPEARE DEEP STRUCTURE LOGGER (GUARANTEED) ---
+                // If we get past 60k steps and see a massive spike in structure, GUARANTEE capture.
+                // Wait 5000 bounces before logging another to prevent UI spam.
+                if (stats.bounces > 60000 && currentRatio > 1.2 && (stats.bounces - lastShakespeareBounce) > 5000) {
+                    lastShakespeareBounce = stats.bounces;
                     artifacts.unshift({ 
                         id: `SHAKE-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
-                        desc: `SHAKESPEARE PATTERN / DEEP EMERGENCE: Highly structured self-organizing mathematical geometry detected deep in phase space.`,
+                        desc: `SHAKESPEARE PATTERN / DEEP EMERGENCE: Guaranteed Capture. Highly structured self-organizing mathematical geometry detected.`,
                         trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
                         kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} },
                         gridSnapshot: new Map(visitedGrid)
@@ -906,38 +871,8 @@
                     if (artifacts.length > 20) artifacts.pop();
                 }
 
-                // --- INVERTED CAUSTIC EPOCH TRIGGER ---
-                // Instead of only the 81003 limit, we trigger when the ratio fully inverts or collapses deeply.
-                let shouldInvertEpoch = false;
-                let epochTriggerReason = "";
-
-                if (stats.bounces > 65000 && currentRatio > 1.5) {
-                    shouldInvertEpoch = true;
-                    epochTriggerReason = "FULLY INVERTED CAUSTIC RATIO (STRUCTURE OVERWHELM)";
-                } else if (stats.bounces > 65000 && currentRatio < 0.1) {
-                    shouldInvertEpoch = true;
-                    epochTriggerReason = "FULLY INVERTED CAUSTIC RATIO (CHAOTIC COLLAPSE)";
-                } else if (stats.bounces > 1000 && (stats.bounces - lastHighZetaBounce) > 81003) {
-                    shouldInvertEpoch = true;
-                    epochTriggerReason = "MAXIMUM BOUNDARY GAP EXHAUSTION (81,003)";
-                }
-
-                if (shouldInvertEpoch) {
-                    artifacts.unshift({ 
-                        id: `EPOCH-${searchEpoch}`, bounce: stats.bounces, tick: globalTick,
-                        triggerSwarm: "ALL", zetaStrAlpha: "0", zetaStrBeta: "0",
-                        desc: `EPOCH ${searchEpoch} COMPLETE.<br/>Trigger: ${epochTriggerReason}<br/>Final Morph Ratio: ${currentRatio.toFixed(4)}`,
-                        trailAlpha: null, trailBeta: null, kinematics: null, gridSnapshot: null
-                    });
-                    if (artifacts.length > 20) artifacts.pop();
-
-                    searchEpoch++;
-                    baseAngleShift += 0.000137; 
-                    isEpochInverted = !isEpochInverted; 
-                    lastHighZetaBounce = stats.bounces; 
-                    
-                    fleet = initializeFleet(baseAngleShift, isEpochInverted);
-                }
+                // AUTOMATIC EPOCH ITERATION HAS BEEN REMOVED HERE
+                // The simulation will now freely run continuously to 160,000+ bounces uninterrupted.
 
                 if (globalTick % 20 === 0) {
                     ratioHistory.push(currentRatio);
@@ -977,7 +912,6 @@
                 document.getElementById('statDivergence').className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
                 document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
                 document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
-                document.getElementById('statEpoch').innerText = searchEpoch;
 
                 if (activeTab === 'SUPER_BRAIN') {
                     if (document.getElementById('super-void')) document.getElementById('super-void').innerText = currentTickCaustic === Infinity ? '1.414' : currentTickCaustic.toFixed(4);
