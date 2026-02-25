@@ -8,15 +8,14 @@
     <!-- SUPABASE CLIENT -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;700;900&display=swap');
+        /* Digital Calculator & LCD Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         body {
-            font-family: 'Inter', sans-serif;
+            /* Applied Calculator Font Globally */
+            font-family: 'Share Tech Mono', monospace;
             background-color: #000000;
             color: #d1d5db;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
         }
         
         /* Custom Scrollbar */
@@ -30,50 +29,56 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
-            z-index: 9999;
+            z-index: 99999;
+            /* Aggressive 3px interleaving to force hue shifts in the brain */
             background: repeating-linear-gradient(
                 0deg,
-                rgba(0, 0, 0, 0.45) 0px,
-                rgba(0, 0, 0, 0.45) 2px,
-                rgba(255, 255, 255, 0.15) 2px,
-                rgba(255, 255, 255, 0.15) 4px
+                rgba(0, 0, 0, 0.6) 0px,
+                rgba(0, 0, 0, 0.6) 3px,
+                rgba(255, 255, 255, 0.25) 3px,
+                rgba(255, 255, 255, 0.25) 6px
             );
-            mix-blend-mode: hard-light;
+            mix-blend-mode: normal;
         }
 
         .glass-panel {
-            background: rgba(10, 10, 15, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 255, 255, 0.15);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            background: rgba(5, 5, 10, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
         }
         
         .glass-sub-panel {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Glitch effect for titles */
+        .glitch-text {
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
         }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col selection:bg-cyan-900 relative text-shadow-sm">
 
-    <!-- GLOBAL RULIAD MATRIX BACKGROUND & MUNKER ILLUSION -->
-    <canvas id="globalBgCanvas" class="fixed inset-0 w-full h-full -z-10 opacity-40"></canvas>
+    <!-- GLOBAL RULIAD MATRIX BACKGROUND (Wolfram CA) & MUNKER ILLUSION -->
+    <canvas id="globalBgCanvas" class="fixed inset-0 w-full h-full -z-10 opacity-60"></canvas>
     <div class="munker-overlay"></div>
 
     <!-- HEADER -->
-    <header class="flex justify-between items-end border-b border-cyan-900/50 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
+    <header class="flex justify-between items-end border-b border-cyan-900/80 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
-            <h1 class="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-sm font-mono text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Collective Swarm Memory v5</h2>
+            <h1 class="text-3xl font-black tracking-widest text-white glitch-text">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
+            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Munker-White CA Engine v6</h2>
         </div>
         <div class="flex items-center gap-6">
-            <div class="text-right font-mono text-xs text-gray-400">
-                STATUS: <span class="text-yellow-400 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: CROSS-DEVICE COLLECTIVE MAPPING
+            <div class="text-right text-xs text-gray-400">
+                STATUS: <span class="text-yellow-400 animate-pulse font-bold" id="save-status">CONNECTING SUPABASE...</span><br/>
+                ENGINE: SHAPE INVERSION MAPPING
             </div>
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
-               class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-xs font-bold font-mono tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.3)]">
+               class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-sm font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.4)]">
                 <span>☕</span> TIP JAR
             </a>
         </div>
@@ -85,16 +90,16 @@
         <!-- LEFT PANE: CANVAS & CONTROLS -->
         <div class="lg:col-span-2 flex flex-col gap-4">
             
-            <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_40px_rgba(0,255,255,0.1)]" id="canvas-container">
+            <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.15)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
-                <div class="absolute top-2 left-2 text-[10px] font-mono text-cyan-100/70 select-none pointer-events-none bg-black/40 px-2 py-1 rounded">
+                <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/60 px-2 py-1 rounded border border-cyan-900/50">
                     GEOMETRY: SQUARE_STRICT<br/>
-                    MODE: 7-SWARM COLLECTIVE (14 AGENTS)<br/>
-                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (SHARED KNOWLEDGE)</span>
+                    MODE: INVERSION MAPPING (14 AGENTS)<br/>
+                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 glass-panel p-4 rounded-lg font-mono text-xs">
+            <div class="grid grid-cols-2 gap-4 glass-panel p-4 rounded-lg text-sm">
                 <div class="glass-sub-panel p-3 rounded">
                     <label class="flex justify-between text-cyan-100 mb-1">
                         <span>SONIC DRIVE (Time Δt)</span>
@@ -115,133 +120,133 @@
         <!-- RIGHT PANE: QUADRATIC REALITY MATRIX & OBSERVABLES -->
         <div class="flex flex-col gap-4 h-full">
             
-            <div class="glass-panel p-4 rounded-lg grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs relative overflow-hidden">
-                <div class="col-span-2 border-b border-cyan-800/50 pb-2 mb-1 text-cyan-300 font-bold tracking-widest flex justify-between">
+            <div class="glass-panel p-4 rounded-lg grid grid-cols-2 gap-y-4 gap-x-2 text-sm relative overflow-hidden">
+                <div class="col-span-2 border-b border-cyan-800/80 pb-2 mb-1 text-cyan-300 font-bold tracking-widest flex justify-between text-base">
                     <span>SYSTEM MACROSTATES</span>
-                    <span class="text-cyan-400">PEAK DIVERGENCE: <span id="statDivergence" class="text-white">0.000</span></span>
+                    <span class="text-cyan-400">Δ DIVERGENCE: <span id="statDivergence" class="text-white">0.000</span></span>
                 </div>
                 
-                <div class="flex flex-col glass-sub-panel p-2 rounded">
-                    <span class="text-gray-400 text-[10px]">AGG. WINDING ($W$)</span>
-                    <span class="text-xl text-cyan-400 font-bold" id="statWinding">0.000</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
+                    <span class="text-gray-400 text-[11px] tracking-widest">AGG. WINDING ($W$)</span>
+                    <span class="text-2xl text-cyan-400 font-bold mt-1" id="statWinding">0.000</span>
                 </div>
                 
-                <div class="flex flex-col glass-sub-panel p-2 rounded">
-                    <span class="text-gray-400 text-[10px]">CORNER HITS (ε)</span>
-                    <span class="text-xl text-magenta-400 font-bold" id="statCorners">0</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
+                    <span class="text-gray-400 text-[11px] tracking-widest">CORNER HITS (ε)</span>
+                    <span class="text-2xl text-magenta-400 font-bold mt-1" id="statCorners">0</span>
                 </div>
 
-                <div class="flex flex-col glass-sub-panel p-2 rounded">
-                    <span class="text-gray-400 text-[10px]">SWARM IMPACTS</span>
-                    <span class="text-lg text-white" id="statBounces">0</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
+                    <span class="text-gray-400 text-[11px] tracking-widest">SWARM IMPACTS</span>
+                    <span class="text-xl text-white mt-1" id="statBounces">0</span>
                 </div>
 
-                <div class="flex flex-col glass-sub-panel p-2 rounded">
-                    <span class="text-gray-400 text-[10px]">FREE CONFIGS</span>
-                    <span class="text-lg text-white" id="statConfigs">180,360</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
+                    <span class="text-gray-400 text-[11px] tracking-widest">FREE CONFIGS</span>
+                    <span class="text-xl text-white mt-1" id="statConfigs">180,360</span>
                 </div>
             </div>
 
             <div class="flex-1 flex flex-col glass-panel rounded-lg overflow-hidden min-h-[300px]">
-                <div class="flex glass-sub-panel border-b border-cyan-800/50 text-[10px] font-mono overflow-x-auto" id="tab-headers"></div>
+                <div class="flex glass-sub-panel border-b border-cyan-800/80 text-xs overflow-x-auto" id="tab-headers"></div>
                 
                 <div class="flex-1 p-3 relative">
-                    <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col font-mono text-xs text-blue-200">
-                        <h3 class="text-blue-300 mb-2 border-b border-blue-800/50 pb-1 font-bold">HIVE-MIND CROSS-REFERENCE</h3>
+                    <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col text-sm text-blue-200">
+                        <h3 class="text-blue-300 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">HIVE-MIND CROSS-REFERENCE</h3>
                         <div class="flex-1 overflow-y-auto space-y-3">
-                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
-                                <p class="text-blue-400 font-bold mb-1">COLLECTIVE INVARIANTS</p>
+                            <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1 tracking-widest">COLLECTIVE INVARIANTS</p>
                                 <div class="flex justify-between"><span class="text-gray-300">Energy (Velocity):</span> <span class="text-lime-400 font-bold">CONSERVATION</span></div>
                                 <div class="flex justify-between mt-1"><span class="text-gray-300">Phase Volume:</span> <span class="text-lime-400 font-bold">LIOUVILLE (Alpha)</span></div>
                             </div>
-                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
-                                <p class="text-blue-400 font-bold mb-1">SWARM VARIANTS (SPREAD)</p>
+                            <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1 tracking-widest">SWARM VARIANTS (SPREAD)</p>
                                 <div id="swarm-divergence-bars" class="space-y-1"></div>
                             </div>
-                            <div class="glass-sub-panel border-blue-900/50 p-2 rounded">
-                                <p class="text-blue-400 font-bold mb-1">VOID DETECTION</p>
+                            <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
+                                <p class="text-blue-400 font-bold mb-1 tracking-widest">VOID DETECTION</p>
                                 <div class="flex justify-between"><span class="text-gray-300">Shared Caustic Radius:</span> <span id="super-void" class="text-cyan-400 font-bold">0.000</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="tab-EYES" class="hidden h-full flex flex-col font-mono text-xs text-blue-400">
-                        <h3 class="text-blue-200 mb-2 border-b border-blue-800/50 pb-1 font-bold">GLOBAL COLLECTIVE MAP</h3>
-                        <p class="text-[9px] text-gray-400 mb-2">This Heatmap synchronizes across all users. Spaces mapped by others are avoided automatically.</p>
+                    <div id="tab-EYES" class="hidden h-full flex flex-col text-sm text-blue-400">
+                        <h3 class="text-blue-200 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">GLOBAL COLLECTIVE MAP</h3>
                         <div class="flex-1 relative glass-sub-panel overflow-hidden rounded">
-                            <canvas id="eyesCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
+                            <canvas id="eyesCanvas" class="absolute inset-0 w-full h-full opacity-100"></canvas>
                         </div>
                     </div>
 
-                    <div id="tab-STABILITY" class="hidden h-full flex flex-col font-mono text-xs text-indigo-300">
-                        <h3 class="text-indigo-200 mb-2 border-b border-indigo-800/50 pb-1 font-bold">ORBITAL STABILITY METRICS</h3>
+                    <div id="tab-STABILITY" class="hidden h-full flex flex-col text-sm text-indigo-300">
+                        <h3 class="text-indigo-200 mb-2 border-b border-indigo-800/80 pb-1 font-bold tracking-widest">ORBITAL STABILITY METRICS</h3>
                         <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="stability-log">
                             <div class="text-gray-400">Calculating periodic orbital variance...</div>
                         </div>
                     </div>
 
-                    <div id="tab-VOIDS" class="hidden h-full flex flex-col font-mono text-xs text-teal-300">
-                        <h3 class="text-teal-200 mb-2 border-b border-teal-800/50 pb-1 font-bold">CAUSTIC VOID TOPOLOGY</h3>
+                    <div id="tab-VOIDS" class="hidden h-full flex flex-col text-sm text-teal-300">
+                        <h3 class="text-teal-200 mb-2 border-b border-teal-800/80 pb-1 font-bold tracking-widest">CAUSTIC VOID TOPOLOGY</h3>
                         <div class="grid grid-cols-2 gap-2 mb-2">
-                            <div class="glass-sub-panel border-teal-900/50 p-2 rounded">
-                                <p class="text-gray-400">Void Structure</p>
-                                <p class="text-white font-bold" id="void-structure">Analyzing...</p>
+                            <div class="glass-sub-panel border-teal-900/80 p-2 rounded">
+                                <p class="text-gray-400 text-xs">Void Structure</p>
+                                <p class="text-white font-bold text-lg" id="void-structure">Analyzing...</p>
                             </div>
-                            <div class="glass-sub-panel border-teal-900/50 p-2 rounded">
-                                <p class="text-gray-400">Min. Radius (r)</p>
-                                <p class="text-teal-400 font-bold" id="void-radius">0.000</p>
+                            <div class="glass-sub-panel border-teal-900/80 p-2 rounded">
+                                <p class="text-gray-400 text-xs">Min. Radius (r)</p>
+                                <p class="text-teal-400 font-bold text-xl" id="void-radius">0.000</p>
                             </div>
                         </div>
                     </div>
 
-                    <div id="tab-MUSEUM" class="hidden h-full flex flex-col font-mono text-xs text-yellow-300">
-                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/50 pb-1 font-bold">ARTIFACT STORAGE (CLICK TO RENDER)</h3>
+                    <div id="tab-MUSEUM" class="hidden h-full flex flex-col text-sm text-yellow-300">
+                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest">INVERSION SHAPE ARTIFACTS</h3>
+                        <p class="text-[10px] text-gray-400 mb-2">Logging structural inversions (origin crossing) and corner singularities.</p>
                         <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery"></div>
                     </div>
 
-                    <div id="tab-HYPER" class="hidden h-full flex flex-col font-mono text-xs text-cyan-300">
-                        <h3 class="text-cyan-200 mb-2 border-b border-cyan-800/50 pb-1 font-bold">PHASE DIMENSIONALITY</h3>
+                    <div id="tab-HYPER" class="hidden h-full flex flex-col text-sm text-cyan-300">
+                        <h3 class="text-cyan-200 mb-2 border-b border-cyan-800/80 pb-1 font-bold tracking-widest">PHASE DIMENSIONALITY</h3>
                         <div class="flex-1 grid grid-cols-2 gap-4">
                             <div class="glass-sub-panel p-2 rounded">
-                                <p class="text-gray-400">Effective Dim $d$</p>
+                                <p class="text-gray-400 text-xs">Effective Dim $d$</p>
                                 <p class="text-2xl text-lime-400 font-bold" id="hyper-dim">1.0000</p>
                             </div>
                             <div class="glass-sub-panel p-2 rounded">
-                                <p class="text-gray-400">Ergodicity</p>
-                                <div class="w-full bg-black/50 h-4 mt-1 rounded overflow-hidden">
-                                    <div id="hyper-ergodicity" class="bg-magenta-500 h-full" style="width: 0%; background-color: #ff00ff"></div>
+                                <p class="text-gray-400 text-xs">Ergodicity</p>
+                                <div class="w-full bg-black/80 h-4 mt-1 rounded overflow-hidden border border-gray-700">
+                                    <div id="hyper-ergodicity" class="bg-magenta-500 h-full" style="width: 0%; box-shadow: 0 0 10px #ff00ff"></div>
                                 </div>
                             </div>
                             <div class="col-span-2 mt-2">
-                                <p class="text-gray-300 mb-1">Poincaré Section (x, θ) Map</p>
+                                <p class="text-gray-300 mb-1 text-xs">Poincaré Section (x, θ) Map</p>
                                 <div class="w-full h-32 glass-sub-panel relative overflow-hidden rounded">
-                                    <canvas id="hyperCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
+                                    <canvas id="hyperCanvas" class="absolute inset-0 w-full h-full opacity-100"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="tab-ZETA" class="hidden h-full flex flex-col font-mono text-xs text-magenta-300">
-                        <h3 class="text-magenta-200 mb-2 border-b border-magenta-800/50 pb-1 font-bold">BLADE ALGORITHMIC HEURISTICS</h3>
+                    <div id="tab-ZETA" class="hidden h-full flex flex-col text-sm text-magenta-300">
+                        <h3 class="text-magenta-200 mb-2 border-b border-magenta-800/80 pb-1 font-bold tracking-widest">BLADE ALGORITHMIC HEURISTICS</h3>
                         <div class="grid grid-cols-2 gap-4 mb-2">
                             <div class="glass-sub-panel p-2 rounded">
-                                <p class="text-gray-400">High Zeta (&gt; 0.5)</p>
+                                <p class="text-gray-400 text-xs">High Zeta (&gt; 0.5)</p>
                                 <p class="text-xl text-cyan-400 font-bold" id="zeta-high">0</p>
                             </div>
                             <div class="glass-sub-panel p-2 rounded">
-                                <p class="text-gray-400">Low Zeta (&lt; 0.5)</p>
+                                <p class="text-gray-400 text-xs">Low Zeta (&lt; 0.5)</p>
                                 <p class="text-xl text-red-400 font-bold" id="zeta-low">0</p>
                             </div>
                         </div>
-                        <p class="mb-2 text-gray-300 mt-2">Quadratic Reality Tensor Matrix (Swarm 1)</p>
+                        <p class="mb-2 text-gray-300 mt-2 text-xs">Quadratic Reality Tensor Matrix (Swarm 1)</p>
                         <div class="flex-1 relative glass-sub-panel min-h-[150px] rounded">
-                            <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
+                            <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full opacity-100"></canvas>
                         </div>
                     </div>
 
-                    <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-300">
-                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800/50 pb-1 font-bold">CROSS-REF GLOBAL LEADERBOARD</h3>
-                        <div class="flex justify-between text-[10px] text-gray-400 mb-2 px-1">
+                    <div id="tab-RANK" class="hidden h-full flex flex-col text-sm text-emerald-300">
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800/80 pb-1 font-bold tracking-widest">GLOBAL LEADERBOARD</h3>
+                        <div class="flex justify-between text-[11px] text-gray-400 mb-2 px-1">
                             <span>RANK / TYPE / UID</span>
                             <span>ZETA SCORE (ζ)</span>
                         </div>
@@ -250,7 +255,7 @@
                         </div>
                     </div>
 
-                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 glass-sub-panel rounded text-center p-4">
+                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center text-gray-500 glass-sub-panel rounded text-center p-4">
                         <span id="other-tab-name"></span>
                     </div>
                 </div>
@@ -260,27 +265,27 @@
     </div>
 
     <!-- ARTIFACT RENDER MODAL -->
-    <div id="artifactModal" class="fixed inset-0 z-50 hidden items-center justify-center p-8 bg-black/60 backdrop-blur-md">
-        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded-xl shadow-[0_0_100px_rgba(0,255,255,0.2)] overflow-hidden">
-            <div class="bg-gray-900/80 border-b border-cyan-800/50 p-4 flex justify-between items-center">
-                <h2 class="text-cyan-400 font-mono font-bold tracking-widest text-lg" id="modal-title">ARTIFACT RENDER</h2>
-                <button onclick="closeModal()" class="text-red-500 hover:text-red-300 font-mono text-2xl font-bold px-2 transition-colors">&times;</button>
+    <div id="artifactModal" class="fixed inset-0 z-[100000] hidden items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded-xl shadow-[0_0_100px_rgba(0,255,255,0.4)] overflow-hidden border-2 border-cyan-500">
+            <div class="bg-gray-900/90 border-b border-cyan-500 p-4 flex justify-between items-center">
+                <h2 class="text-cyan-400 font-bold tracking-widest text-xl glitch-text" id="modal-title">ARTIFACT RENDER</h2>
+                <button onclick="closeModal()" class="text-red-500 hover:text-red-300 text-3xl font-bold px-2 transition-colors leading-none">&times;</button>
             </div>
-            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/40 relative">
+            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/60 relative">
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800/50 p-2 z-10 text-center font-mono text-xs text-cyan-200 font-bold tracking-widest">
+                    <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-cyan-800/80 p-2 z-10 text-center text-xs text-cyan-300 font-bold tracking-widest">
                         2D TRAJECTORY SPACE
                     </div>
                     <canvas id="modalTrajCanvas" class="w-full h-full"></canvas>
                 </div>
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800/50 p-2 z-10 text-center font-mono text-xs text-magenta-200 font-bold tracking-widest">
+                    <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-magenta-800/80 p-2 z-10 text-center text-xs text-magenta-300 font-bold tracking-widest">
                         RULIAD BLOCK PATTERN
                     </div>
                     <canvas id="modalRuliadCanvas" class="w-full h-full"></canvas>
                 </div>
             </div>
-            <div class="bg-gray-900/80 p-4 border-t border-cyan-800/50 text-xs font-mono text-gray-300" id="modal-desc"></div>
+            <div class="bg-gray-900/90 p-4 border-t border-cyan-500 text-sm text-gray-300" id="modal-desc"></div>
         </div>
     </div>
 
@@ -297,13 +302,11 @@
         let isSaving = false;
         let lastSaveBounce = 0;
         let lastSaveTime = 0; 
-        let lastCollectiveSyncTime = 0; // Throttle cross-device syncs
 
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
             let seed = Math.abs(Math.floor(x * 10000000) ^ Math.floor(y * 10000000));
             if (seed === 0) seed = 123456789; 
-            
             while(str.length < 103) { 
                 seed = (seed * 9301 + 49297) % 233280; 
                 let fraction = seed / 233280;
@@ -322,18 +325,11 @@
         let fleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
             const angle = (i / NUM_SWARMS) * Math.PI * 2;
             const r = 0.3;
-            const sx = Math.cos(angle) * r;
-            const sy = Math.sin(angle) * r;
-            const stheta = angle + Math.PI/4; 
-            const vx = Math.cos(stheta) * INITIAL_SPEED;
-            const vy = Math.sin(stheta) * INITIAL_SPEED;
-
             return {
                 id: i,
-                alpha: { x: sx, y: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
-                beta:  { x: sx, y: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
-                divergence: 0,
-                bounces: 0
+                alpha: { x: Math.cos(angle)*r, y: Math.sin(angle)*r, prevX: 0, prevY: 0, vx: Math.cos(angle+Math.PI/4)*INITIAL_SPEED, vy: Math.sin(angle+Math.PI/4)*INITIAL_SPEED, theta: angle+Math.PI/4, accumulatedTheta: 0, trail: [] },
+                beta:  { x: Math.cos(angle)*r, y: Math.sin(angle)*r, prevX: 0, prevY: 0, vx: Math.cos(angle+Math.PI/4)*INITIAL_SPEED, vy: Math.sin(angle+Math.PI/4)*INITIAL_SPEED, theta: angle+Math.PI/4, accumulatedTheta: 0, trail: [] },
+                divergence: 0, bounces: 0
             };
         });
 
@@ -347,88 +343,70 @@
         let stabilityLogArray = []; 
         let minOrbitRadius = Infinity;
 
+        // CYCLIC CELLULAR AUTOMATON BG
+        let bgCols = 0, bgRows = 0;
+        let bgGridCA = [];
+        const BG_CELL_SIZE = 25;
+
+        function initBgGrid(w, h) {
+            bgCols = Math.ceil(w / BG_CELL_SIZE);
+            bgRows = Math.ceil(h / BG_CELL_SIZE);
+            bgGridCA = new Array(bgCols).fill(0).map(() => new Array(bgRows).fill(0).map(() => Math.floor(Math.random() * 7)));
+        }
+
+        function updateBgGrid() {
+            let newGrid = new Array(bgCols).fill(0).map(() => new Array(bgRows).fill(0));
+            for (let x = 0; x < bgCols; x++) {
+                for (let y = 0; y < bgRows; y++) {
+                    let state = bgGridCA[x][y];
+                    let nextState = (state + 1) % 7;
+                    let changed = false;
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            let nx = (x + dx + bgCols) % bgCols;
+                            let ny = (y + dy + bgRows) % bgRows;
+                            if (bgGridCA[nx][ny] === nextState) { changed = true; break; }
+                        }
+                        if (changed) break;
+                    }
+                    newGrid[x][y] = changed ? nextState : state;
+                }
+            }
+            bgGridCA = newGrid;
+        }
+
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
-        const speedInput = document.getElementById('speedInput');
-        const speedLabel = document.getElementById('speedLabel');
-        const trailInput = document.getElementById('trailInput');
-        const trailLabel = document.getElementById('trailLabel');
-
-        const statWinding = document.getElementById('statWinding');
-        const statCorners = document.getElementById('statCorners');
-        const statBounces = document.getElementById('statBounces');
-        const statDivergence = document.getElementById('statDivergence');
-        
         const globalBgCanvas = document.getElementById('globalBgCanvas');
         const eyesCanvas = document.getElementById('eyesCanvas');
         const hyperCanvas = document.getElementById('hyperCanvas');
         const zetaCanvas = document.getElementById('zetaCanvas');
         
-        const museumGallery = document.getElementById('museum-gallery');
-        const leaderboardContainer = document.getElementById('leaderboard-container');
-        const saveStatusEl = document.getElementById('save-status');
-        
-        const stabilityLog = document.getElementById('stability-log');
-        const voidStructure = document.getElementById('void-structure');
-        const voidRadius = document.getElementById('void-radius');
-        const hyperDim = document.getElementById('hyper-dim');
-        const hyperErgodicity = document.getElementById('hyper-ergodicity');
-        const zetaHighEl = document.getElementById('zeta-high');
-        const zetaLowEl = document.getElementById('zeta-low');
-        
-        const superVoidEl = document.getElementById('super-void');
-        const swarmDivergenceBars = document.getElementById('swarm-divergence-bars');
-
-        const artifactModal = document.getElementById('artifactModal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalDesc = document.getElementById('modal-desc');
-        const modalTrajCanvas = document.getElementById('modalTrajCanvas');
-        const modalRuliadCanvas = document.getElementById('modalRuliadCanvas');
-
         const tabs = ['SUPER_BRAIN', 'EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
-        const tabHeaders = document.getElementById('tab-headers');
 
         function renderTabButtons() {
-            tabHeaders.innerHTML = tabs.map(tab => `
-                <button
-                    onclick="window.switchTab('${tab}')"
-                    class="px-3 py-2 flex-shrink-0 transition-colors ${
-                        activeTab === tab 
-                            ? 'bg-black/80 text-white border-t-2 border-cyan-400 font-bold shadow-[0_-5px_15px_rgba(0,255,255,0.2)]' 
-                            : 'text-gray-400 hover:text-cyan-200 border-t-2 border-transparent'
-                    }"
-                >
-                    ${tab.replace('_', ' ')}
-                </button>
+            document.getElementById('tab-headers').innerHTML = tabs.map(tab => `
+                <button onclick="window.switchTab('${tab}')" class="px-3 py-2 flex-shrink-0 transition-all ${activeTab === tab ? 'bg-cyan-900/50 text-white border-t-2 border-cyan-400 font-bold shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'text-gray-400 hover:text-cyan-200 border-t-2 border-transparent'}">${tab.replace('_', ' ')}</button>
             `).join('');
         }
 
         window.switchTab = function(tab) {
             activeTab = tab;
             renderTabButtons();
-            
-            [...tabs, 'OTHER'].forEach(t => {
-                const el = document.getElementById(`tab-${t}`);
-                if (el) el.classList.add('hidden');
-            });
-
+            [...tabs, 'OTHER'].forEach(t => { const el = document.getElementById(`tab-${t}`); if (el) el.classList.add('hidden'); });
             if (tabs.includes(tab)) {
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
                 if (tab === 'RANK') renderLeaderboardUI();
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
-            } else {
-                document.getElementById('tab-OTHER').classList.remove('hidden');
-                document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE ARCHIVED ]`;
             }
         };
 
-        // --- CLOUD SYNC LOGIC (SUPABASE) ---
+        // --- CLOUD SYNC LOGIC (GRID PAYLOADS REMOVED FOR DB STABILITY) ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
-                // 1. Download Private Memory
                 const { data, error } = await supabaseClient.from('saves').select('state_data').eq('user_id', currentUser.uid).single();
-                if (error && error.code !== 'PGRST116') throw error; // Ignore "no rows" for new users
+                if (error && error.code !== 'PGRST116') throw error; 
 
                 if (data && data.state_data) {
                     const saved = data.state_data;
@@ -439,35 +417,14 @@
                             id: i,
                             alpha: { ...fleet[i].alpha, ...g.alpha, trail: [] },
                             beta: { ...fleet[i].beta, ...g.beta, trail: [] },
-                            divergence: g.divergence || 0,
-                            bounces: g.bounces || 0
+                            divergence: g.divergence || 0, bounces: g.bounces || 0
                         }));
                     }
                     globalTick = saved.globalTick || 0;
                     artifacts = saved.artifacts || [];
-                    if (saved.visitedGrid) try { visitedGrid = new Map(JSON.parse(saved.visitedGrid)); } catch(e) {}
-                    if (saved.hyperGrid) try { hyperGrid = new Map(JSON.parse(saved.hyperGrid)); } catch(e) {}
                     lastSaveBounce = stats.bounces;
                 }
-
-                // 2. Download Shared Collective Map (Cross-Device)
-                const { data: globalData } = await supabaseClient.from('global_state').select('leaderboard_data').eq('id', 'collective_map').single();
-                if (globalData && globalData.leaderboard_data && globalData.leaderboard_data.grid) {
-                    const globalGridMap = new Map(JSON.parse(globalData.leaderboard_data.grid));
-                    // Merge local into global to retain discoveries across all users
-                    globalGridMap.forEach((cellData, key) => {
-                        const local = visitedGrid.get(key) || { density: 0, lastVisit: 0 };
-                        visitedGrid.set(key, { 
-                            density: local.density + cellData.density, 
-                            lastVisit: Math.max(local.lastVisit, cellData.lastVisit) 
-                        });
-                    });
-                }
-            } catch (e) { 
-                console.error("Cloud load failed:", e); 
-                saveStatusEl.innerText = 'DB READ ERROR (Check RLS)';
-                saveStatusEl.classList.replace('text-yellow-400', 'text-red-500');
-            }
+            } catch (e) { console.error("Cloud load failed:", e); }
         }
 
         async function setupGlobalLeaderboardListener() {
@@ -488,11 +445,11 @@
         async function saveStateToCloud() {
             if (!supabaseClient || !currentUser || isSaving) return;
             isSaving = true;
-            saveStatusEl.innerText = 'SYNCING REALITY...';
-            saveStatusEl.classList.replace('text-lime-500', 'text-yellow-500');
+            document.getElementById('save-status').innerText = 'SYNCING REALITY...';
+            document.getElementById('save-status').className = 'text-yellow-500 animate-pulse font-bold';
             
             try {
-                // 1. Save Private State
+                // NO GRID DATA UPLOADED - Saves bandwidth and prevents DB crashes
                 const state = {
                     stats, zetaStats,
                     fleet: fleet.map(g => ({
@@ -500,105 +457,73 @@
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
                         divergence: g.divergence, bounces: g.bounces
                     })),
-                    globalTick, artifacts,
-                    visitedGrid: JSON.stringify(Array.from(visitedGrid.entries())),
-                    hyperGrid: JSON.stringify(Array.from(hyperGrid.entries()))
+                    globalTick, artifacts
                 };
                 
                 const { error: saveError } = await supabaseClient.from('saves').upsert({ user_id: currentUser.uid, state_data: state });
                 if (saveError) throw saveError;
 
-                // 2. Upload to Shared Collective Map (Cross-Device Swarm Data)
-                // Throttle this to run occasionally to avoid massive data writes
-                const now = Date.now();
-                if (now - lastCollectiveSyncTime > 30000) { // Every 30 seconds
-                    await supabaseClient.from('global_state').upsert({ 
-                        id: 'collective_map', 
-                        leaderboard_data: { grid: JSON.stringify(Array.from(visitedGrid.entries())) } 
-                    });
-                    lastCollectiveSyncTime = now;
-                }
-
-                saveStatusEl.innerText = 'MULTIWAY CLOUD SYNCED';
-                saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
+                document.getElementById('save-status').innerText = 'MULTIWAY CLOUD SYNCED';
+                document.getElementById('save-status').className = 'text-lime-500 font-bold';
             } catch (e) {
-                console.error("Cloud save failed:", e.message);
-                saveStatusEl.innerText = 'SYNC ERROR (Check RLS/API KEY)';
-                saveStatusEl.classList.replace('text-yellow-500', 'text-red-500');
+                document.getElementById('save-status').innerText = 'SYNC ERROR (Check RLS/API KEY)';
+                document.getElementById('save-status').className = 'text-red-500 font-bold';
             }
             isSaving = false;
         }
 
-        // Force a save right before the user refreshes or leaves to prevent data loss
-        window.addEventListener('beforeunload', () => {
-            if (stats.bounces > lastSaveBounce && supabaseClient && currentUser) {
-                saveStateToCloud();
-            }
-        });
+        window.addEventListener('beforeunload', () => { if (stats.bounces > lastSaveBounce && supabaseClient && currentUser) saveStateToCloud(); });
 
         function renderLeaderboardUI() {
-            if (globalLeaderboard.length === 0) {
-                leaderboardContainer.innerHTML = `<span class="text-gray-500">No public configurations cataloged yet.</span>`;
-                return;
-            }
-            leaderboardContainer.innerHTML = globalLeaderboard.map((entry, index) => {
+            const lc = document.getElementById('leaderboard-container');
+            if (globalLeaderboard.length === 0) { lc.innerHTML = `<span class="text-gray-500">No configurations cataloged yet.</span>`; return; }
+            lc.innerHTML = globalLeaderboard.map((entry, index) => {
                 const isMe = currentUser && entry.uid === currentUser.uid;
                 const displayUid = entry.uid.split('-')[0] + '...';
                 const color = entry.type === 'ALPHA' ? 'text-cyan-400' : 'text-magenta-400';
                 return `
-                <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/30 px-2 rounded' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-2 bg-emerald-900/20' : ''}">
+                <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/50 px-2 rounded border border-emerald-400' : ''} ${isMe ? 'border-l-4 border-l-lime-400 pl-2 bg-emerald-900/30' : ''}">
                     <div class="flex justify-between w-full items-center">
-                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[8px] ml-1">[SWRM-${entry.swarmId} ${entry.type}]</span></div>
-                        <div class="text-[9px] text-gray-400 font-bold">${isMe ? '<span class="text-lime-400 drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]">YOU</span>' : displayUid}</div>
+                        <div class="${index === 0 ? 'text-emerald-200 font-bold text-lg' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[9px] ml-1">[SWRM-${entry.swarmId} ${entry.type}]</span></div>
+                        <div class="text-[10px] text-gray-300 font-bold tracking-widest">${isMe ? '<span class="text-lime-400 drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]">YOU</span>' : displayUid}</div>
                     </div>
-                    <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1 opacity-90">ζ: ${entry.zetaStr}</div>
-                </div>
-            `}).join('');
+                    <div class="font-bold text-[8.5px] text-emerald-300 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
+                </div>`
+            }).join('');
         }
 
         function openArtifactModal(id) {
             const art = artifacts.find(a => a.id === id);
             if (!art) return;
             
-            modalTitle.innerText = `ARTIFACT // ${art.id}`;
-            modalDesc.innerHTML = `<span class="text-cyan-400 font-bold">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-300">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-300">Beta Zeta:</span> ${art.zetaStrBeta}<br/><span class="text-gray-400">Discovered at T=${art.bounce}. ${art.desc}</span>`;
-            artifactModal.classList.remove('hidden');
-            artifactModal.classList.add('flex');
+            document.getElementById('modal-title').innerText = `ARTIFACT // ${art.id}`;
+            document.getElementById('modal-desc').innerHTML = `<span class="text-cyan-400 font-bold">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-300">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-300">Beta Zeta:</span> ${art.zetaStrBeta}<br/><span class="text-gray-200 font-bold mt-2 block p-2 border border-gray-600 rounded bg-black/50">GEOMETRIC TRIGGER: ${art.desc}</span>`;
+            document.getElementById('artifactModal').classList.remove('hidden');
+            document.getElementById('artifactModal').classList.add('flex');
 
-            const tCtx = modalTrajCanvas.getContext('2d');
-            const rCtx = modalRuliadCanvas.getContext('2d');
-            const w = modalTrajCanvas.width = modalTrajCanvas.parentElement.clientWidth;
-            const h = modalTrajCanvas.height = modalTrajCanvas.parentElement.clientHeight - 30; 
-            modalRuliadCanvas.width = w; modalRuliadCanvas.height = h;
+            const tCtx = document.getElementById('modalTrajCanvas').getContext('2d');
+            const rCtx = document.getElementById('modalRuliadCanvas').getContext('2d');
+            const w = tCtx.canvas.width = tCtx.canvas.parentElement.clientWidth;
+            const h = tCtx.canvas.height = tCtx.canvas.parentElement.clientHeight - 30; 
+            rCtx.canvas.width = w; rCtx.canvas.height = h;
 
             tCtx.fillStyle = '#050505'; tCtx.fillRect(0, 0, w, h);
             const cx = w/2; const cy = h/2; const scale = Math.min(w,h)/2 * 0.9;
-            
             tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
             
             if (art.trailAlpha && art.trailAlpha.length > 1) {
                 tCtx.globalAlpha = 0.8;
                 for (let i=1; i<art.trailAlpha.length; i++) {
-                    tCtx.beginPath(); 
-                    tCtx.moveTo(cx + art.trailAlpha[i-1].x * scale, cy + art.trailAlpha[i-1].y * scale);
-                    tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
-                    tCtx.strokeStyle = getRuliadColor(art.tick - art.trailAlpha[i].tick);
-                    tCtx.lineWidth = 1.5;
-                    tCtx.stroke();
+                    tCtx.beginPath(); tCtx.moveTo(cx + art.trailAlpha[i-1].x * scale, cy + art.trailAlpha[i-1].y * scale); tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
+                    tCtx.strokeStyle = getRuliadColorState(art.tick - art.trailAlpha[i].tick); tCtx.lineWidth = 2; tCtx.stroke();
                 }
-                tCtx.globalAlpha = 1.0;
             }
             if (art.trailBeta && art.trailBeta.length > 1) {
                 tCtx.globalAlpha = 0.8;
                 for (let i=1; i<art.trailBeta.length; i++) {
-                    tCtx.beginPath(); 
-                    tCtx.moveTo(cx + art.trailBeta[i-1].x * scale, cy + art.trailBeta[i-1].y * scale);
-                    tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
-                    tCtx.strokeStyle = getRuliadColor(art.tick - art.trailBeta[i].tick);
-                    tCtx.lineWidth = 1.5;
-                    tCtx.stroke();
+                    tCtx.beginPath(); tCtx.moveTo(cx + art.trailBeta[i-1].x * scale, cy + art.trailBeta[i-1].y * scale); tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
+                    tCtx.strokeStyle = getRuliadColorState(art.tick - art.trailBeta[i].tick); tCtx.lineWidth = 2; tCtx.stroke();
                 }
-                tCtx.globalAlpha = 1.0;
             }
 
             rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
@@ -606,45 +531,43 @@
                 const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
                 art.gridSnapshot.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
-                    const age = art.tick - cell.lastVisit;
-                    rCtx.fillStyle = getRuliadColor(age);
+                    rCtx.fillStyle = getRuliadColorState(art.tick - cell.lastVisit);
                     rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
                 });
             }
         }
 
         window.closeModal = function() {
-            artifactModal.classList.add('hidden');
-            artifactModal.classList.remove('flex');
+            document.getElementById('artifactModal').classList.add('hidden');
+            document.getElementById('artifactModal').classList.remove('flex');
         }
 
         function setupUI() {
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width; canvas.height = rect.height;
-                
                 [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
                     if(c && c.parentElement) {
                         const r = c.parentElement === document.body ? {width: window.innerWidth, height: window.innerHeight} : c.parentElement.getBoundingClientRect();
                         if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
                     }
                 });
+                if(globalBgCanvas.width > 0) initBgGrid(globalBgCanvas.width, globalBgCanvas.height);
             }
             window.addEventListener('resize', resize);
             resize();
 
-            speedInput.addEventListener('input', (e) => { speed = parseInt(e.target.value); speedLabel.innerText = `x${speed}`; });
-            trailInput.addEventListener('input', (e) => { trailLength = parseInt(e.target.value); trailLabel.innerText = `${trailLength} steps`; });
-            
-            renderTabButtons();
-            window.switchTab(activeTab);
+            document.getElementById('speedInput').addEventListener('input', (e) => { speed = parseInt(e.target.value); document.getElementById('speedLabel').innerText = `x${speed}`; });
+            document.getElementById('trailInput').addEventListener('input', (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailLabel').innerText = `${trailLength} steps`; });
+            renderTabButtons(); window.switchTab(activeTab);
         }
 
         function moveAgent(agent, isBetaObserver) {
+            agent.prevX = agent.x; 
+            agent.prevY = agent.y;
             let nextX = agent.x + agent.vx;
             let nextY = agent.y + agent.vy;
-            let bounced = false;
-            let cornerHit = false;
+            let bounced = false; let cornerHit = false;
 
             if (nextX > BOX_SIZE) { nextX = BOX_SIZE - (nextX - BOX_SIZE); agent.vx *= -1; bounced = true; } 
             else if (nextX < -BOX_SIZE) { nextX = -BOX_SIZE + (-BOX_SIZE - nextX); agent.vx *= -1; bounced = true; }
@@ -660,8 +583,13 @@
             const radius = Math.sqrt(nextX*nextX + nextY*nextY);
             if (radius < minOrbitRadius) minOrbitRadius = radius;
 
-            agent.x = nextX;
-            agent.y = nextY;
+            agent.x = nextX; agent.y = nextY;
+
+            // Mathematical Origin Crossing (Inversion)
+            let originCross = false;
+            if (Math.sign(agent.x) !== Math.sign(agent.prevX) && Math.sign(agent.y) !== Math.sign(agent.prevY)) {
+                originCross = true;
+            }
 
             const gridSegments = 20; 
             const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
@@ -679,49 +607,43 @@
             let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
             let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
 
-            if (currentZetaNum >= 0.5) zetaStats.high++;
-            else zetaStats.low++;
+            if (currentZetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
 
             if (bounced) {
                 let nextTheta = agent.theta;
                 if (nextX !== 0 || nextY !== 0) nextTheta = Math.atan2(nextY, nextX);
-                
                 let dTheta = nextTheta - agent.theta;
-                if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
-                if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
-                
-                agent.accumulatedTheta += dTheta;
-                agent.theta = nextTheta;
+                if (dTheta > Math.PI) dTheta -= 2 * Math.PI; if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                agent.accumulatedTheta += dTheta; agent.theta = nextTheta;
 
                 const hyperX = Math.floor((agent.x + BOX_SIZE) * 20); 
                 const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40); 
-                const hyperKey = `${hyperX},${hyperTheta}`;
-                const hyperCellData = hyperGrid.get(hyperKey) || { density: 0, lastVisit: 0 };
-                hyperGrid.set(hyperKey, { density: hyperCellData.density + 1, lastVisit: globalTick });
+                hyperGrid.set(`${hyperX},${hyperTheta}`, { density: 1, lastVisit: globalTick });
             }
 
             if (isBetaObserver && currentZetaNum < 0.5) {
                 const currentAngle = Math.atan2(agent.vy, agent.vx);
                 const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
                 const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; 
-                agent.vx = Math.cos(steerAngle) * speedMag;
-                agent.vy = Math.sin(steerAngle) * speedMag;
+                agent.vx = Math.cos(steerAngle) * speedMag; agent.vy = Math.sin(steerAngle) * speedMag;
             }
 
             agent.trail.push({ x: agent.x, y: agent.y, tick: globalTick });
             if (agent.trail.length > trailLength) agent.trail.shift();
 
-            return { bounced, cornerHit, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
+            return { bounced, cornerHit, originCross, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
         }
 
         function updatePhysics() {
             let swarmHitBoundary = false;
             let triggerArtifact = false;
             let artifactGroup = null;
+            let artifactDesc = "";
             let maxDivergence = 0;
 
             for (let step = 0; step < speed; step++) {
                 globalTick++; 
+                if(globalTick % 5 === 0) updateBgGrid(); // Update CA Background
                 
                 fleet.forEach(group => {
                     const alphaRes = moveAgent(group.alpha, false);
@@ -733,44 +655,20 @@
                         stats.bounces++; 
                         
                         if (alphaRes.cornerHit || betaRes.cornerHit) stats.cornerHits++;
-
                         stabilityHistory.push(stats.bounces);
                         if (stabilityHistory.length > 5) stabilityHistory.shift();
-
-                        if (!triggerArtifact && (alphaRes.zetaNum > 0.95 || betaRes.zetaNum > 0.95)) {
-                            triggerArtifact = true;
-                            artifactGroup = { 
-                                id: group.id, 
-                                zetaStrAlpha: alphaRes.zetaStr, 
-                                zetaStrBeta: betaRes.zetaStr,
-                                trailAlpha: [...group.alpha.trail],
-                                trailBeta: [...group.beta.trail]
-                            };
-                        }
 
                         if (supabaseClient) {
                             [ {r: alphaRes, t: 'ALPHA'}, {r: betaRes, t: 'BETA'} ].forEach(evalAgent => {
                                 if (evalAgent.r.zetaNum > 0.6) {
                                     let isGlobalTop = false;
-                                    if (globalLeaderboard.length < 20) {
-                                        isGlobalTop = true;
-                                    } else {
-                                        const lowest = globalLeaderboard[globalLeaderboard.length - 1];
-                                        if (evalAgent.r.zetaStr.localeCompare(lowest.zetaStr) > 0) isGlobalTop = true;
-                                    }
+                                    if (globalLeaderboard.length < 20) isGlobalTop = true;
+                                    else if (evalAgent.r.zetaStr.localeCompare(globalLeaderboard[globalLeaderboard.length - 1].zetaStr) > 0) isGlobalTop = true;
 
                                     if (isGlobalTop) {
-                                        globalLeaderboard.push({ 
-                                            uid: currentUser.uid, 
-                                            swarmId: group.id + 1,
-                                            type: evalAgent.t, 
-                                            bounce: stats.bounces, 
-                                            zetaStr: evalAgent.r.zetaStr 
-                                        });
+                                        globalLeaderboard.push({ uid: currentUser.uid, swarmId: group.id + 1, type: evalAgent.t, bounce: stats.bounces, zetaStr: evalAgent.r.zetaStr });
                                         globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
                                         if (globalLeaderboard.length > 20) globalLeaderboard.pop();
-                                        
-                                        // Save Leaderboard immediately
                                         supabaseClient.from('global_state').update({ leaderboard_data: { entries: globalLeaderboard } }).eq('id', 'main_leaderboard').then();
                                     }
                                 }
@@ -778,6 +676,23 @@
                         }
                     }
                     
+                    // SHAPE INVERSION MAPPING: Trigger artifact on geometric events
+                    if (!triggerArtifact) {
+                        if (alphaRes.cornerHit || betaRes.cornerHit) {
+                            triggerArtifact = true;
+                            artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped.";
+                        } else if (alphaRes.originCross || betaRes.originCross) {
+                            triggerArtifact = true;
+                            artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing.";
+                        }
+                        if (triggerArtifact) {
+                            artifactGroup = { 
+                                id: group.id, zetaStrAlpha: alphaRes.zetaStr, zetaStrBeta: betaRes.zetaStr,
+                                trailAlpha: [...group.alpha.trail], trailBeta: [...group.beta.trail]
+                            };
+                        }
+                    }
+
                     group.divergence = Math.sqrt(Math.pow(group.alpha.x - group.beta.x, 2) + Math.pow(group.alpha.y - group.beta.y, 2));
                     if (group.divergence > maxDivergence) maxDivergence = group.divergence;
                 });
@@ -787,15 +702,9 @@
 
             if (triggerArtifact && artifactGroup && artifacts.length < 20) {
                 artifacts.unshift({ 
-                    id: `ART-${Math.floor(Math.random()*10000)}`, 
-                    bounce: stats.bounces, 
-                    tick: globalTick,
-                    triggerSwarm: artifactGroup.id + 1,
-                    zetaStrAlpha: artifactGroup.zetaStrAlpha, 
-                    zetaStrBeta: artifactGroup.zetaStrBeta,
-                    desc: `Max Swarm Divergence: ${maxDivergence.toFixed(4)}. Novel mapping phase.`,
-                    trailAlpha: artifactGroup.trailAlpha,
-                    trailBeta: artifactGroup.trailBeta,
+                    id: `INV-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
+                    triggerSwarm: artifactGroup.id + 1, zetaStrAlpha: artifactGroup.zetaStrAlpha, zetaStrBeta: artifactGroup.zetaStrBeta,
+                    desc: artifactDesc, trailAlpha: artifactGroup.trailAlpha, trailBeta: artifactGroup.trailBeta,
                     gridSnapshot: new Map(visitedGrid) 
                 });
             }
@@ -803,49 +712,46 @@
             if (swarmHitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
                 const now = Date.now();
                 if (now - lastSaveTime > 10000) { 
-                    lastSaveBounce = stats.bounces;
-                    lastSaveTime = now;
+                    lastSaveBounce = stats.bounces; lastSaveTime = now;
                     saveStateToCloud();
                 }
             }
 
             // --- UI UPDATES ---
             if (swarmHitBoundary || Math.random() < 0.05) {
-                statBounces.innerText = stats.bounces;
-                statDivergence.innerText = maxDivergence.toFixed(4);
-                statDivergence.className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
-                statWinding.innerText = stats.windingNumber.toFixed(3);
-                statCorners.innerText = stats.cornerHits;
+                document.getElementById('statBounces').innerText = stats.bounces.toLocaleString();
+                document.getElementById('statDivergence').innerText = maxDivergence.toFixed(4);
+                document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
+                document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
 
                 if (activeTab === 'SUPER_BRAIN') {
-                    if (superVoidEl) superVoidEl.innerText = minOrbitRadius.toFixed(4);
-                    if (swarmDivergenceBars) {
-                        swarmDivergenceBars.innerHTML = fleet.map(g => `
+                    if (document.getElementById('super-void')) document.getElementById('super-void').innerText = minOrbitRadius.toFixed(4);
+                    if (document.getElementById('swarm-divergence-bars')) {
+                        document.getElementById('swarm-divergence-bars').innerHTML = fleet.map(g => `
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] w-12 text-gray-400">SWRM ${g.id+1}</span>
-                                <div class="flex-1 bg-black/50 h-2 rounded border border-gray-800"><div class="bg-blue-500 h-full transition-all" style="width: ${Math.min(100, g.divergence * 50)}%; box-shadow: 0 0 10px rgba(0,100,255,0.8);"></div></div>
-                                <span class="text-[9px] text-blue-300 w-10 text-right">${g.divergence.toFixed(3)}</span>
+                                <span class="text-[10px] w-12 text-gray-400">SWRM ${g.id+1}</span>
+                                <div class="flex-1 bg-black/50 h-2 rounded border border-gray-700"><div class="bg-cyan-400 h-full transition-all" style="width: ${Math.min(100, g.divergence * 50)}%; box-shadow: 0 0 10px rgba(0,255,255,0.8);"></div></div>
+                                <span class="text-[10px] text-cyan-200 w-10 text-right">${g.divergence.toFixed(3)}</span>
                             </div>
                         `).join('');
                     }
                 }
 
                 if (activeTab === 'HYPER') {
-                    if(hyperDim) hyperDim.innerText = (1.0 + Math.abs(stats.windingNumber * 0.0142)).toFixed(4);
-                    if(hyperErgodicity) hyperErgodicity.style.width = `${Math.min(100, (stats.bounces / 20000) * 100)}%`;
+                    const hd = document.getElementById('hyper-dim');
+                    if(hd) hd.innerText = (1.0 + Math.abs(stats.windingNumber * 0.0142)).toFixed(4);
                 }
-
                 if (activeTab === 'ZETA') {
-                    if(zetaHighEl) zetaHighEl.innerText = zetaStats.high.toLocaleString();
-                    if(zetaLowEl) zetaLowEl.innerText = zetaStats.low.toLocaleString();
+                    const zh = document.getElementById('zeta-high');
+                    if(zh) zh.innerText = zetaStats.high.toLocaleString();
                 }
 
                 if (activeTab === 'MUSEUM') {
-                    museumGallery.innerHTML = artifacts.map(art => `
-                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/30 border-yellow-600/50 p-2 rounded flex flex-col transition-all shadow-lg hover:shadow-[0_0_15px_rgba(255,255,0,0.3)]">
-                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-yellow-500/80 ml-1">SWRM ${art.triggerSwarm}</span></div>
-                            <div class="text-[7px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha}</div>
-                            <div class="text-[7px] text-magenta-300 break-all leading-tight mt-1">β: ${art.zetaStrBeta}</div>
+                    document.getElementById('museum-gallery').innerHTML = artifacts.map(art => `
+                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-yellow-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(255,255,0,0.1)] hover:shadow-[0_0_20px_rgba(255,255,0,0.4)]">
+                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-yellow-400/80 ml-1">SWRM ${art.triggerSwarm}</span></div>
+                            <div class="text-[9px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha.substring(0,25)}...</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split(':')[0]}</div>
                         </div>
                     `).join('');
                 }
@@ -856,95 +762,64 @@
                         for(let i=1; i<stabilityHistory.length; i++) intervals.push(stabilityHistory[i] - stabilityHistory[i-1]);
                         const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
                         const isStable = variance < 10;
-                        
-                        const logHTML = `
-                            <div class="${isStable ? 'text-lime-300 font-bold bg-lime-900/30' : 'text-gray-400'} p-1 border-b border-gray-800/50">
-                                Global: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '⚡ ORBIT' : ''}
-                            </div>
-                        `;
-                        
+                        const logHTML = `<div class="${isStable ? 'text-lime-300 font-bold bg-lime-900/40' : 'text-gray-400'} p-2 border-b border-gray-800/80 text-xs">Global: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '⚡ ORBIT DETECTED' : ''}</div>`;
                         stabilityLogArray.unshift(logHTML);
                         if (stabilityLogArray.length > 30) stabilityLogArray.pop(); 
-                        if (stabilityLog) stabilityLog.innerHTML = stabilityLogArray.join('');
+                        document.getElementById('stability-log').innerHTML = stabilityLogArray.join('');
                     }
                 }
 
                 if (activeTab === 'VOIDS') {
-                    if (voidRadius) voidRadius.innerText = minOrbitRadius.toFixed(4);
-                    if (voidStructure) {
-                        if (minOrbitRadius > 0.1) {
-                            voidStructure.innerText = "STRUCTURED (Caustic)";
-                            voidStructure.className = "text-lime-400 font-bold drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]";
-                        } else {
-                            voidStructure.innerText = "CHAOTIC (Origin crossed)";
-                            voidStructure.className = "text-red-400 font-bold";
-                        }
-                    }
+                    const vr = document.getElementById('void-radius');
+                    if (vr) vr.innerText = minOrbitRadius.toFixed(4);
                 }
-
-                if (activeTab === 'RANK') renderLeaderboardUI();
             }
         }
 
-        function getRuliadColor(age, maxAge = 2400) {
-            if (age < 5) return '#ffffff';                  
-            if (age < maxAge * 0.02) return '#00ffff';      
-            if (age < maxAge * 0.05) return '#00ff88';      
-            if (age < maxAge * 0.12) return '#ffff00';      
-            if (age < maxAge * 0.25) return '#ff8800';      
-            if (age < maxAge * 0.60) return '#ff00ff';      
-            return '#220044';                               
+        // --- 7-COLOR PALETTE ---
+        function getRuliadColorState(age, maxAge = 2400) {
+            if (age < 5) return '#ffffff';                  // 0/White
+            if (age < maxAge * 0.02) return '#00ffff';      // 1/Cyan
+            if (age < maxAge * 0.05) return '#00ff88';      // 2/Neon Green
+            if (age < maxAge * 0.12) return '#ffff00';      // 3/Yellow
+            if (age < maxAge * 0.25) return '#ff8800';      // 4/Orange
+            if (age < maxAge * 0.60) return '#ff00ff';      // 5/Magenta
+            return '#220044';                               // 6/Purple
         }
+
+        const colorMap = ['#ffffff', '#00ffff', '#00ff88', '#ffff00', '#ff8800', '#ff00ff', '#220044'];
 
         function renderCanvas() {
             const w = canvas.width; const h = canvas.height;
             const cx = w / 2; const cy = h / 2; const scale = Math.min(w, h) / 2 * 0.9;
 
-            ctx.fillStyle = 'rgba(5, 5, 10, 0.6)'; 
-            ctx.fillRect(0, 0, w, h);
-            
-            ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 1; 
-            ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 1; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
 
             const colorBatches = {};
-            
             fleet.forEach(group => {
                 [group.alpha, group.beta].forEach(agent => {
                     if (agent.trail.length > 1) {
                         for (let i = 1; i < agent.trail.length; i++) {
-                            const age = globalTick - agent.trail[i].tick;
-                            const color = getRuliadColor(age);
+                            const color = getRuliadColorState(globalTick - agent.trail[i].tick);
                             if (!colorBatches[color]) colorBatches[color] = [];
-                            colorBatches[color].push({
-                                x1: cx + agent.trail[i-1].x * scale,
-                                y1: cy + agent.trail[i-1].y * scale,
-                                x2: cx + agent.trail[i].x * scale,
-                                y2: cy + agent.trail[i].y * scale
-                            });
+                            colorBatches[color].push({ x1: cx + agent.trail[i-1].x * scale, y1: cy + agent.trail[i-1].y * scale, x2: cx + agent.trail[i].x * scale, y2: cy + agent.trail[i].y * scale });
                         }
                     }
                 });
             });
 
-            ctx.globalAlpha = 0.9;
-            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.9; ctx.lineWidth = 2;
             for (const color in colorBatches) {
                 ctx.beginPath();
-                colorBatches[color].forEach(line => {
-                    ctx.moveTo(line.x1, line.y1);
-                    ctx.lineTo(line.x2, line.y2);
-                });
-                ctx.strokeStyle = color;
-                ctx.stroke();
+                colorBatches[color].forEach(line => { ctx.moveTo(line.x1, line.y1); ctx.lineTo(line.x2, line.y2); });
+                ctx.strokeStyle = color; ctx.stroke();
             }
             ctx.globalAlpha = 1.0;
 
             fleet.forEach(group => {
-                ctx.beginPath(); ctx.arc(cx + group.alpha.x * scale, cy + group.alpha.y * scale, 2.5, 0, 2 * Math.PI);
-                ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
-                
-                ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 2.5, 0, 2 * Math.PI);
-                ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
+                ctx.beginPath(); ctx.arc(cx + group.alpha.x * scale, cy + group.alpha.y * scale, 3, 0, 2 * Math.PI); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
+                ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 3, 0, 2 * Math.PI); ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
             });
 
             if (activeTab === 'EYES' && eyesCanvas) {
@@ -955,19 +830,17 @@
                 
                 visitedGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
-                    const age = globalTick - cell.lastVisit;
-                    
+                    let age = globalTick - cell.lastVisit;
                     let displayAge = age;
+                    
                     if (cell.density > 2) {
                         const timeMod = Math.floor(globalTick * 0.15); 
                         const magicHash = (gx ^ gy ^ timeMod) % 25;
-                        
                         if (magicHash === 0) displayAge = 2; 
                         else if (magicHash < 3) displayAge = 40; 
                         else if (cell.density > 8 && (gx * gy + timeMod) % 15 === 0) displayAge = 200; 
                     }
-                    
-                    eCtx.fillStyle = getRuliadColor(displayAge);
+                    eCtx.fillStyle = getRuliadColorState(displayAge);
                     eCtx.fillRect((gx/gridSize)*ew + 1, (gy/gridSize)*eh + 1, cellW - 2, cellH - 2);
                 });
             }
@@ -976,14 +849,12 @@
                 const hCtx = hyperCanvas.getContext('2d');
                 hCtx.clearRect(0, 0, hyperCanvas.width, hyperCanvas.height);
                 const hw = hyperCanvas.width; const hh = hyperCanvas.height;
-                const hGridX = 40; const hGridY = 40; 
-                const hCellW = hw / hGridX; const hCellH = hh / hGridY;
+                const hCellW = hw / 40; const hCellH = hh / 40;
 
                 hyperGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
-                    const age = globalTick - cell.lastVisit;
-                    hCtx.fillStyle = getRuliadColor(age);
-                    hCtx.fillRect((gx/hGridX)*hw + 1, (gy/hGridY)*hh + 1, hCellW - 2, hCellH - 2);
+                    hCtx.fillStyle = getRuliadColorState(globalTick - cell.lastVisit);
+                    hCtx.fillRect((gx/40)*hw + 1, (gy/40)*hh + 1, hCellW - 2, hCellH - 2);
                 });
             }
 
@@ -991,47 +862,32 @@
                 const zCtx = zetaCanvas.getContext('2d');
                 zCtx.clearRect(0, 0, zetaCanvas.width, zetaCanvas.height);
                 const zw = zetaCanvas.width; const zh = zetaCanvas.height;
-                const zGridSize = 8;
-                const zCellW = zw / zGridSize; const zCellH = zh / zGridSize;
+                const zCellW = zw / 8; const zCellH = zh / 8;
 
-                for (let ix = 0; ix < zGridSize; ix++) {
-                    for (let iy = 0; iy < zGridSize; iy++) {
+                for (let ix = 0; ix < 8; ix++) {
+                    for (let iy = 0; iy < 8; iy++) {
                         const weight = Math.abs(Math.sin((ix+1) * fleet[0].beta.x * 3.14 + (iy+1) * fleet[0].beta.y * 2.71 + globalTick * 0.005));
-                        const simulatedAge = (1.0 - weight) * 2400; 
-                        
-                        zCtx.fillStyle = getRuliadColor(simulatedAge);
-                        zCtx.fillRect((ix/zGridSize)*zw + 1, (iy/zGridSize)*zh + 1, zCellW - 2, zCellH - 2);
+                        zCtx.fillStyle = getRuliadColorState((1.0 - weight) * 2400);
+                        zCtx.fillRect((ix/8)*zw + 1, (iy/8)*zh + 1, zCellW - 2, zCellH - 2);
                     }
                 }
             }
 
-            if (globalBgCanvas) {
+            // LIVE CYCLIC CELLULAR AUTOMATON BACKGROUND (Wolfram Style Reacting 2D Grid)
+            if (globalBgCanvas && bgCols > 0) {
                 const bgCtx = globalBgCanvas.getContext('2d');
                 const bgW = bgCtx.canvas.width; const bgH = bgCtx.canvas.height;
                 
-                bgCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                bgCtx.fillStyle = 'rgba(0, 0, 0, 0.4)';
                 bgCtx.fillRect(0, 0, bgW, bgH);
 
-                const bgCell = 40; 
-                const cols = Math.ceil(bgW / bgCell);
-                const rows = Math.ceil(bgH / bgCell);
-                const tShift = Math.floor(globalTick * 0.02);
-
-                for(let i=0; i<30; i++) {
-                    const gx = Math.floor(Math.random() * cols);
-                    const gy = Math.floor(Math.random() * rows);
-                    
-                    const hash = (gx ^ gy ^ tShift) % 30;
-                    let age = 3000; 
-                    
-                    if (hash === 0) age = 2; 
-                    else if (hash < 3) age = 40; 
-                    else if ((gx * gy) % 17 === 0) age = 200; 
-                    else if ((gx + gy + tShift) % 9 === 0) age = 800; 
-
-                    if (age < 3000) {
-                        bgCtx.fillStyle = getRuliadColor(age) + '44'; 
-                        bgCtx.fillRect(gx * bgCell, gy * bgCell, bgCell - 2, bgCell - 2);
+                for (let x = 0; x < bgCols; x++) {
+                    for (let y = 0; y < bgRows; y++) {
+                        let state = bgGridCA[x][y];
+                        if (state < 6) { // Don't draw the darkest purple to save GPU and keep it mostly black
+                            bgCtx.fillStyle = colorMap[state];
+                            bgCtx.fillRect(x * BG_CELL_SIZE, y * BG_CELL_SIZE, BG_CELL_SIZE - 2, BG_CELL_SIZE - 2);
+                        }
                     }
                 }
             }
@@ -1046,12 +902,7 @@
         async function initSupabaseAndStart() {
             try {
                 const SUPABASE_URL = "https://xoolmbmnzbsvcqeyqvyi.supabase.co";
-                // PASTE YOUR REAL API KEY BELOW ('eyJ...')
                 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvb2xtYm1uemJzdmNxZXlxdnlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDMwNDQsImV4cCI6MjA4NzAxOTA0NH0.ebTwMZ_byU6EXtuR0jynct64QO5ornQrCwElQ5b9TxQ";
-
-                if (SUPABASE_ANON_KEY === "REPLACE_ME_WITH_REAL_API_KEY" || !SUPABASE_ANON_KEY.startsWith("eyJ")) {
-                    throw new Error("Invalid API Key! Ensure you copied the anon/public key.");
-                }
 
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -1065,8 +916,8 @@
                 await loadStateFromCloud();
                 await setupGlobalLeaderboardListener();
                 
-                saveStatusEl.innerText = 'MULTIWAY SYNCED';
-                saveStatusEl.classList.replace('text-yellow-400', 'text-lime-500');
+                document.getElementById('save-status').innerText = 'MULTIWAY SYNCED';
+                document.getElementById('save-status').className = 'text-lime-500 font-bold';
                 
                 if (!isLoopRunning) {
                     isLoopRunning = true;
@@ -1075,8 +926,8 @@
                 }
             } catch (e) {
                 console.error("Cloud Sync Setup Error:", e);
-                saveStatusEl.innerText = e.message.includes("Invalid API Key") ? 'INVALID API KEY' : 'LOCAL ONLY (UNSAVED)';
-                saveStatusEl.classList.replace('text-yellow-400', 'text-red-500');
+                document.getElementById('save-status').innerText = 'LOCAL ONLY (UNSAVED)';
+                document.getElementById('save-status').className = 'text-red-500 font-bold';
                 if (!isLoopRunning) {
                     isLoopRunning = true;
                     setupUI();
