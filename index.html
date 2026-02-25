@@ -1,0 +1,377 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// --- CONSTANTS & CONFIG ---
+const BOX_SIZE = 1; // Logical size of the square boundary [-1, 1]
+const CORNER_TOLERANCE = 0.05; // Precision threshold for corner hit detection
+const MAX_TRAIL_MEMORY = 1000; // Constrained for web GL/Canvas performance
+const INITIAL_SPEED = 0.015;
+
+const App = () => {
+  // --- STATE: UI & TABS ---
+  const [activeTab, setActiveTab] = useState('LOG');
+  const [speed, setSpeed] = useState(5);
+  const [trailLength, setTrailLength] = useState(800);
+  
+  // --- STATE: PHYSICS OBSERVABLES ---
+  const [stats, setStats] = useState({
+    bounces: 0,
+    cornerHits: 0,
+    windingNumber: 0,
+    lyapunovProxy: 0.0,
+    freeConfigs: 180360
+  });
+
+  // --- REFS: PHYSICS ENGINE (Mutable, avoids re-renders) ---
+  const canvasRef = useRef(null);
+  const requestRef = useRef(null);
+  const agentRef = useRef({
+    x: 0.1,
+    y: 0.2,
+    vx: INITIAL_SPEED * 0.8,
+    vy: INITIAL_SPEED * 1.2,
+    theta: Math.atan2(0.2, 0.1), // For winding number
+    accumulatedTheta: 0,
+    trail: []
+  });
+  const eventLogRef = useRef([]);
+
+  // --- PHYSICS LOOP ---
+  const updatePhysics = () => {
+    let p = agentRef.current;
+    let s = { ...stats };
+    let newEvents = [];
+    let hitBoundary = false;
+
+    // Sub-stepping for simulation speed (Sonic Drive)
+    for (let step = 0; step < speed; step++) {
+      let nextX = p.x + p.vx;
+      let nextY = p.y + p.vy;
+      let bouncedX = false;
+      let bouncedY = false;
+
+      // Specular Reflection Matrix (Square Boundary)
+      if (nextX >= BOX_SIZE) { nextX = BOX_SIZE; p.vx *= -1; bouncedX = true; }
+      if (nextX <= -BOX_SIZE) { nextX = -BOX_SIZE; p.vx *= -1; bouncedX = true; }
+      if (nextY >= BOX_SIZE) { nextY = BOX_SIZE; p.vy *= -1; bouncedY = true; }
+      if (nextY <= -BOX_SIZE) { nextY = -BOX_SIZE; p.vy *= -1; bouncedY = true; }
+
+      if (bouncedX || bouncedY) {
+        hitBoundary = true;
+        s.bounces++;
+        
+        // CORNER HIT DETECTION (Nils Bergland Logic)
+        const isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
+        const isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
+        
+        if (isCornerX && isCornerY) {
+          s.cornerHits++;
+          newEvents.push(`[T=${s.bounces}] PRECISION CORNER HIT DETECTED @ (${nextX.toFixed(2)}, ${nextY.toFixed(2)})`);
+        } else {
+          newEvents.push(`[T=${s.bounces}] Vector Reflection @ (${nextX.toFixed(2)}, ${nextY.toFixed(2)})`);
+        }
+      }
+
+      // WINDING NUMBER CALCULATION
+      let nextTheta = Math.atan2(nextY, nextX);
+      let dTheta = nextTheta - p.theta;
+      // Handle wraparound
+      if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+      if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+      
+      p.accumulatedTheta += dTheta;
+      p.theta = nextTheta;
+      s.windingNumber = p.accumulatedTheta / (2 * Math.PI);
+
+      // Update positions
+      p.x = nextX;
+      p.y = nextY;
+
+      // Trail Memory (Smith Logic)
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > trailLength) {
+        p.trail.shift();
+      }
+    }
+
+    // Update Logs
+    if (newEvents.length > 0) {
+      eventLogRef.current = [...newEvents.reverse(), ...eventLogRef.current].slice(0, 50); // Keep last 50
+    }
+
+    // Update state observables (throttled for React performance)
+    if (hitBoundary || Math.random() < 0.05) {
+        setStats(prev => ({
+            ...prev,
+            bounces: s.bounces,
+            cornerHits: s.cornerHits,
+            windingNumber: s.windingNumber,
+            lyapunovProxy: Math.abs(s.windingNumber * 0.0142) // Mock proxy for UI
+        }));
+    }
+  };
+
+  // --- RENDER LOOP ---
+  const renderCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = Math.min(w, h) / 2 * 0.9; // 90% of half-width
+
+    // Clear background (Dark mode Ruliad)
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw Square Boundary
+    ctx.strokeStyle = '#33ff00';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
+
+    // Draw Corners (Highlight hit zones)
+    ctx.fillStyle = 'rgba(255, 0, 128, 0.3)';
+    const cSize = scale * CORNER_TOLERANCE * 2;
+    ctx.fillRect(cx - scale - cSize/2, cy - scale - cSize/2, cSize, cSize); // TL
+    ctx.fillRect(cx + scale - cSize/2, cy - scale - cSize/2, cSize, cSize); // TR
+    ctx.fillRect(cx - scale - cSize/2, cy + scale - cSize/2, cSize, cSize); // BL
+    ctx.fillRect(cx + scale - cSize/2, cy + scale - cSize/2, cSize, cSize); // BR
+
+    // Draw Trail (Smith Memory)
+    const trail = agentRef.current.trail;
+    if (trail.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(cx + trail[0].x * scale, cy + trail[0].y * scale);
+      for (let i = 1; i < trail.length; i++) {
+        ctx.lineTo(cx + trail[i].x * scale, cy + trail[i].y * scale);
+      }
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw Agent
+    const { x, y } = agentRef.current;
+    ctx.beginPath();
+    ctx.arc(cx + x * scale, cy + y * scale, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00ffff';
+    ctx.closePath();
+    ctx.shadowBlur = 0; // reset
+  };
+
+  // --- LIFECYCLE ---
+  const loop = () => {
+    updatePhysics();
+    renderCanvas();
+    requestRef.current = requestAnimationFrame(loop);
+  };
+
+  useEffect(() => {
+    // Handle HiDPI displays
+    const canvas = canvasRef.current;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    requestRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(requestRef.current);
+  }, [speed, trailLength]);
+
+
+  // --- SUB-COMPONENTS (TABS) ---
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'HYPER':
+        return (
+          <div className="h-full flex flex-col font-mono text-xs text-cyan-400 p-4 bg-gray-900 border border-cyan-800 rounded">
+            <h3 className="text-cyan-200 mb-2 border-b border-cyan-800 pb-1">BRANCHIAL SPACE / PHASE DIMENSIONALITY</h3>
+            <div className="flex-1 grid grid-cols-2 gap-4">
+               <div>
+                 <p className="text-gray-400">Effective Dimension $d$</p>
+                 <p className="text-2xl text-lime-400">{(1.0 + Math.abs(stats.lyapunovProxy)).toFixed(4)}</p>
+               </div>
+               <div>
+                 <p className="text-gray-400">Phase-Space Ergodicity</p>
+                 <div className="w-full bg-gray-800 h-4 mt-1 rounded overflow-hidden">
+                    <div className="bg-magenta-500 h-full" style={{width: `${Math.min(100, (stats.bounces / 5000)*100)}%`, backgroundColor: '#ff00ff'}}></div>
+                 </div>
+               </div>
+               <div className="col-span-2 mt-2">
+                 <p className="text-gray-400 mb-1">Poincaré Section (x, vx) Map</p>
+                 <div className="w-full h-32 bg-black border border-cyan-900 relative overflow-hidden">
+                    {/* Simulated scatter plot of phase space */}
+                    {Array.from({length: 40}).map((_, i) => (
+                      <div key={i} className="absolute w-1 h-1 bg-cyan-500 rounded-full opacity-50" 
+                           style={{
+                             left: `${50 + Math.sin(stats.bounces * i * 0.01) * 40}%`, 
+                             top: `${50 + Math.cos(stats.bounces * i * 0.013) * 40}%`
+                           }}></div>
+                    ))}
+                 </div>
+               </div>
+            </div>
+          </div>
+        );
+      case 'ZETA':
+        return (
+          <div className="h-full flex flex-col font-mono text-xs text-magenta-400 p-4 bg-gray-900 border border-magenta-800 rounded">
+            <h3 className="text-magenta-200 mb-2 border-b border-magenta-800 pb-1">BLADE ALGORITHMIC HEURISTICS</h3>
+            <p className="mb-2 text-gray-400">Quadratic Reality Tensor Matrix (Active weights)</p>
+            <div className="grid grid-cols-8 grid-rows-8 flex-1 gap-1">
+              {Array.from({ length: 64 }).map((_, i) => {
+                // Generative heat map effect based on current agent position
+                const intensity = Math.abs(Math.sin((i % 8) * agentRef.current.x + Math.floor(i / 8) * agentRef.current.y));
+                return (
+                  <div 
+                    key={i} 
+                    className="rounded-sm transition-colors duration-100"
+                    style={{ backgroundColor: `rgba(255, 0, 255, ${intensity * 0.8})` }}
+                  ></div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      case 'LOG':
+        return (
+          <div className="h-full flex flex-col font-mono text-xs text-lime-400 p-4 bg-black border border-lime-800 rounded overflow-hidden">
+            <h3 className="text-lime-200 mb-2 border-b border-lime-800 pb-1">CAUSAL GRAPH EVENT STREAM</h3>
+            <div className="flex-1 overflow-y-auto space-y-1 pr-2">
+              {eventLogRef.current.map((log, i) => (
+                <div key={i} className={`opacity-${100 - Math.min(i * 5, 80)} ${log.includes('CORNER') ? 'text-magenta-400 font-bold bg-gray-900' : ''}`}>
+                  {log}
+                </div>
+              ))}
+              {eventLogRef.current.length === 0 && <span className="text-gray-600">Awaiting boundary interactions...</span>}
+            </div>
+          </div>
+        );
+      default:
+        return (
+           <div className="h-full flex items-center justify-center font-mono text-gray-500 border border-gray-800 bg-gray-900 rounded">
+              [ {activeTab} MODULE CONNECTED ELSEWHERE ]
+           </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 p-4 flex flex-col font-sans selection:bg-cyan-900">
+      {/* HEADER */}
+      <header className="flex justify-between items-end border-b border-gray-700 pb-2 mb-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span className="text-cyan-500">//</span> INVERSION</h1>
+          <h2 className="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Rulial Mechanics v2</h2>
+        </div>
+        <div className="text-right font-mono text-xs text-gray-500">
+          STATUS: <span className="text-lime-500 animate-pulse">ONLINE</span><br/>
+          ENGINE: RULIAD_KINEMATICS_X1
+        </div>
+      </header>
+
+      {/* MAIN GRID */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT PANE: CANVAS & CONTROLS */}
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          
+          {/* SIMULATION VIEWPORT */}
+          <div className="relative w-full h-[500px] bg-black border border-gray-800 rounded shadow-[0_0_30px_rgba(0,255,255,0.05)] overflow-hidden">
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+            <div className="absolute top-2 left-2 text-[10px] font-mono text-gray-500 select-none">
+              GEOMETRY: SQUARE_STRICT<br/>
+              RAY_SPLIT: OFF
+            </div>
+          </div>
+
+          {/* SIMULATION CONTROLS */}
+          <div className="grid grid-cols-2 gap-4 bg-gray-900 p-4 border border-gray-800 rounded font-mono text-xs">
+            <div>
+              <label className="flex justify-between text-gray-400 mb-1">
+                <span>SONIC DRIVE (Time $\Delta t$)</span>
+                <span className="text-cyan-400">x{speed}</span>
+              </label>
+              <input 
+                type="range" min="1" max="50" value={speed} 
+                onChange={(e) => setSpeed(parseInt(e.target.value))}
+                className="w-full accent-cyan-500"
+              />
+            </div>
+            <div>
+              <label className="flex justify-between text-gray-400 mb-1">
+                <span>SMITH TRAIL MEMORY</span>
+                <span className="text-magenta-400">{trailLength} steps</span>
+              </label>
+              <input 
+                type="range" min="10" max={MAX_TRAIL_MEMORY} value={trailLength} 
+                onChange={(e) => setTrailLength(parseInt(e.target.value))}
+                className="w-full accent-magenta-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT PANE: QUADRATIC REALITY MATRIX & OBSERVABLES */}
+        <div className="flex flex-col gap-4 h-full">
+          
+          {/* MACRO OBSERVABLES DASHBOARD */}
+          <div className="bg-gray-900 p-4 border border-gray-800 rounded grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs">
+            <div className="col-span-2 border-b border-gray-800 pb-1 mb-1 text-gray-500 font-bold tracking-widest">
+              SYSTEM MACROSTATES
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-gray-500">AGG. WINDING ($W$)</span>
+              <span className="text-xl text-cyan-400 font-bold">{stats.windingNumber.toFixed(3)}</span>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-gray-500">CORNER HITS ($\epsilon$)</span>
+              <span className="text-xl text-magenta-400 font-bold">{stats.cornerHits}</span>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="text-gray-500">BOUNDARY IMPACTS</span>
+              <span className="text-lg text-white">{stats.bounces}</span>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="text-gray-500">FREE CONFIGS</span>
+              <span className="text-lg text-white">{stats.freeConfigs.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* QUADRATIC REALITY MATRIX TABS */}
+          <div className="flex-1 flex flex-col border border-gray-800 rounded overflow-hidden bg-black">
+            <div className="flex bg-gray-900 border-b border-gray-800 text-[10px] font-mono overflow-x-auto">
+              {['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 py-2 flex-shrink-0 transition-colors ${
+                    activeTab === tab 
+                      ? 'bg-black text-white border-t-2 border-cyan-500' 
+                      : 'text-gray-500 hover:text-gray-300 border-t-2 border-transparent'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex-1 p-2">
+              {renderTabContent()}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
