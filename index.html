@@ -367,6 +367,8 @@
                 let nextY = agent.y + agent.vy;
                 let bouncedX = false;
                 let bouncedY = false;
+                let isCornerX = false;
+                let isCornerY = false;
 
                 // Specular Reflection Matrix (Square Boundary)
                 if (nextX >= BOX_SIZE) { nextX = BOX_SIZE; agent.vx *= -1; bouncedX = true; }
@@ -379,8 +381,8 @@
                     stats.bounces++;
                     
                     // CORNER HIT DETECTION (Nils Bergland Logic)
-                    const isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
-                    const isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
+                    isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
+                    isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
                     
                     if (isCornerX && isCornerY) {
                         stats.cornerHits++;
@@ -439,7 +441,7 @@
                 }
 
                 // ARTIFACT STORAGE (Museum) - Store exceptionally rare moments
-                if (hitBoundary && currentZeta > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
+                if ((bouncedX || bouncedY) && currentZeta > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
                     artifacts.unshift({
                         id: `ART-${Math.floor(Math.random()*10000)}`,
                         bounce: stats.bounces,
@@ -447,7 +449,7 @@
                         desc: 'Novel Phase Space Config'
                     });
                 }
-                if (hitBoundary && isCornerX && isCornerY) {
+                if ((bouncedX || bouncedY) && isCornerX && isCornerY) {
                     artifacts.unshift({
                         id: `ART-CRN-${Math.floor(Math.random()*10000)}`,
                         bounce: stats.bounces,
