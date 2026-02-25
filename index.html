@@ -67,12 +67,12 @@
     <header class="flex justify-between items-end border-b border-cyan-900/80 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
             <h1 class="text-3xl font-black tracking-widest text-white glitch-text">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: KAM Resonance & Tensor Steering v11</h2>
+            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Flatline Epoch Architecture v12</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right text-xs text-gray-400">
                 STATUS: <span class="text-yellow-400 animate-pulse font-bold" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: AUTONOMOUS EXHAUSTION & INVERSION
+                ENGINE: FLATLINE EPOCH DETECTOR
             </div>
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
                class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-sm font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.4)]">
@@ -133,12 +133,17 @@
                     <span class="text-2xl text-magenta-400 font-bold mt-1" id="statCorners">0</span>
                 </div>
 
-                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
-                    <span class="text-gray-400 text-[11px] tracking-widest">SWARM IMPACTS</span>
-                    <span class="text-xl text-white mt-1" id="statBounces">0</span>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center relative overflow-hidden">
+                    <span class="text-gray-400 text-[11px] tracking-widest relative z-10">EPOCH IMPACTS</span>
+                    <span class="text-xl text-white mt-1 relative z-10" id="statBounces">0</span>
+                    <div class="absolute bottom-0 left-0 h-1 bg-cyan-500/50 transition-all" id="flatline-progress" style="width: 0%"></div>
                 </div>
 
-                <!-- SEARCH EPOCH TRACKER REMOVED FOR CONTINUOUS DEEP RUNS -->
+                <!-- NEW SIM COUNT AND INVERSION TRACKER -->
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/10">
+                    <span class="text-lime-300 text-[11px] tracking-widest font-bold">SIM / INVERSION</span>
+                    <span class="text-xl text-lime-400 font-bold mt-1" id="statSim">1 / FALSE</span>
+                </div>
             </div>
 
             <div class="flex-1 flex flex-col glass-panel rounded-lg overflow-hidden min-h-[300px]">
@@ -148,7 +153,6 @@
                     <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col text-sm text-blue-200">
                         <h3 class="text-blue-300 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">HIVE-MIND CROSS-REFERENCE</h3>
                         <div class="flex-1 overflow-y-auto space-y-3 pr-2">
-                            <!-- FREE COMP TRACKING -->
                             <div class="glass-sub-panel border-lime-900/80 p-2 rounded bg-lime-900/10">
                                 <p class="text-lime-400 font-bold mb-1 tracking-widest">FREE COMP: VIRTUAL TOPOLOGIES</p>
                                 <div class="flex justify-between"><span class="text-gray-300">Virtual Circle ($r=1$) Hits:</span> <span id="virt-circle" class="text-lime-300 font-bold">0</span></div>
@@ -165,11 +169,10 @@
                         </div>
                     </div>
 
-                    <!-- STRUCTURE RATIO TAB -->
                     <div id="tab-STRUCTURE_RATIO" class="hidden h-full flex flex-col text-sm text-purple-300">
                         <h3 class="text-purple-200 mb-2 border-b border-purple-800/80 pb-1 font-bold tracking-widest">MORPHOLOGICAL RATIO (Φ)</h3>
                         <div class="flex-1 flex flex-col gap-2">
-                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events (Corners/Inversions) against Chaotic Dispersion. Epoch iterations wait for Deep Fully Inverted ratios.</p>
+                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events vs Chaotic Dispersion. Epoch iterations wait for Deep Fully Inverted flatlines (Var < 1e-10).</p>
                             <div class="glass-sub-panel p-2 rounded grid grid-cols-3 gap-2 text-center text-xs">
                                 <div><span class="text-gray-400 text-[10px]">STRUCTURED</span><br><span id="val-structured" class="text-lime-400 font-bold">0</span></div>
                                 <div><span class="text-gray-400 text-[10px]">RATIO (Φ)</span><br><span id="val-ratio" class="text-purple-400 font-bold text-lg">0.000</span></div>
@@ -198,7 +201,6 @@
                         </div>
                     </div>
 
-                    <!-- VOIDS TAB WITH LIVE CONVERGENCE CHART -->
                     <div id="tab-VOIDS" class="hidden h-full flex flex-col text-sm text-teal-300">
                         <h3 class="text-teal-200 mb-2 border-b border-teal-800/80 pb-1 font-bold tracking-widest">CAUSTIC VOID CONVERGENCE</h3>
                         <div class="grid grid-cols-2 gap-2 mb-2">
@@ -219,7 +221,7 @@
 
                     <div id="tab-MUSEUM" class="hidden h-full flex flex-col text-sm text-yellow-300">
                         <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest">INVERSION SHAPE ARTIFACTS</h3>
-                        <p class="text-[10px] text-gray-400 mb-2">Logging structural inversions, Shakespeare emergent patterns, and Epoch Summaries. Click to Replay.</p>
+                        <p class="text-[10px] text-gray-400 mb-2">Logging Epochs, structural inversions, and KAM Torus resonances. Click to Replay.</p>
                         <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery"></div>
                     </div>
 
@@ -320,7 +322,6 @@
         let isSaving = false;
         let lastSaveBounce = 0;
         let lastSaveTime = 0; 
-        let lastCollectiveSyncTime = 0;
 
         // MULTI-TOPOLOGY VIRTUAL TRACKING
         let virtualHits = { circle: 0, diamond: 0 };
@@ -331,7 +332,14 @@
         let ratioHistory = []; 
         let causticHistory = []; 
         let currentTickCaustic = Infinity;
-        let recentRadii = []; // Tracks rolling window to find true breathing void boundary
+        let recentRadii = []; 
+
+        // TRUE EPOCH FLATLINE TRACKING
+        let simCount = 1;
+        let epochBounces = 0;
+        let isEpochInverted = false;
+        let baseAngleShift = 0;
+        let lastKamBounce = 0;
 
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
@@ -349,18 +357,19 @@
         let speed = 5;
         let trailLength = 200; 
         
-        let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
-        let zetaStats = { high: 0, low: 0, steers: 0 };
+        let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0 };
+        let zetaStats = { high: 0, low: 0 };
         
-        function initializeFleet() {
+        function initializeFleet(angleShift, invertBasis = false) {
+            const multiplier = invertBasis ? -1 : 1;
             return Array.from({ length: NUM_SWARMS }, (_, i) => {
-                const angle = (i / NUM_SWARMS) * Math.PI * 2;
+                const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
                 const r = 0.3;
-                const sx = Math.cos(angle) * r;
-                const sy = Math.sin(angle) * r;
+                const sx = Math.cos(angle) * r * multiplier;
+                const sy = Math.sin(angle) * r * multiplier;
                 const stheta = angle + Math.PI/4; 
-                const vx = Math.cos(stheta) * INITIAL_SPEED;
-                const vy = Math.sin(stheta) * INITIAL_SPEED;
+                const vx = Math.cos(stheta) * INITIAL_SPEED * multiplier;
+                const vy = Math.sin(stheta) * INITIAL_SPEED * multiplier;
 
                 return {
                     id: i,
@@ -371,7 +380,7 @@
             });
         }
         
-        let fleet = initializeFleet();
+        let fleet = initializeFleet(baseAngleShift, isEpochInverted);
 
         let visitedGrid = new Map(); 
         let hyperGrid = new Map(); 
@@ -381,11 +390,6 @@
         
         let stabilityHistory = [];
         let stabilityLogArray = []; 
-        let minOrbitRadius = Infinity;
-
-        // NEW: Track the true Emergence Epochs
-        let emergenceEpoch = 1;
-        let lastEmergenceBounce = 0;
 
         // CYCLIC CELLULAR AUTOMATON BG
         let bgCols = 0, bgRows = 0;
@@ -447,7 +451,7 @@
             }
         };
 
-        // --- CLOUD SYNC LOGIC (NO GRID PAYLOADS FOR DB STABILITY) ---
+        // --- CLOUD SYNC LOGIC ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
@@ -459,6 +463,10 @@
                     stats = saved.stats || stats;
                     zetaStats = saved.zetaStats || zetaStats;
                     virtualHits = saved.virtualHits || virtualHits;
+                    simCount = saved.simCount || 1;
+                    epochBounces = saved.epochBounces || 0;
+                    isEpochInverted = saved.isEpochInverted || false;
+                    baseAngleShift = saved.baseAngleShift || 0;
                     
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
                         fleet = saved.fleet.map((g, i) => ({
@@ -469,17 +477,10 @@
                         }));
                     }
                     globalTick = saved.globalTick || 0;
-                    emergenceEpoch = saved.emergenceEpoch || 1;
 
-                    // PURGE BUGGED DATA: Delete old broken epoch logs and empty records.
-                    // Only preserve logs with proper kinematics to keep the Museum pristine.
                     artifacts = (saved.artifacts || []).filter(art => 
-                        art.kinematics && 
-                        art.kinematics.alpha && 
-                        !art.id.startsWith('EPOCH-') && 
-                        !art.id.includes('undefined')
+                        art.kinematics && art.kinematics.alpha && !art.id.includes('undefined')
                     );
-                    
                     lastSaveBounce = stats.bounces;
                 }
             } catch (e) { console.error("Cloud load failed:", e); }
@@ -508,7 +509,8 @@
             
             try {
                 const state = {
-                    stats, zetaStats, virtualHits, emergenceEpoch,
+                    stats, zetaStats, virtualHits, 
+                    simCount, epochBounces, isEpochInverted, baseAngleShift,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -555,10 +557,6 @@
         let modalAnimId = null;
         let modalLocalGrid = new Map();
 
-        // NEW: Strict debouncers for guaranteed artifact logging without UI spam
-        let lastShakespeareBounce = 0;
-        let lastKamBounce = 0;
-
         function playModal() {
             if (!modalArt || !modalArt.trailAlpha) return;
             
@@ -582,7 +580,6 @@
             const bTrail = modalArt.trailBeta || [];
             const maxLen = Math.max(aTrail.length, bTrail.length);
 
-            // 200X MAX SPEED OVERDRIVE: Process 200 frames per render cycle
             for (let k = 0; k < 200; k++) {
                 if (modalTick < maxLen) {
                     if (modalTick > 0 && modalTick < aTrail.length) {
@@ -606,7 +603,7 @@
                     modalLocalGrid.forEach((visitTick, key) => {
                         const [gx, gy] = key.split(',').map(Number);
                         const age = modalTick - visitTick;
-                        rCtx.fillStyle = getRuliadColorState(age * 3); // Accelerated decay look
+                        rCtx.fillStyle = getRuliadColorState(age * 3); 
                         rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
                     });
 
@@ -637,7 +634,7 @@
                     <div class="mt-1"><span class="text-magenta-400">BETA X:</span> ${k.beta.x.toFixed(8)} | <span class="text-magenta-400">Y:</span> ${k.beta.y.toFixed(8)}</div>
                     <div><span class="text-magenta-400">BETA Vx:</span> ${k.beta.vx.toFixed(8)} | <span class="text-magenta-400">Vy:</span> ${k.beta.vy.toFixed(8)}</div>
                 </div>
-            ` : `<div class="bg-black/80 p-2 rounded border border-gray-700 text-xs text-gray-500 flex items-center justify-center font-bold">EPOCH METADATA PAYLOAD</div>`;
+            ` : ``;
 
             document.getElementById('modal-desc').innerHTML = `
                 <div class="grid grid-cols-2 gap-4">
@@ -788,26 +785,23 @@
                     const alphaRes = moveAgent(group.alpha, false);
                     const betaRes = moveAgent(group.beta, true);
                     
-                    currentTickCaustic = Math.min(currentTickCaustic, Math.sqrt(group.alpha.x**2 + group.alpha.y**2), Math.sqrt(group.beta.x**2 + group.beta.y**2));
+                    const rAlpha = Math.sqrt(group.alpha.x**2 + group.alpha.y**2);
+                    const rBeta = Math.sqrt(group.beta.x**2 + group.beta.y**2);
+                    recentRadii.push(Math.min(rAlpha, rBeta));
+                    if (recentRadii.length > 300) recentRadii.shift();
+                    currentTickCaustic = Math.min(...recentRadii);
 
                     if (alphaRes.bounced || betaRes.bounced) {
                         swarmHitBoundary = true;
                         group.bounces++;
                         stats.bounces++; 
+                        epochBounces++; // Local tracking for the flatline
                         
-                        if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) {
-                            zetaStats.high++;
-                        } else {
-                            zetaStats.low++;
-                        }
-
-                        if (alphaRes.cornerHit || betaRes.cornerHit) {
-                            stats.cornerHits++;
-                            structuredEvents++;
-                        }
+                        if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
+                        if (alphaRes.cornerHit || betaRes.cornerHit) { stats.cornerHits++; structuredEvents++; }
                         if (alphaRes.originCross || betaRes.originCross) structuredEvents++;
 
-                        stabilityHistory.push(stats.bounces);
+                        stabilityHistory.push(epochBounces);
                         if (stabilityHistory.length > 5) stabilityHistory.shift();
 
                         if (supabaseClient) {
@@ -829,19 +823,13 @@
                     }
                     
                     if (!triggerArtifact) {
-                        if (alphaRes.cornerHit || betaRes.cornerHit) {
-                            triggerArtifact = true; artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped.";
-                        } else if (alphaRes.originCross || betaRes.originCross) {
-                            triggerArtifact = true; artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing.";
-                        }
+                        if (alphaRes.cornerHit || betaRes.cornerHit) { triggerArtifact = true; artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped."; } 
+                        else if (alphaRes.originCross || betaRes.originCross) { triggerArtifact = true; artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing."; }
                         if (triggerArtifact) {
                             artifactGroup = { 
                                 id: group.id, zetaStrAlpha: alphaRes.zetaStr, zetaStrBeta: betaRes.zetaStr,
                                 trailAlpha: [...group.alpha.trail], trailBeta: [...group.beta.trail],
-                                kinematics: {
-                                    alpha: { x: group.alpha.x, y: group.alpha.y, vx: group.alpha.vx, vy: group.alpha.vy },
-                                    beta: { x: group.beta.x, y: group.beta.y, vx: group.beta.vx, vy: group.beta.vy }
-                                }
+                                kinematics: { alpha: { x: group.alpha.x, y: group.alpha.y, vx: group.alpha.vx, vy: group.alpha.vy }, beta: { x: group.beta.x, y: group.beta.y, vx: group.beta.vx, vy: group.beta.vy } }
                             };
                         }
                     }
@@ -854,36 +842,47 @@
 
                 let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
 
-                // --- EINSTEIN UPGRADE 1: KAM THEOREM (GOLDEN RATIO) DETECTOR ---
-                // Guaranteed capture using a mathematical debounce instead of random chance
-                if (stats.bounces > 20000 && Math.abs(currentRatio - 1.61803) < 0.005 && (stats.bounces - lastKamBounce) > 5000) {
-                    lastKamBounce = stats.bounces;
+                // --- EINSTEIN KAM DETECTOR ---
+                if (epochBounces > 20000 && Math.abs(currentRatio - 1.61803) < 0.005 && (epochBounces - lastKamBounce) > 5000) {
+                    lastKamBounce = epochBounces;
                     artifacts.unshift({ 
                         id: `KAM-TORUS-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
-                        desc: `KAM THEOREM RESONANCE (Φ ≈ 1.618): The system has locked onto the Golden Ratio. The ultimate unbreakable invariant torus has been isolated in the phase space.`,
+                        desc: `KAM THEOREM RESONANCE (Φ ≈ 1.618): The system has locked onto the Golden Ratio.`,
                         trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
-                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} },
-                        gridSnapshot: new Map(visitedGrid)
+                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
                     });
                     if (artifacts.length > 20) artifacts.pop();
                 }
 
-                // --- TRUE EMERGENCE EPOCH DETECTOR ---
-                // When the system reaches deep phase space (>60k steps) and all Swarms synchronize into
-                // the final, ultra-structured diamond boundary, it marks the true completion of a computational era.
-                if (stats.bounces > 60000 && currentRatio > 1.2 && (stats.bounces - lastEmergenceBounce) > 5000) {
-                    lastEmergenceBounce = stats.bounces;
+                // --- PERFECT FLATLINE DETECTOR (TRUE EPOCHS) ---
+                let variance = 1;
+                if (epochBounces > 100000 && ratioHistory.length >= 300) {
+                    const mean = ratioHistory.reduce((a,b)=>a+b,0) / ratioHistory.length;
+                    variance = ratioHistory.reduce((a,b)=>a+Math.pow(b-mean,2),0) / ratioHistory.length;
+                }
+
+                if (epochBounces > 100000 && variance < 1e-10) {
+                    // Log the perfect flatline epoch
                     artifacts.unshift({ 
-                        id: `EMERGENCE-EPOCH-${emergenceEpoch}`, bounce: stats.bounces, tick: globalTick,
+                        id: `EPOCH-FLATLINE-${simCount}`, bounce: stats.bounces, tick: globalTick,
                         triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
-                        desc: `EPOCH ${emergenceEpoch} REACHED: All random chaotic paths have been exhausted. The entire swarm matrix has successfully collapsed into the absolute diamond invariant.`,
+                        desc: `TRUE FLATLINE (Sim ${simCount}): Ratio variance hit 0. <br/>Basis Inverted: ${isEpochInverted} <br/>Epsilon Shift: +${baseAngleShift.toExponential(2)}`,
                         trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
-                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} },
-                        gridSnapshot: new Map(visitedGrid)
+                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
                     });
-                    emergenceEpoch++;
                     if (artifacts.length > 20) artifacts.pop();
+
+                    simCount++;
+                    isEpochInverted = !isEpochInverted;
+                    if (!isEpochInverted) baseAngleShift += 1e-15; // Infinitesimal shift after a full cycle
+                    
+                    fleet = initializeFleet(baseAngleShift, isEpochInverted);
+                    epochBounces = 0;
+                    ratioHistory = [];
+                    causticHistory = [];
+                    currentTickCaustic = Infinity;
+                    recentRadii = [];
                 }
 
                 if (globalTick % 20 === 0) {
@@ -904,8 +903,7 @@
                     id: `INV-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                     triggerSwarm: artifactGroup.id + 1, zetaStrAlpha: artifactGroup.zetaStrAlpha, zetaStrBeta: artifactGroup.zetaStrBeta,
                     desc: artifactDesc, trailAlpha: artifactGroup.trailAlpha, trailBeta: artifactGroup.trailBeta,
-                    kinematics: artifactGroup.kinematics,
-                    gridSnapshot: new Map(visitedGrid)
+                    kinematics: artifactGroup.kinematics
                 });
             }
 
@@ -924,6 +922,11 @@
                 document.getElementById('statDivergence').className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
                 document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
                 document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
+                
+                document.getElementById('statSim').innerText = `${simCount} / ${isEpochInverted ? 'TRUE' : 'FALSE'}`;
+                
+                const progressWidth = Math.min(100, (epochBounces / 100000) * 100);
+                document.getElementById('flatline-progress').style.width = `${progressWidth}%`;
 
                 if (activeTab === 'SUPER_BRAIN') {
                     if (document.getElementById('super-void')) document.getElementById('super-void').innerText = currentTickCaustic === Infinity ? '1.414' : currentTickCaustic.toFixed(4);
@@ -976,12 +979,12 @@
 
                 if (activeTab === 'MUSEUM') {
                     document.getElementById('museum-gallery').innerHTML = artifacts.map(art => {
-                        const isShake = art.id.includes('SHAKE');
+                        const isShake = art.id.includes('KAM') || art.id.includes('EPOCH');
                         return `
-                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-${isShake ? 'ff00ff' : (art.triggerSwarm === 'ALL' ? 'lime' : 'yellow')}-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(${isShake ? '255,0,255' : '255,255,0'},0.1)] hover:shadow-[0_0_20px_rgba(${isShake ? '255,0,255' : '255,255,0'},0.4)]">
-                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-${isShake ? 'magenta-400' : 'yellow-400/80'} ml-1">${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</span></div>
+                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-${isShake ? 'lime' : 'yellow'}-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(${isShake ? '0,255,0' : '255,255,0'},0.1)] hover:shadow-[0_0_20px_rgba(${isShake ? '0,255,0' : '255,255,0'},0.4)]">
+                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-${isShake ? 'lime-400' : 'yellow-400/80'} ml-1">${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</span></div>
                             <div class="text-[9px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha.substring(0,25)}...</div>
-                            <div class="text-[10px] text-${isShake ? 'magenta-400' : 'gray-400'} font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split('<br/>')[0].split(':')[0]}</div>
+                            <div class="text-[10px] text-${isShake ? 'lime-400' : 'gray-400'} font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split(':')[0]}</div>
                         </div>
                     `}).join('');
                 }
@@ -1077,7 +1080,6 @@
                 }
             }
 
-            // LIVE BREATHING CAUSTIC WAVEFORM
             if (activeTab === 'VOIDS' && causticCanvas) {
                 const cCtx = causticCanvas.getContext('2d');
                 const cw = causticCanvas.width; const ch = causticCanvas.height;
@@ -1086,7 +1088,7 @@
                     cCtx.beginPath();
                     for (let i=0; i<causticHistory.length; i++) {
                         const x = (i / 300) * cw;
-                        const y = ch - (causticHistory[i] / 1.414) * ch; // 1.414 = approx sqrt(2), max dist
+                        const y = ch - (causticHistory[i] / 1.414) * ch; 
                         if (i===0) cCtx.moveTo(x, y); else cCtx.lineTo(x, y);
                     }
                     cCtx.strokeStyle = '#00ffff'; cCtx.lineWidth = 2; cCtx.stroke();
