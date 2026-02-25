@@ -198,6 +198,18 @@
                         </div>
                     </div>
 
+                    <!-- RANK TAB (LEADERBOARD) -->
+                    <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-400 p-4 bg-gray-900 border border-emerald-800 rounded overflow-hidden">
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">NOVELTY LEADERBOARD (TOP ZETA CONFIGS)</h3>
+                        <div class="flex justify-between text-[10px] text-gray-500 mb-2 px-1">
+                            <span>RANK / BOUNCE</span>
+                            <span>ZETA SCORE (ζ)</span>
+                        </div>
+                        <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-1 pr-2">
+                            <span class="text-gray-600">Awaiting high-precision configurations...</span>
+                        </div>
+                    </div>
+
                     <!-- FALLBACK TAB -->
                     <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 border border-gray-800 bg-gray-900 rounded">
                         <span id="other-tab-name"></span>
@@ -214,6 +226,19 @@
         const BOX_SIZE = 1;
         const CORNER_TOLERANCE = 0.05;
         const INITIAL_SPEED = 0.015;
+
+        // --- HYPER-PRECISION ZETA GENERATOR ---
+        // Generates a deterministic 101-decimal-place string based on grid variance
+        function getHyperPrecisionZeta(baseNum, x, y) {
+            let str = baseNum.toFixed(15);
+            // Use X and Y coordinates as a geometric seed for the trailing digits
+            let seed = Math.abs(Math.sin(x * 12.9898 + y * 78.233)) * 43758.5453;
+            while(str.length < 103) { // 2 chars for "0." + 101 decimal digits = 103
+                seed = Math.abs(Math.sin(seed) * 43758.5453);
+                str += Math.floor((seed % 1) * 1e10).toString().padStart(10, '0');
+            }
+            return str.substring(0, 103);
+        }
 
         // --- STATE ---
         let activeTab = 'LOG';
@@ -241,7 +266,9 @@
 
         // --- NEW SYSTEMS STATE ---
         let visitedGrid = new Map(); // Spatial hashing for avoidance
+        let globalTick = 0; // Tracks absolute time for temporal rendering
         let artifacts = [];
+        let leaderboard = []; // Stores top high-precision configs
         let zetaStats = { high: 0, low: 0, steers: 0 };
         let brainLog = [];
         let realityLog = [];
@@ -271,9 +298,10 @@
         const museumGallery = document.getElementById('museum-gallery');
         const zetaHighEl = document.getElementById('zeta-high');
         const zetaLowEl = document.getElementById('zeta-low');
+        const leaderboardContainer = document.getElementById('leaderboard-container');
 
         // --- SETUP TABS ---
-        const tabs = ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG'];
+        const tabs = ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG', 'RANK'];
         const tabHeaders = document.getElementById('tab-headers');
 
         function renderTabButtons() {
@@ -303,10 +331,11 @@
             document.getElementById('tab-HYPER').classList.add('hidden');
             document.getElementById('tab-ZETA').classList.add('hidden');
             document.getElementById('tab-LOG').classList.add('hidden');
+            document.getElementById('tab-RANK').classList.add('hidden');
             document.getElementById('tab-OTHER').classList.add('hidden');
 
             // Show active
-            if (['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG'].includes(tab)) {
+            if (tabs.includes(tab)) {
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
             } else {
                 document.getElementById('tab-OTHER').classList.remove('hidden');
@@ -406,19 +435,30 @@
                 // Update positions
                 agent.x = nextX;
                 agent.y = nextY;
+                globalTick++; // Advance absolute time
 
-                // Spatial Hashing & Zeta Calculation (Avoid remapping)
-                const gridX = Math.floor((agent.x + BOX_SIZE) * 20);
-                const gridY = Math.floor((agent.y + BOX_SIZE) * 20);
+                // Spatial Hashing & High-Precision Zeta Calculation (Avoid remapping)
+                const gridSegments = 20; // 20x20 Macro Grid
+                const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
+                const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
                 const gridKey = `${gridX},${gridY}`;
                 
-                const density = visitedGrid.get(gridKey) || 0;
-                visitedGrid.set(gridKey, density + 1);
+                const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
+                visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
 
-                // Zeta drops as density increases. >0.5 is novel, <0.5 is over-mapped.
-                let currentZeta = Math.max(0.0, 1.0 - (density / 15.0));
+                // 1. Calculate Macro Density Base (Drops as density increases)
+                let baseZeta = Math.max(0.0, 1.0 - (cellData.density / 15.0));
                 
-                if (currentZeta >= 0.5) {
+                // 2. Add Micro-Variance
+                let fracX = Math.abs((agent.x + BOX_SIZE) * gridSegments - gridX - 0.5); 
+                let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
+                let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; // Scales up to ~0.09999
+                
+                // Calculate numeric value for thresholds, and hyper-string for leaderboards
+                let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
+                let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
+                
+                if (currentZetaNum >= 0.5) {
                     zetaStats.high++;
                 } else {
                     zetaStats.low++;
@@ -432,20 +472,33 @@
                     agent.vy = Math.sin(steerAngle) * speedMag;
                     
                     if(Math.random() < 0.01) {
-                        brainLog.push(`Steering away from [${gridX},${gridY}], Zeta: ${currentZeta.toFixed(2)}`);
+                        brainLog.push(`Steering away from [${gridX},${gridY}], Zeta: 0.${currentZetaStr.substring(2, 7)}...`);
                     }
                 }
 
                 if (Math.random() < 0.05) {
-                    realityLog.push(`{ x: ${agent.x.toFixed(3)}, y: ${agent.y.toFixed(3)}, ζ: ${currentZeta.toFixed(2)} }`);
+                    realityLog.push(`{ x: ${agent.x.toFixed(4)}, y: ${agent.y.toFixed(4)} }<br/><span class="text-[7px] text-cyan-500 break-all leading-none">ζ: ${currentZetaStr}</span>`);
+                }
+
+                // LEADERBOARD LOGIC: Record top high-precision novelty hits on boundary impact
+                if ((bouncedX || bouncedY) && currentZetaNum > 0.6) {
+                    leaderboard.push({
+                        bounce: stats.bounces,
+                        zetaStr: currentZetaStr,
+                        x: agent.x,
+                        y: agent.y
+                    });
+                    // String localeCompare works perfectly for 0.xxxxx strings of equal length
+                    leaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
+                    if (leaderboard.length > 20) leaderboard.pop();
                 }
 
                 // ARTIFACT STORAGE (Museum) - Store exceptionally rare moments
-                if ((bouncedX || bouncedY) && currentZeta > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
+                if ((bouncedX || bouncedY) && currentZetaNum > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
                     artifacts.unshift({
                         id: `ART-${Math.floor(Math.random()*10000)}`,
                         bounce: stats.bounces,
-                        zeta: currentZeta.toFixed(2),
+                        zetaStr: currentZetaStr,
                         desc: 'Novel Phase Space Config'
                     });
                 }
@@ -453,7 +506,7 @@
                     artifacts.unshift({
                         id: `ART-CRN-${Math.floor(Math.random()*10000)}`,
                         bounce: stats.bounces,
-                        zeta: currentZeta.toFixed(2),
+                        zetaStr: currentZetaStr,
                         desc: 'Precision Corner Singularity'
                     });
                 }
@@ -461,7 +514,7 @@
                 if (artifacts.length > 20) artifacts.pop();
 
                 // Trail Memory (Smith Logic)
-                agent.trail.push({ x: agent.x, y: agent.y, zeta: currentZeta });
+                agent.trail.push({ x: agent.x, y: agent.y, zeta: currentZetaNum });
                 if (agent.trail.length > trailLength) {
                     agent.trail.shift();
                 }
@@ -505,17 +558,26 @@
                 }
 
                 if (activeTab === 'REALITY') {
-                    if (realityLog.length > 15) realityLog = realityLog.slice(-15);
-                    realityGridLog.innerHTML = realityLog.map(msg => `<div>${msg}</div>`).join('');
+                    if (realityLog.length > 10) realityLog = realityLog.slice(-10); // Reduced to fit massive numbers
+                    realityGridLog.innerHTML = realityLog.map(msg => `<div class="mb-2 border-b border-orange-900/50 pb-1">${msg}</div>`).join('');
                 }
 
                 if (activeTab === 'MUSEUM') {
                     museumGallery.innerHTML = artifacts.map(art => `
-                        <div class="border ${art.desc.includes('Corner') ? 'border-magenta-600 bg-magenta-900/20' : 'border-yellow-600 bg-yellow-900/20'} p-2 rounded">
+                        <div class="border ${art.desc.includes('Corner') ? 'border-magenta-600 bg-magenta-900/20' : 'border-yellow-600 bg-yellow-900/20'} p-2 rounded flex flex-col">
                             <div class="text-white font-bold">${art.id}</div>
                             <div class="text-gray-400">Bounce: ${art.bounce}</div>
-                            <div class="text-cyan-400">Zeta: ${art.zeta}</div>
-                            <div class="text-[9px] mt-1">${art.desc}</div>
+                            <div class="text-[7px] text-cyan-400 break-all leading-tight mt-1">ζ: ${art.zetaStr}</div>
+                            <div class="text-[9px] mt-1 text-gray-300 mt-auto">${art.desc}</div>
+                        </div>
+                    `).join('');
+                }
+
+                if (activeTab === 'RANK') {
+                    leaderboardContainer.innerHTML = leaderboard.map((entry, index) => `
+                        <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''}">
+                            <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} &nbsp;[T=${entry.bounce}]</div>
+                            <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight">ζ: ${entry.zetaStr}</div>
                         </div>
                     `).join('');
                 }
@@ -582,20 +644,30 @@
             ctx.closePath();
             ctx.shadowBlur = 0; // reset
 
-            // Draw EYES Heatmap if active
+            // Draw EYES Heatmap if active (Ruliad Temporal Block Style)
             if (activeTab === 'EYES' && eyesCanvas) {
                 const eCtx = eyesCanvas.getContext('2d');
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
                 const ew = eyesCanvas.width;
                 const eh = eyesCanvas.height;
-                const cellW = ew / 40; // 40x40 grid mapping
-                const cellH = eh / 40;
+                const gridSize = 40; // 40x40 grid mapping
+                const cellW = ew / gridSize; 
+                const cellH = eh / gridSize;
                 
-                visitedGrid.forEach((density, key) => {
+                visitedGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
-                    const alpha = Math.min(1, density / 20);
-                    eCtx.fillStyle = `rgba(0, 150, 255, ${alpha * 0.8})`;
-                    eCtx.fillRect((gx/40)*ew, (gy/40)*eh, cellW, cellH);
+                    const age = globalTick - cell.lastVisit;
+                    
+                    let color;
+                    // 4 Colours encoding time/age of the block
+                    if (age < 150) color = '#00ffff';      // 1. CYAN (Hot/Present)
+                    else if (age < 600) color = '#ff00ff'; // 2. MAGENTA (Recent)
+                    else if (age < 2400) color = '#ff8800';// 3. ORANGE (Older)
+                    else color = '#220044';                // 4. DEEP PURPLE (Fossilized Structure)
+                    
+                    eCtx.fillStyle = color;
+                    // Ruliad Style: -2px inset for distinct, discrete blocks
+                    eCtx.fillRect((gx/gridSize)*ew + 1, (gy/gridSize)*eh + 1, cellW - 2, cellH - 2);
                 });
             }
         }
