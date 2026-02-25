@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Genesis // Inversion</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SUPABASE CLIENT -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;700;900&display=swap');
         
@@ -32,9 +34,16 @@
             <h1 class="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
             <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Rulial Mechanics v2</h2>
         </div>
-        <div class="text-right font-mono text-xs text-gray-500">
-            STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING CLOUD...</span><br/>
-            ENGINE: RULIAD_KINEMATICS_X1 (MULTIWAY)
+        <div class="flex items-center gap-6">
+            <div class="text-right font-mono text-xs text-gray-500">
+                STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
+                ENGINE: RULIAD_KINEMATICS_X1 (MULTIWAY)
+            </div>
+            <!-- BUY ME A COFFEE TIP JAR -->
+            <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
+               class="bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-xs font-bold font-mono tracking-widest flex items-center gap-2">
+                <span>☕</span> TIP JAR
+            </a>
         </div>
     </header>
 
@@ -221,19 +230,15 @@
     </div>
 
     <!-- ENGINE SCRIPT & CLOUD SYNC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         // --- CONSTANTS & CONFIG ---
         const BOX_SIZE = 1;
         const CORNER_TOLERANCE = 0.05;
         const INITIAL_SPEED = 0.015;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'genesis-ruliad-v2';
 
-        // --- FIREBASE CLOUD STATE ---
-        let app, auth, db, currentUser;
+        // --- SUPABASE CLOUD STATE ---
+        let supabaseClient;
+        let currentUser;
         let isLoopRunning = false;
         let isSaving = false;
         let lastSaveBounce = 0;
@@ -241,15 +246,10 @@
         // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED) ---
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
-            
-            // Deterministic Linear Congruential Generator (LCG) for absolute cross-platform math parity.
-            // Avoids browser-specific Math.sin() floating-point micro-deviations at extreme decimals.
-            // Bitwise XOR (^) securely maps float coordinates to a strict 32-bit integer seed.
             let seed = Math.abs(Math.floor(x * 10000000) ^ Math.floor(y * 10000000));
-            if (seed === 0) seed = 123456789; // Protect against origin 0 singularity
+            if (seed === 0) seed = 123456789; 
             
             while(str.length < 103) { 
-                // Strict mathematical modulo progression
                 seed = (seed * 9301 + 49297) % 233280; 
                 let fraction = seed / 233280;
                 str += Math.floor(fraction * 1e10).toString().padStart(10, '0');
@@ -267,10 +267,10 @@
         let eventLog = [];
 
         let visitedGrid = new Map();
-        let hyperGrid = new Map(); // Phase space (x, theta) mapping
+        let hyperGrid = new Map(); 
         let globalTick = 0; 
         let artifacts = [];
-        let globalLeaderboard = []; // Multiway shared leaderboard
+        let globalLeaderboard = []; 
         let zetaStats = { high: 0, low: 0, steers: 0 };
         let brainLog = [];
         let realityLog = [];
@@ -334,7 +334,6 @@
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
                 if (tab === 'RANK') renderLeaderboardUI();
                 
-                // FIX: Force canvases to recalculate their dimensions once unhidden
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
             } else {
                 document.getElementById('tab-OTHER').classList.remove('hidden');
@@ -342,26 +341,29 @@
             }
         };
 
-        // --- CLOUD SYNC LOGIC (MULTIWAY PUBLIC & PRIVATE) ---
+        // --- CLOUD SYNC LOGIC (SUPABASE) ---
         async function loadStateFromCloud() {
-            if (!currentUser || !db) return;
+            if (!supabaseClient || !currentUser) return;
             try {
-                // 1. Load private state (visited grid, exact coordinate positioning)
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sim_data', 'primary_save');
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    stats = data.stats || stats;
-                    agent = { ...agent, ...data.agent, trail: [] }; 
-                    globalTick = data.globalTick || 0;
-                    artifacts = data.artifacts || [];
-                    zetaStats = data.zetaStats || zetaStats;
+                const { data, error } = await supabaseClient
+                    .from('saves')
+                    .select('state_data')
+                    .eq('user_id', currentUser.uid)
+                    .single();
+
+                if (data && data.state_data) {
+                    const saved = data.state_data;
+                    stats = saved.stats || stats;
+                    agent = { ...agent, ...saved.agent, trail: [] }; 
+                    globalTick = saved.globalTick || 0;
+                    artifacts = saved.artifacts || [];
+                    zetaStats = saved.zetaStats || zetaStats;
                     
-                    if (data.visitedGrid) {
-                        try {
-                            const parsedGrid = JSON.parse(data.visitedGrid);
-                            visitedGrid = new Map(parsedGrid);
-                        } catch(e) { visitedGrid = new Map(); }
+                    if (saved.visitedGrid) {
+                        try { visitedGrid = new Map(JSON.parse(saved.visitedGrid)); } catch(e) {}
+                    }
+                    if (saved.hyperGrid) {
+                        try { hyperGrid = new Map(JSON.parse(saved.hyperGrid)); } catch(e) {}
                     }
                     lastSaveBounce = stats.bounces;
                 }
@@ -370,22 +372,35 @@
             }
         }
 
-        function setupGlobalLeaderboardListener() {
-            if (!currentUser || !db) return;
-            // 2. Set up realtime public listening for global multi-user competition
-            const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_state', 'leaderboard');
-            onSnapshot(publicDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    globalLeaderboard = docSnap.data().entries || [];
-                    if (activeTab === 'RANK') renderLeaderboardUI();
-                }
-            }, (error) => {
-                console.error("Global leaderboard sync error:", error);
-            });
+        async function setupGlobalLeaderboardListener() {
+            if (!supabaseClient) return;
+            
+            // Initial fetch
+            const { data } = await supabaseClient
+                .from('global_state')
+                .select('leaderboard_data')
+                .eq('id', 'main_leaderboard')
+                .single();
+                
+            if (data && data.leaderboard_data) {
+                globalLeaderboard = data.leaderboard_data.entries || [];
+                if (activeTab === 'RANK') renderLeaderboardUI();
+            }
+
+            // Realtime Subscription
+            supabaseClient
+                .channel('public:global_state')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'global_state', filter: 'id=eq.main_leaderboard' }, payload => {
+                    if (payload.new && payload.new.leaderboard_data) {
+                        globalLeaderboard = payload.new.leaderboard_data.entries || [];
+                        if (activeTab === 'RANK') renderLeaderboardUI();
+                    }
+                })
+                .subscribe();
         }
 
         async function saveStateToCloud() {
-            if (!currentUser || !db || isSaving) return;
+            if (!supabaseClient || !currentUser || isSaving) return;
             isSaving = true;
             saveStatusEl.innerText = 'SYNCING REALITY...';
             saveStatusEl.classList.replace('text-lime-500', 'text-yellow-500');
@@ -400,11 +415,13 @@
                     globalTick,
                     artifacts,
                     zetaStats,
-                    visitedGrid: JSON.stringify(Array.from(visitedGrid.entries()))
+                    visitedGrid: JSON.stringify(Array.from(visitedGrid.entries())),
+                    hyperGrid: JSON.stringify(Array.from(hyperGrid.entries()))
                 };
                 
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sim_data', 'primary_save');
-                await setDoc(docRef, state);
+                await supabaseClient
+                    .from('saves')
+                    .upsert({ user_id: currentUser.uid, state_data: state });
                 
                 saveStatusEl.innerText = 'MULTIWAY CLOUD SYNCED';
                 saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
@@ -424,11 +441,13 @@
             }
             leaderboardContainer.innerHTML = globalLeaderboard.map((entry, index) => {
                 const isMe = currentUser && entry.uid === currentUser.uid;
+                // Obfuscate UUID slightly for display safety
+                const displayUid = entry.uid.split('-')[0] + '...';
                 return `
                 <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-1 bg-emerald-900/10' : ''}">
                     <div class="flex justify-between w-full">
                         <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1}</div>
-                        <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : entry.uid}</div>
+                        <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : displayUid}</div>
                         <div class="text-emerald-600 text-[9px]">[T=${entry.bounce}]</div>
                     </div>
                     <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
@@ -446,7 +465,6 @@
                 [eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
                     if(c && c.parentElement) {
                         const r = c.parentElement.getBoundingClientRect();
-                        // FIX: Only resize if the tab is actually visible (> 0)
                         if (r.width > 0 && r.height > 0) {
                             c.width = r.width;
                             c.height = r.height;
@@ -465,15 +483,6 @@
                 trailLength = parseInt(e.target.value);
                 trailLabel.innerText = `${trailLength} steps`;
             });
-            
-            const scatter = document.getElementById('hyper-scatter');
-            if (scatter) {
-                scatter.innerHTML = Array.from({ length: 40 }).map((_, i) => `
-                    <div class="absolute w-1 h-1 bg-cyan-500 rounded-full opacity-50" 
-                         style="left: ${50 + Math.sin(i * 0.5) * 40}%; top: ${50 + Math.cos(i * 0.6) * 40}%">
-                    </div>
-                `).join('');
-            }
 
             renderTabButtons();
             window.switchTab(activeTab);
@@ -492,8 +501,7 @@
                 let isCornerX = false;
                 let isCornerY = false;
 
-                // EXACT PHASE SPACE FOLDING (Continuous Collision Detection)
-                // Preserves absolute momentum magnitude; no fractional distance is lost to coordinate clamping.
+                // EXACT PHASE SPACE FOLDING
                 if (nextX > BOX_SIZE) { 
                     let overlap = nextX - BOX_SIZE;
                     nextX = BOX_SIZE - overlap; 
@@ -533,9 +541,8 @@
                     }
                 }
 
-                // WINDING NUMBER CALCULATION (With Origin Singularity Protection)
                 let nextTheta = agent.theta;
-                if (nextX !== 0 || nextY !== 0) { // Prevent Math.atan2(0,0) NaN collapse
+                if (nextX !== 0 || nextY !== 0) {
                     nextTheta = Math.atan2(nextY, nextX);
                 }
                 
@@ -564,9 +571,8 @@
                 let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
                 let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
                 
-                // Track Phase Space for HYPER Tab (x, theta)
                 const hyperX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
-                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40); // 40 segments for angle
+                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40);
                 const hyperKey = `${hyperX},${hyperTheta}`;
                 const hyperCellData = hyperGrid.get(hyperKey) || { density: 0, lastVisit: 0 };
                 hyperGrid.set(hyperKey, { density: hyperCellData.density + 1, lastVisit: globalTick });
@@ -595,8 +601,7 @@
                 }
 
                 // MULTI-USER GLOBAL LEADERBOARD LOGIC
-                if ((bouncedX || bouncedY) && currentZetaNum > 0.6 && currentUser && db) {
-                    // Determine if this score beats the global array limits
+                if ((bouncedX || bouncedY) && currentZetaNum > 0.6 && supabaseClient) {
                     let isGlobalTop = false;
                     if (globalLeaderboard.length < 20) {
                         isGlobalTop = true;
@@ -608,7 +613,6 @@
                     }
 
                     if (isGlobalTop) {
-                        // Push locally to immediately reflect, and save directly to public collection
                         globalLeaderboard.push({
                             uid: currentUser.uid,
                             bounce: stats.bounces, 
@@ -619,8 +623,9 @@
                         globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
                         if (globalLeaderboard.length > 20) globalLeaderboard.pop();
                         
-                        const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_state', 'leaderboard');
-                        setDoc(publicDocRef, { entries: globalLeaderboard }).catch(console.error);
+                        supabaseClient.from('global_state').update({
+                            leaderboard_data: { entries: globalLeaderboard }
+                        }).eq('id', 'main_leaderboard').then();
                     }
                 }
 
@@ -638,7 +643,6 @@
                 }
             }
 
-            // AUTO-SAVE LOGIC (Private State)
             if (hitBoundary && (stats.bounces - lastSaveBounce >= 100)) {
                 lastSaveBounce = stats.bounces;
                 saveStateToCloud();
@@ -775,8 +779,8 @@
                 hCtx.clearRect(0, 0, hyperCanvas.width, hyperCanvas.height);
                 const hw = hyperCanvas.width;
                 const hh = hyperCanvas.height;
-                const hGridX = 40; // Spatial resolution
-                const hGridY = 40; // Angular resolution
+                const hGridX = 40; 
+                const hGridY = 40; 
                 const hCellW = hw / hGridX;
                 const hCellH = hh / hGridY;
 
@@ -801,11 +805,7 @@
 
                 for (let ix = 0; ix < zGridSize; ix++) {
                     for (let iy = 0; iy < zGridSize; iy++) {
-                        // Calculate live tensor weight based on agent coordinates
                         const weight = Math.abs(Math.sin((ix+1) * agent.x * 3.14 + (iy+1) * agent.y * 2.71 + globalTick * 0.005));
-                        
-                        // Treat raw numeric weight as "temporal age" to hijack the Ruliad color pallete
-                        // High weight (1.0) = Present/Cyan. Low weight (0.0) = Fossilized/Purple.
                         const simulatedAge = (1.0 - weight) * 2400; 
                         
                         zCtx.fillStyle = getRuliadColor(simulatedAge);
@@ -822,43 +822,42 @@
             requestAnimationFrame(loop);
         }
 
-        async function initFirebaseAndStart() {
+        async function initSupabaseAndStart() {
             try {
-                if (typeof __firebase_config !== 'undefined') {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+                // 👇 --- SUPABASE CONFIGURATION --- 👇
+                // Extracted from your provided Edge Function URL string
+                const SUPABASE_URL = "https://xoolmbmnzbsvcqeyqvyi.supabase.co";
+                
+                // You provided the project ID below. If this fails to connect, replace this string
+                // with the long "anon / public" API key from your Supabase Project API Settings.
+                const SUPABASE_ANON_KEY = "xoolmbmnzbsvcqeyqvyi";
 
-                    // 1. Authenticate FIRST
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+                // Initialize client
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-                    // 2. Wait for user object and sync cloud data
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            currentUser = user;
-                            await loadStateFromCloud();
-                            setupGlobalLeaderboardListener(); // Init Multiway Listening
-                            
-                            saveStatusEl.innerText = 'MULTIWAY SYNCED';
-                            saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
-                            
-                            if (!isLoopRunning) {
-                                isLoopRunning = true;
-                                setupUI();
-                                requestAnimationFrame(loop);
-                            }
-                        }
-                    });
-                } else {
-                    throw new Error("No Firebase config found in environment.");
+                // ZERO-FRICTION ANONYMOUS AUTHENTICATION
+                // We generate a strict UUID locally and store it to track the user invisibly
+                let localUid = localStorage.getItem('ruliad_uid');
+                if (!localUid) {
+                    localUid = 'USR-' + crypto.randomUUID();
+                    localStorage.setItem('ruliad_uid', localUid);
+                }
+                currentUser = { uid: localUid };
+
+                // 2. Wait for user object and sync cloud data
+                await loadStateFromCloud();
+                await setupGlobalLeaderboardListener();
+                
+                saveStatusEl.innerText = 'MULTIWAY SYNCED';
+                saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
+                
+                if (!isLoopRunning) {
+                    isLoopRunning = true;
+                    setupUI();
+                    requestAnimationFrame(loop);
                 }
             } catch (e) {
-                console.warn("Running locally (Cloud Sync Unavailable):", e);
+                console.warn("Cloud Sync Setup Error. Check API Key:", e);
                 saveStatusEl.innerText = 'LOCAL ONLY (UNSAVED)';
                 saveStatusEl.classList.replace('text-yellow-500', 'text-gray-500');
                 if (!isLoopRunning) {
@@ -869,7 +868,7 @@
             }
         }
 
-        window.onload = initFirebaseAndStart;
+        window.onload = initSupabaseAndStart;
     </script>
 </body>
 </html>
