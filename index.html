@@ -12,7 +12,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         body {
-            /* Applied Calculator Font Globally */
             font-family: 'Share Tech Mono', monospace;
             background-color: #000000;
             color: #d1d5db;
@@ -24,13 +23,12 @@
         ::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(0,255,255,0.6); }
 
-        /* Munker-White Illusion Global Overlay */
+        /* Munker-White Illusion Global Overlay - Absolute Highest Z-Index */
         .munker-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
-            z-index: 99999;
-            /* Aggressive 3px interleaving to force hue shifts in the brain */
+            z-index: 999999;
             background: repeating-linear-gradient(
                 0deg,
                 rgba(0, 0, 0, 0.6) 0px,
@@ -54,7 +52,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Glitch effect for titles */
         .glitch-text {
             text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
         }
@@ -70,12 +67,12 @@
     <header class="flex justify-between items-end border-b border-cyan-900/80 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
             <h1 class="text-3xl font-black tracking-widest text-white glitch-text">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Munker-White CA Engine v6</h2>
+            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Munker-White CA Engine v8</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right text-xs text-gray-400">
                 STATUS: <span class="text-yellow-400 animate-pulse font-bold" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: SHAPE INVERSION MAPPING
+                ENGINE: AUTONOMOUS EXHAUSTION ITERATION
             </div>
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
                class="bg-yellow-500/20 border border-yellow-500/80 text-yellow-400 hover:bg-yellow-500 hover:text-black transition-all px-4 py-2 rounded text-sm font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,0,0.4)]">
@@ -92,7 +89,7 @@
             
             <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.15)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
-                <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/60 px-2 py-1 rounded border border-cyan-900/50">
+                <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/80 px-2 py-1 rounded border border-cyan-900/50">
                     GEOMETRY: SQUARE_STRICT<br/>
                     MODE: INVERSION MAPPING (14 AGENTS)<br/>
                     <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span>
@@ -141,9 +138,10 @@
                     <span class="text-xl text-white mt-1" id="statBounces">0</span>
                 </div>
 
-                <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
-                    <span class="text-gray-400 text-[11px] tracking-widest">FREE CONFIGS</span>
-                    <span class="text-xl text-white mt-1" id="statConfigs">180,360</span>
+                <!-- NEW SEARCH EPOCH TRACKER -->
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/20">
+                    <span class="text-lime-300 text-[11px] tracking-widest font-bold">SEARCH EPOCH</span>
+                    <span class="text-2xl text-lime-400 font-bold mt-1 shadow-lime" id="statEpoch">1</span>
                 </div>
             </div>
 
@@ -153,7 +151,7 @@
                 <div class="flex-1 p-3 relative">
                     <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col text-sm text-blue-200">
                         <h3 class="text-blue-300 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">HIVE-MIND CROSS-REFERENCE</h3>
-                        <div class="flex-1 overflow-y-auto space-y-3">
+                        <div class="flex-1 overflow-y-auto space-y-3 pr-2">
                             <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
                                 <p class="text-blue-400 font-bold mb-1 tracking-widest">COLLECTIVE INVARIANTS</p>
                                 <div class="flex justify-between"><span class="text-gray-300">Energy (Velocity):</span> <span class="text-lime-400 font-bold">CONSERVATION</span></div>
@@ -166,6 +164,26 @@
                             <div class="glass-sub-panel border-blue-900/80 p-2 rounded">
                                 <p class="text-blue-400 font-bold mb-1 tracking-widest">VOID DETECTION</p>
                                 <div class="flex justify-between"><span class="text-gray-300">Shared Caustic Radius:</span> <span id="super-void" class="text-cyan-400 font-bold">0.000</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW STRUCTURE RATIO TAB -->
+                    <div id="tab-STRUCTURE_RATIO" class="hidden h-full flex flex-col text-sm text-purple-300">
+                        <h3 class="text-purple-200 mb-2 border-b border-purple-800/80 pb-1 font-bold tracking-widest">MORPHOLOGICAL RATIO (Φ)</h3>
+                        <div class="flex-1 flex flex-col gap-2">
+                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events (Corners/Inversions/Orbits) against Chaotic Dispersion (Divergence &gt; 0.3). Flatlines reveal invariants.</p>
+                            <div class="glass-sub-panel p-2 rounded grid grid-cols-3 gap-2 text-center text-xs">
+                                <div><span class="text-gray-400 text-[10px]">STRUCTURED</span><br><span id="val-structured" class="text-lime-400 font-bold">0</span></div>
+                                <div><span class="text-gray-400 text-[10px]">RATIO (Φ)</span><br><span id="val-ratio" class="text-purple-400 font-bold text-lg">0.000</span></div>
+                                <div><span class="text-gray-400 text-[10px]">CHAOTIC</span><br><span id="val-chaotic" class="text-red-400 font-bold">0</span></div>
+                            </div>
+                            <!-- NEW EMERGENCE TREND TRACKER -->
+                            <div class="mt-1 text-center text-[10px] font-bold tracking-widest text-cyan-500 bg-black/50 p-1 rounded border border-cyan-900/50" id="chaos-trend">
+                                EMERGENCE TREND: GATHERING DATA...
+                            </div>
+                            <div class="flex-1 relative glass-sub-panel rounded overflow-hidden mt-1">
+                                <canvas id="ratioCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                             </div>
                         </div>
                     </div>
@@ -254,37 +272,36 @@
                             <span class="text-gray-500">Syncing multiway data stream...</span>
                         </div>
                     </div>
-
-                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center text-gray-500 glass-sub-panel rounded text-center p-4">
-                        <span id="other-tab-name"></span>
-                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <!-- ARTIFACT RENDER MODAL -->
-    <div id="artifactModal" class="fixed inset-0 z-[100000] hidden items-center justify-center p-8 bg-black/80 backdrop-blur-md">
-        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded-xl shadow-[0_0_100px_rgba(0,255,255,0.4)] overflow-hidden border-2 border-cyan-500">
+    <div id="artifactModal" class="fixed inset-0 z-[90000] hidden items-center justify-center p-8 bg-black/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-5xl h-[85vh] flex flex-col rounded-xl shadow-[0_0_100px_rgba(0,255,255,0.4)] overflow-hidden border-2 border-cyan-500">
             <div class="bg-gray-900/90 border-b border-cyan-500 p-4 flex justify-between items-center">
                 <h2 class="text-cyan-400 font-bold tracking-widest text-xl glitch-text" id="modal-title">ARTIFACT RENDER</h2>
                 <button onclick="closeModal()" class="text-red-500 hover:text-red-300 text-3xl font-bold px-2 transition-colors leading-none">&times;</button>
             </div>
+            
             <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/60 relative">
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-cyan-800/80 p-2 z-10 text-center text-xs text-cyan-300 font-bold tracking-widest">
-                        2D TRAJECTORY SPACE
+                    <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-cyan-800/80 p-2 z-10 text-center text-xs text-cyan-300 font-bold tracking-widest flex justify-between px-4">
+                        <span>2D TRAJECTORY SPACE</span>
+                        <span class="text-yellow-400 animate-pulse">LIVE RECONSTRUCTION</span>
                     </div>
                     <canvas id="modalTrajCanvas" class="w-full h-full"></canvas>
                 </div>
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-magenta-800/80 p-2 z-10 text-center text-xs text-magenta-300 font-bold tracking-widest">
-                        RULIAD BLOCK PATTERN
+                        RULIAD GENERATION
                     </div>
                     <canvas id="modalRuliadCanvas" class="w-full h-full"></canvas>
                 </div>
             </div>
+            
+            <!-- REPRODUCIBILITY MANIFEST -->
             <div class="bg-gray-900/90 p-4 border-t border-cyan-500 text-sm text-gray-300" id="modal-desc"></div>
         </div>
     </div>
@@ -302,6 +319,17 @@
         let isSaving = false;
         let lastSaveBounce = 0;
         let lastSaveTime = 0; 
+        let lastCollectiveSyncTime = 0;
+
+        // AUTO-ITERATION (EPOCH) TRACKING
+        let searchEpoch = 1;
+        let baseAngleShift = 0;
+        let lastHighZetaBounce = 0; // Tracks phase space exhaustion
+
+        // MORPHOLOGICAL RATIO TRACKING
+        let structuredEvents = 0;
+        let chaoticEvents = 0;
+        let ratioHistory = []; // Array of calculated ratio values
 
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
@@ -322,16 +350,26 @@
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
         let zetaStats = { high: 0, low: 0, steers: 0 };
         
-        let fleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
-            const angle = (i / NUM_SWARMS) * Math.PI * 2;
-            const r = 0.3;
-            return {
-                id: i,
-                alpha: { x: Math.cos(angle)*r, y: Math.sin(angle)*r, prevX: 0, prevY: 0, vx: Math.cos(angle+Math.PI/4)*INITIAL_SPEED, vy: Math.sin(angle+Math.PI/4)*INITIAL_SPEED, theta: angle+Math.PI/4, accumulatedTheta: 0, trail: [] },
-                beta:  { x: Math.cos(angle)*r, y: Math.sin(angle)*r, prevX: 0, prevY: 0, vx: Math.cos(angle+Math.PI/4)*INITIAL_SPEED, vy: Math.sin(angle+Math.PI/4)*INITIAL_SPEED, theta: angle+Math.PI/4, accumulatedTheta: 0, trail: [] },
-                divergence: 0, bounces: 0
-            };
-        });
+        function initializeFleet(angleShift) {
+            return Array.from({ length: NUM_SWARMS }, (_, i) => {
+                const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
+                const r = 0.3;
+                const sx = Math.cos(angle) * r;
+                const sy = Math.sin(angle) * r;
+                const stheta = angle + Math.PI/4; 
+                const vx = Math.cos(stheta) * INITIAL_SPEED;
+                const vy = Math.sin(stheta) * INITIAL_SPEED;
+
+                return {
+                    id: i,
+                    alpha: { x: sx, y: sy, prevX: sx, prevY: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
+                    beta:  { x: sx, y: sy, prevX: sx, prevY: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
+                    divergence: 0, bounces: 0
+                };
+            });
+        }
+        
+        let fleet = initializeFleet(baseAngleShift);
 
         let visitedGrid = new Map(); 
         let hyperGrid = new Map(); 
@@ -381,8 +419,9 @@
         const eyesCanvas = document.getElementById('eyesCanvas');
         const hyperCanvas = document.getElementById('hyperCanvas');
         const zetaCanvas = document.getElementById('zetaCanvas');
+        const ratioCanvas = document.getElementById('ratioCanvas');
         
-        const tabs = ['SUPER_BRAIN', 'EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
+        const tabs = ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
 
         function renderTabButtons() {
             document.getElementById('tab-headers').innerHTML = tabs.map(tab => `
@@ -401,7 +440,7 @@
             }
         };
 
-        // --- CLOUD SYNC LOGIC (GRID PAYLOADS REMOVED FOR DB STABILITY) ---
+        // --- CLOUD SYNC LOGIC (NO GRID PAYLOADS FOR DB STABILITY) ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
@@ -412,6 +451,9 @@
                     const saved = data.state_data;
                     stats = saved.stats || stats;
                     zetaStats = saved.zetaStats || zetaStats;
+                    searchEpoch = saved.searchEpoch || 1;
+                    baseAngleShift = saved.baseAngleShift || 0;
+                    
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
                         fleet = saved.fleet.map((g, i) => ({
                             id: i,
@@ -449,9 +491,8 @@
             document.getElementById('save-status').className = 'text-yellow-500 animate-pulse font-bold';
             
             try {
-                // NO GRID DATA UPLOADED - Saves bandwidth and prevents DB crashes
                 const state = {
-                    stats, zetaStats,
+                    stats, zetaStats, searchEpoch, baseAngleShift,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -492,52 +533,120 @@
             }).join('');
         }
 
+        // --- ARTIFACT MODAL PLAYBACK LOGIC ---
+        let modalArt = null;
+        let modalTick = 0;
+        let modalAnimId = null;
+        let modalLocalGrid = new Map();
+
+        function playModal() {
+            if (!modalArt) return;
+            
+            const tCtx = document.getElementById('modalTrajCanvas').getContext('2d');
+            const rCtx = document.getElementById('modalRuliadCanvas').getContext('2d');
+            const w = tCtx.canvas.width; const h = tCtx.canvas.height;
+            const cx = w/2; const cy = h/2; const scale = Math.min(w,h)/2 * 0.9;
+            const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
+
+            if (modalTick === 0) {
+                tCtx.fillStyle = '#050505'; tCtx.fillRect(0, 0, w, h);
+                rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
+                modalLocalGrid.clear();
+                tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
+            } else {
+                tCtx.fillStyle = 'rgba(5, 5, 5, 0.1)'; tCtx.fillRect(0, 0, w, h);
+                tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
+            }
+
+            const aTrail = modalArt.trailAlpha || [];
+            const bTrail = modalArt.trailBeta || [];
+            const maxLen = Math.max(aTrail.length, bTrail.length);
+
+            if (modalTick < maxLen) {
+                // Alpha
+                if (modalTick > 0 && modalTick < aTrail.length) {
+                    const p1 = aTrail[modalTick-1]; const p2 = aTrail[modalTick];
+                    tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
+                    tCtx.strokeStyle = '#00ffff'; tCtx.lineWidth = 2; tCtx.stroke();
+                    
+                    const gx = Math.floor((p2.x + BOX_SIZE) * 20); const gy = Math.floor((p2.y + BOX_SIZE) * 20);
+                    modalLocalGrid.set(`${gx},${gy}`, modalTick);
+                }
+                // Beta
+                if (modalTick > 0 && modalTick < bTrail.length) {
+                    const p1 = bTrail[modalTick-1]; const p2 = bTrail[modalTick];
+                    tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
+                    tCtx.strokeStyle = '#ff00ff'; tCtx.lineWidth = 2; tCtx.stroke();
+                    
+                    const gx = Math.floor((p2.x + BOX_SIZE) * 20); const gy = Math.floor((p2.y + BOX_SIZE) * 20);
+                    modalLocalGrid.set(`${gx},${gy}`, modalTick);
+                }
+
+                // Render reconstructed Ruliad blocks
+                rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
+                modalLocalGrid.forEach((visitTick, key) => {
+                    const [gx, gy] = key.split(',').map(Number);
+                    const age = modalTick - visitTick;
+                    rCtx.fillStyle = getRuliadColorState(age * 5); // Scale age to look cool in short loop
+                    rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
+                });
+
+                modalTick++;
+            } else {
+                if (modalTick > maxLen + 60) modalTick = 0;
+                else modalTick++;
+            }
+
+            modalAnimId = requestAnimationFrame(playModal);
+        }
+
         function openArtifactModal(id) {
             const art = artifacts.find(a => a.id === id);
             if (!art) return;
             
+            modalArt = art;
             document.getElementById('modal-title').innerText = `ARTIFACT // ${art.id}`;
-            document.getElementById('modal-desc').innerHTML = `<span class="text-cyan-400 font-bold">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-300">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-300">Beta Zeta:</span> ${art.zetaStrBeta}<br/><span class="text-gray-200 font-bold mt-2 block p-2 border border-gray-600 rounded bg-black/50">GEOMETRIC TRIGGER: ${art.desc}</span>`;
+            
+            // Generate Reproducibility Manifest (Calculator layout)
+            const k = art.kinematics;
+            const kinHTML = k ? `
+                <div class="bg-black/80 p-2 rounded border border-gray-700 text-[10px] text-gray-400">
+                    <div class="text-white border-b border-gray-600 mb-1 tracking-widest">REPRODUCIBILITY MANIFEST</div>
+                    <div><span class="text-cyan-400">ALPHA X:</span> ${k.alpha.x.toFixed(8)} | <span class="text-cyan-400">Y:</span> ${k.alpha.y.toFixed(8)}</div>
+                    <div><span class="text-cyan-400">ALPHA Vx:</span> ${k.alpha.vx.toFixed(8)} | <span class="text-cyan-400">Vy:</span> ${k.alpha.vy.toFixed(8)}</div>
+                    <div class="mt-1"><span class="text-magenta-400">BETA X:</span> ${k.beta.x.toFixed(8)} | <span class="text-magenta-400">Y:</span> ${k.beta.y.toFixed(8)}</div>
+                    <div><span class="text-magenta-400">BETA Vx:</span> ${k.beta.vx.toFixed(8)} | <span class="text-magenta-400">Vy:</span> ${k.beta.vy.toFixed(8)}</div>
+                </div>
+            ` : `<div class="text-gray-600">Kinematics manifest not available for epoch shifts.</div>`;
+
+            document.getElementById('modal-desc').innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-cyan-400 font-bold mb-1 border-b border-cyan-800 tracking-widest">TRIGGER: ${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</div>
+                        <div class="text-gray-300">α Zeta: <span class="text-cyan-300">${art.zetaStrAlpha.substring(0,25)}...</span></div>
+                        <div class="text-gray-300">β Zeta: <span class="text-magenta-300">${art.zetaStrBeta.substring(0,25)}...</span></div>
+                        <div class="text-yellow-400 font-bold mt-2 text-xs uppercase">${art.desc}</div>
+                    </div>
+                    ${kinHTML}
+                </div>
+            `;
+            
             document.getElementById('artifactModal').classList.remove('hidden');
             document.getElementById('artifactModal').classList.add('flex');
 
-            const tCtx = document.getElementById('modalTrajCanvas').getContext('2d');
-            const rCtx = document.getElementById('modalRuliadCanvas').getContext('2d');
-            const w = tCtx.canvas.width = tCtx.canvas.parentElement.clientWidth;
-            const h = tCtx.canvas.height = tCtx.canvas.parentElement.clientHeight - 30; 
-            rCtx.canvas.width = w; rCtx.canvas.height = h;
+            const tCtx = document.getElementById('modalTrajCanvas');
+            tCtx.width = tCtx.parentElement.clientWidth;
+            tCtx.height = tCtx.parentElement.clientHeight - 30; 
+            document.getElementById('modalRuliadCanvas').width = tCtx.width; 
+            document.getElementById('modalRuliadCanvas').height = tCtx.height;
 
-            tCtx.fillStyle = '#050505'; tCtx.fillRect(0, 0, w, h);
-            const cx = w/2; const cy = h/2; const scale = Math.min(w,h)/2 * 0.9;
-            tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
-            
-            if (art.trailAlpha && art.trailAlpha.length > 1) {
-                tCtx.globalAlpha = 0.8;
-                for (let i=1; i<art.trailAlpha.length; i++) {
-                    tCtx.beginPath(); tCtx.moveTo(cx + art.trailAlpha[i-1].x * scale, cy + art.trailAlpha[i-1].y * scale); tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
-                    tCtx.strokeStyle = getRuliadColorState(art.tick - art.trailAlpha[i].tick); tCtx.lineWidth = 2; tCtx.stroke();
-                }
-            }
-            if (art.trailBeta && art.trailBeta.length > 1) {
-                tCtx.globalAlpha = 0.8;
-                for (let i=1; i<art.trailBeta.length; i++) {
-                    tCtx.beginPath(); tCtx.moveTo(cx + art.trailBeta[i-1].x * scale, cy + art.trailBeta[i-1].y * scale); tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
-                    tCtx.strokeStyle = getRuliadColorState(art.tick - art.trailBeta[i].tick); tCtx.lineWidth = 2; tCtx.stroke();
-                }
-            }
-
-            rCtx.fillStyle = '#050505'; rCtx.fillRect(0, 0, w, h);
-            if (art.gridSnapshot) {
-                const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
-                art.gridSnapshot.forEach((cell, key) => {
-                    const [gx, gy] = key.split(',').map(Number);
-                    rCtx.fillStyle = getRuliadColorState(art.tick - cell.lastVisit);
-                    rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
-                });
-            }
+            modalTick = 0;
+            cancelAnimationFrame(modalAnimId);
+            playModal();
         }
 
         window.closeModal = function() {
+            cancelAnimationFrame(modalAnimId);
             document.getElementById('artifactModal').classList.add('hidden');
             document.getElementById('artifactModal').classList.remove('flex');
         }
@@ -546,7 +655,7 @@
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width; canvas.height = rect.height;
-                [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
+                [globalBgCanvas, eyesCanvas, hyperCanvas, zetaCanvas, ratioCanvas].forEach(c => {
                     if(c && c.parentElement) {
                         const r = c.parentElement === document.body ? {width: window.innerWidth, height: window.innerHeight} : c.parentElement.getBoundingClientRect();
                         if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
@@ -607,8 +716,6 @@
             let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
             let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
 
-            if (currentZetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
-
             if (bounced) {
                 let nextTheta = agent.theta;
                 if (nextX !== 0 || nextY !== 0) nextTheta = Math.atan2(nextY, nextX);
@@ -625,7 +732,8 @@
                 const currentAngle = Math.atan2(agent.vy, agent.vx);
                 const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
                 const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; 
-                agent.vx = Math.cos(steerAngle) * speedMag; agent.vy = Math.sin(steerAngle) * speedMag;
+                agent.vx = Math.cos(steerAngle) * speedMag;
+                agent.vy = Math.sin(steerAngle) * speedMag;
             }
 
             agent.trail.push({ x: agent.x, y: agent.y, tick: globalTick });
@@ -654,7 +762,20 @@
                         group.bounces++;
                         stats.bounces++; 
                         
-                        if (alphaRes.cornerHit || betaRes.cornerHit) stats.cornerHits++;
+                        // TRACKING FOR RATIO / EXHAUSTION
+                        if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) {
+                            lastHighZetaBounce = stats.bounces;
+                            zetaStats.high++;
+                        } else {
+                            zetaStats.low++;
+                        }
+
+                        if (alphaRes.cornerHit || betaRes.cornerHit) {
+                            stats.cornerHits++;
+                            structuredEvents++;
+                        }
+                        if (alphaRes.originCross || betaRes.originCross) structuredEvents++;
+
                         stabilityHistory.push(stats.bounces);
                         if (stabilityHistory.length > 5) stabilityHistory.shift();
 
@@ -686,16 +807,49 @@
                             artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing.";
                         }
                         if (triggerArtifact) {
+                            // Save exact kinematics for reproducibility!
                             artifactGroup = { 
                                 id: group.id, zetaStrAlpha: alphaRes.zetaStr, zetaStrBeta: betaRes.zetaStr,
-                                trailAlpha: [...group.alpha.trail], trailBeta: [...group.beta.trail]
+                                trailAlpha: [...group.alpha.trail], trailBeta: [...group.beta.trail],
+                                kinematics: {
+                                    alpha: { x: group.alpha.x, y: group.alpha.y, vx: group.alpha.vx, vy: group.alpha.vy },
+                                    beta: { x: group.beta.x, y: group.beta.y, vx: group.beta.vx, vy: group.beta.vy }
+                                }
                             };
                         }
                     }
 
                     group.divergence = Math.sqrt(Math.pow(group.alpha.x - group.beta.x, 2) + Math.pow(group.alpha.y - group.beta.y, 2));
                     if (group.divergence > maxDivergence) maxDivergence = group.divergence;
+                    
+                    // Ratio tracking: High divergence counts as chaotic event
+                    if (swarmHitBoundary && group.divergence > 0.3) chaoticEvents++;
                 });
+
+                // --- EPOCH ITERATION (AUTO-EXHAUSTION) ---
+                // Wait for a massive 81,003 boundary bounces without novelty to allow for deep phase-space re-emergence
+                if (stats.bounces > 1000 && (stats.bounces - lastHighZetaBounce) > 81003) {
+                    searchEpoch++;
+                    baseAngleShift += 0.000137; // Infinitesimal Epsilon Shift
+                    lastHighZetaBounce = stats.bounces; // Reset tracker
+                    
+                    fleet = initializeFleet(baseAngleShift);
+
+                    artifacts.unshift({ 
+                        id: `EPOCH-${searchEpoch}`, bounce: stats.bounces, tick: globalTick,
+                        triggerSwarm: "ALL", zetaStrAlpha: "0", zetaStrBeta: "0",
+                        desc: `PHASE SPACE EXHAUSTED AT 81,003 GAP. Shifting initial configurations by ε=+0.000137.`,
+                        trailAlpha: [], trailBeta: [], kinematics: null, gridSnapshot: null
+                    });
+                    if (artifacts.length > 20) artifacts.pop();
+                }
+
+                // Plot ratio history periodically
+                if (globalTick % 20 === 0) {
+                    let ratio = chaoticEvents === 0 ? structuredEvents : structuredEvents / chaoticEvents;
+                    ratioHistory.push(ratio);
+                    if (ratioHistory.length > 300) ratioHistory.shift();
+                }
             }
 
             stats.windingNumber = fleet[0].alpha.accumulatedTheta / (2 * Math.PI);
@@ -705,7 +859,7 @@
                     id: `INV-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                     triggerSwarm: artifactGroup.id + 1, zetaStrAlpha: artifactGroup.zetaStrAlpha, zetaStrBeta: artifactGroup.zetaStrBeta,
                     desc: artifactDesc, trailAlpha: artifactGroup.trailAlpha, trailBeta: artifactGroup.trailBeta,
-                    gridSnapshot: new Map(visitedGrid) 
+                    kinematics: artifactGroup.kinematics
                 });
             }
 
@@ -721,8 +875,10 @@
             if (swarmHitBoundary || Math.random() < 0.05) {
                 document.getElementById('statBounces').innerText = stats.bounces.toLocaleString();
                 document.getElementById('statDivergence').innerText = maxDivergence.toFixed(4);
+                document.getElementById('statDivergence').className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
                 document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
                 document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
+                document.getElementById('statEpoch').innerText = searchEpoch;
 
                 if (activeTab === 'SUPER_BRAIN') {
                     if (document.getElementById('super-void')) document.getElementById('super-void').innerText = minOrbitRadius.toFixed(4);
@@ -737,6 +893,31 @@
                     }
                 }
 
+                if (activeTab === 'STRUCTURE_RATIO') {
+                    document.getElementById('val-structured').innerText = structuredEvents.toLocaleString();
+                    document.getElementById('val-chaotic').innerText = chaoticEvents.toLocaleString();
+                    let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
+                    document.getElementById('val-ratio').innerText = currentRatio.toFixed(4);
+
+                    // LIVE RE-EMERGENCE TREND ANALYSIS
+                    const trendEl = document.getElementById('chaos-trend');
+                    if (trendEl && ratioHistory.length > 20) {
+                        const recentAvg = ratioHistory.slice(-10).reduce((a,b)=>a+b,0)/10;
+                        const oldAvg = ratioHistory.slice(0, 10).reduce((a,b)=>a+b,0)/10;
+                        
+                        if (recentAvg > oldAvg * 1.05) {
+                            trendEl.innerText = "EMERGENCE TREND: ⇧ RE-EMERGING (MORE STRUCTURED)";
+                            trendEl.className = "mt-1 text-center text-[10px] font-bold tracking-widest text-lime-400 bg-lime-900/20 p-1 rounded border border-lime-800/50";
+                        } else if (recentAvg < oldAvg * 0.95) {
+                            trendEl.innerText = "EMERGENCE TREND: ⇩ DEGRADING (MORE CHAOTIC)";
+                            trendEl.className = "mt-1 text-center text-[10px] font-bold tracking-widest text-red-400 bg-red-900/20 p-1 rounded border border-red-800/50";
+                        } else {
+                            trendEl.innerText = "EMERGENCE TREND: ≈ STABLE (INVARIANT BOUNDARY)";
+                            trendEl.className = "mt-1 text-center text-[10px] font-bold tracking-widest text-cyan-400 bg-cyan-900/20 p-1 rounded border border-cyan-800/50";
+                        }
+                    }
+                }
+
                 if (activeTab === 'HYPER') {
                     const hd = document.getElementById('hyper-dim');
                     if(hd) hd.innerText = (1.0 + Math.abs(stats.windingNumber * 0.0142)).toFixed(4);
@@ -744,12 +925,14 @@
                 if (activeTab === 'ZETA') {
                     const zh = document.getElementById('zeta-high');
                     if(zh) zh.innerText = zetaStats.high.toLocaleString();
+                    const zl = document.getElementById('zeta-low');
+                    if(zl) zl.innerText = zetaStats.low.toLocaleString();
                 }
 
                 if (activeTab === 'MUSEUM') {
                     document.getElementById('museum-gallery').innerHTML = artifacts.map(art => `
                         <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-yellow-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(255,255,0,0.1)] hover:shadow-[0_0_20px_rgba(255,255,0,0.4)]">
-                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-yellow-400/80 ml-1">SWRM ${art.triggerSwarm}</span></div>
+                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-yellow-400/80 ml-1">${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</span></div>
                             <div class="text-[9px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha.substring(0,25)}...</div>
                             <div class="text-[10px] text-gray-400 font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split(':')[0]}</div>
                         </div>
@@ -822,6 +1005,27 @@
                 ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 3, 0, 2 * Math.PI); ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
             });
 
+            if (activeTab === 'STRUCTURE_RATIO' && ratioCanvas) {
+                const rCtx = ratioCanvas.getContext('2d');
+                const rw = ratioCanvas.width; const rh = ratioCanvas.height;
+                rCtx.clearRect(0, 0, rw, rh);
+                if (ratioHistory.length > 1) {
+                    const maxRatio = Math.max(...ratioHistory, 1.0);
+                    rCtx.beginPath();
+                    for (let i=0; i<ratioHistory.length; i++) {
+                        const x = (i / 300) * rw;
+                        const y = rh - (ratioHistory[i] / maxRatio) * rh;
+                        if (i===0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
+                    }
+                    rCtx.strokeStyle = '#ff00ff'; rCtx.lineWidth = 2; rCtx.stroke();
+                    // Fill gradient
+                    rCtx.lineTo(rw, rh); rCtx.lineTo(0, rh);
+                    const grad = rCtx.createLinearGradient(0,0,0,rh);
+                    grad.addColorStop(0, 'rgba(255,0,255,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    rCtx.fillStyle = grad; rCtx.fill();
+                }
+            }
+
             if (activeTab === 'EYES' && eyesCanvas) {
                 const eCtx = eyesCanvas.getContext('2d');
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
@@ -884,7 +1088,7 @@
                 for (let x = 0; x < bgCols; x++) {
                     for (let y = 0; y < bgRows; y++) {
                         let state = bgGridCA[x][y];
-                        if (state < 6) { // Don't draw the darkest purple to save GPU and keep it mostly black
+                        if (state < 6) { 
                             bgCtx.fillStyle = colorMap[state];
                             bgCtx.fillRect(x * BG_CELL_SIZE, y * BG_CELL_SIZE, BG_CELL_SIZE - 2, BG_CELL_SIZE - 2);
                         }
