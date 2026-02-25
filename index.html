@@ -39,12 +39,12 @@
     <header class="flex justify-between items-end border-b border-gray-700 pb-2 mb-4">
         <div>
             <h1 class="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Dual-Sim Cross-Reference v3</h2>
+            <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Multiway Swarm Architecture v4</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right font-mono text-xs text-gray-500">
                 STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: RULIAD_KINEMATICS_X2 (DUAL-CORE)
+                ENGINE: RULIAD_KINEMATICS_X7 (HIVE MIND)
             </div>
             <!-- BUY ME A COFFEE TIP JAR -->
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
@@ -65,8 +65,8 @@
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[10px] font-mono text-gray-500 select-none pointer-events-none">
                     GEOMETRY: SQUARE_STRICT<br/>
-                    MODE: DUAL_CROSS_REFERENCE<br/>
-                    <span class="text-cyan-400">ALPHA (PURE INERTIAL)</span> | <span class="text-magenta-400">BETA (BLADE OBSERVER)</span>
+                    MODE: 7-SWARM COLLECTIVE (14 AGENTS)<br/>
+                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (SHARED KNOWLEDGE)</span>
                 </div>
             </div>
 
@@ -81,10 +81,10 @@
                 </div>
                 <div>
                     <label class="flex justify-between text-gray-400 mb-1">
-                        <span>SMITH TRAIL MEMORY</span>
-                        <span class="text-magenta-400" id="trailLabel">800 steps</span>
+                        <span>SMITH TRAIL MEMORY (PER AGENT)</span>
+                        <span class="text-magenta-400" id="trailLabel">200 steps</span>
                     </label>
-                    <input type="range" id="trailInput" min="10" max="1000" value="800" class="w-full accent-magenta-500" />
+                    <input type="range" id="trailInput" min="10" max="800" value="200" class="w-full accent-magenta-500" />
                 </div>
             </div>
         </div>
@@ -95,8 +95,8 @@
             <!-- MACRO OBSERVABLES DASHBOARD -->
             <div class="bg-gray-900 p-4 border border-gray-800 rounded grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs relative overflow-hidden">
                 <div class="col-span-2 border-b border-gray-800 pb-1 mb-1 text-gray-500 font-bold tracking-widest flex justify-between">
-                    <span>SYSTEM MACROSTATES</span>
-                    <span class="text-cyan-500">Δ DIVERGENCE: <span id="statDivergence">0.000</span></span>
+                    <span>SYSTEM MACROSTATES (COLLECTIVE)</span>
+                    <span class="text-cyan-500">PEAK DIVERGENCE: <span id="statDivergence">0.000</span></span>
                 </div>
                 
                 <div class="flex flex-col">
@@ -110,7 +110,7 @@
                 </div>
 
                 <div class="flex flex-col">
-                    <span class="text-gray-500">BOUNDARY IMPACTS</span>
+                    <span class="text-gray-500">SWARM IMPACTS</span>
                     <span class="text-lg text-white" id="statBounces">0</span>
                 </div>
 
@@ -127,6 +127,30 @@
                 </div>
                 
                 <div class="flex-1 p-2 relative">
+                    <!-- SUPER BRAIN TAB (NEW) -->
+                    <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col font-mono text-xs text-blue-400 p-4 bg-gray-900 border border-blue-800 rounded">
+                        <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">HIVE-MIND CROSS-REFERENCE</h3>
+                        <div class="flex-1 overflow-y-auto space-y-3">
+                            <div class="bg-black border border-blue-900 p-2">
+                                <p class="text-gray-500 font-bold mb-1">COLLECTIVE INVARIANTS</p>
+                                <div class="flex justify-between"><span class="text-gray-400">Energy (Velocity Mag):</span> <span class="text-lime-400 font-bold">ABSOLUTE CONSERVATION</span></div>
+                                <div class="flex justify-between mt-1"><span class="text-gray-400">Phase Space Volume:</span> <span class="text-lime-400 font-bold">LIOUVILLE PRESERVED (Alpha)</span></div>
+                                <div class="flex justify-between mt-1"><span class="text-gray-400">Corner Topology limits:</span> <span class="text-lime-400 font-bold">BOUNDED</span></div>
+                            </div>
+                            <div class="bg-black border border-blue-900 p-2">
+                                <p class="text-gray-500 font-bold mb-1">SWARM VARIANTS (DIVERGENCE SPREAD)</p>
+                                <div id="swarm-divergence-bars" class="space-y-1">
+                                    <!-- Dynamic Bars -->
+                                </div>
+                            </div>
+                            <div class="bg-black border border-blue-900 p-2">
+                                <p class="text-gray-500 font-bold mb-1">COLLECTIVE VOID DETECTION</p>
+                                <div class="flex justify-between"><span class="text-gray-400">Shared Caustic Radius:</span> <span id="super-void" class="text-cyan-400 font-bold">0.000</span></div>
+                                <p class="text-[9px] text-gray-500 mt-1">If Swarm 1 enters a region, Swarms 2-7 inherit the structural knowledge and actively map around it.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- EYES TAB -->
                     <div id="tab-EYES" class="hidden h-full flex flex-col font-mono text-xs text-blue-400 p-4 bg-gray-900 border border-blue-800 rounded">
                         <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">SENSORY RECEPTORS (COMBINED HEATMAP)</h3>
@@ -139,7 +163,7 @@
                     <div id="tab-STABILITY" class="hidden h-full flex flex-col font-mono text-xs text-indigo-400 p-4 bg-gray-900 border border-indigo-800 rounded">
                         <h3 class="text-indigo-200 mb-2 border-b border-indigo-800 pb-1">ORBITAL STABILITY METRICS</h3>
                         <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="stability-log">
-                            <div class="text-gray-500">Calculating periodic orbital variance...</div>
+                            <div class="text-gray-500">Calculating periodic orbital variance across swarm...</div>
                         </div>
                     </div>
 
@@ -190,7 +214,7 @@
                         </div>
                     </div>
 
-                    <!-- ZETA TAB (RESTORED) -->
+                    <!-- ZETA TAB -->
                     <div id="tab-ZETA" class="hidden h-full flex flex-col font-mono text-xs text-magenta-400 p-4 bg-gray-900 border border-magenta-800 rounded">
                         <h3 class="text-magenta-200 mb-2 border-b border-magenta-800 pb-1">BLADE ALGORITHMIC HEURISTICS</h3>
                         <div class="grid grid-cols-2 gap-4 mb-2">
@@ -203,7 +227,7 @@
                                 <p class="text-xl text-red-400" id="zeta-low">0</p>
                             </div>
                         </div>
-                        <p class="mb-2 text-gray-400 mt-2">Quadratic Reality Tensor Matrix (Active weights)</p>
+                        <p class="mb-2 text-gray-400 mt-2">Quadratic Reality Tensor Matrix (Swarm 1 View)</p>
                         <div class="flex-1 relative bg-black border border-magenta-900 min-h-[150px]">
                             <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                         </div>
@@ -241,7 +265,7 @@
             <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black relative">
                 <div class="flex flex-col border border-gray-800 rounded bg-gray-900 relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800 p-2 z-10 text-center font-mono text-xs text-gray-400">
-                        2D TRAJECTORY SPACE (ALPHA + BETA)
+                        2D TRAJECTORY SPACE (SWARM OVERLAY)
                     </div>
                     <canvas id="modalTrajCanvas" class="w-full h-full"></canvas>
                 </div>
@@ -264,6 +288,7 @@
         const BOX_SIZE = 1;
         const CORNER_TOLERANCE = 0.05;
         const INITIAL_SPEED = 0.015;
+        const NUM_SWARMS = 7;
 
         // --- SUPABASE CLOUD STATE ---
         let supabaseClient;
@@ -286,21 +311,36 @@
             return str.substring(0, 103);
         }
 
-        // --- DUAL-SIMULATION STATE ---
-        let activeTab = 'RANK';
+        // --- MULTIWAY SWARM STATE ---
+        let activeTab = 'SUPER_BRAIN';
         let speed = 5;
-        let trailLength = 800;
+        let trailLength = 200; // Lower default to handle 14 agents
         
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
         let zetaStats = { high: 0, low: 0, steers: 0 };
         
-        // Agent Alpha: Pure Inertial Mathematical Control
-        let agentAlpha = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), trail: [] };
-        // Agent Beta: Blade Heuristic Observer
-        let agentBeta = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), trail: [] };
+        // Initialize 7 Swarm Groups
+        let fleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
+            // Distribute start positions to explore different configs
+            const angle = (i / NUM_SWARMS) * Math.PI * 2;
+            const r = 0.3;
+            const sx = Math.cos(angle) * r;
+            const sy = Math.sin(angle) * r;
+            const stheta = angle + Math.PI/4; 
+            const vx = Math.cos(stheta) * INITIAL_SPEED;
+            const vy = Math.sin(stheta) * INITIAL_SPEED;
+
+            return {
+                id: i,
+                alpha: { x: sx, y: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
+                beta:  { x: sx, y: sy, vx: vx, vy: vy, theta: stheta, accumulatedTheta: 0, trail: [] },
+                divergence: 0,
+                bounces: 0
+            };
+        });
 
         let eventLog = [];
-        let visitedGrid = new Map();
+        let visitedGrid = new Map(); // Shared Knowledge Grid
         let hyperGrid = new Map(); 
         let globalTick = 0; 
         let artifacts = [];
@@ -337,6 +377,9 @@
         const hyperErgodicity = document.getElementById('hyper-ergodicity');
         const zetaHighEl = document.getElementById('zeta-high');
         const zetaLowEl = document.getElementById('zeta-low');
+        
+        const superVoidEl = document.getElementById('super-void');
+        const swarmDivergenceBars = document.getElementById('swarm-divergence-bars');
 
         // Modal Elements
         const artifactModal = document.getElementById('artifactModal');
@@ -346,7 +389,7 @@
         const modalRuliadCanvas = document.getElementById('modalRuliadCanvas');
 
         // --- SETUP TABS ---
-        const tabs = ['EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
+        const tabs = ['SUPER_BRAIN', 'EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
         const tabHeaders = document.getElementById('tab-headers');
 
         function renderTabButtons() {
@@ -368,7 +411,7 @@
             activeTab = tab;
             renderTabButtons();
             
-            ['EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK', 'OTHER'].forEach(t => {
+            [...tabs, 'OTHER'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 if (el) el.classList.add('hidden');
             });
@@ -392,8 +435,17 @@
                     const saved = data.state_data;
                     stats = saved.stats || stats;
                     zetaStats = saved.zetaStats || zetaStats;
-                    agentAlpha = { ...agentAlpha, ...saved.agentAlpha, trail: [] }; 
-                    agentBeta = { ...agentBeta, ...saved.agentBeta, trail: [] }; 
+                    
+                    if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
+                        fleet = saved.fleet.map((g, i) => ({
+                            id: i,
+                            alpha: { ...fleet[i].alpha, ...g.alpha, trail: [] },
+                            beta: { ...fleet[i].beta, ...g.beta, trail: [] },
+                            divergence: g.divergence || 0,
+                            bounces: g.bounces || 0
+                        }));
+                    }
+                    
                     globalTick = saved.globalTick || 0;
                     artifacts = saved.artifacts || [];
                     if (saved.visitedGrid) try { visitedGrid = new Map(JSON.parse(saved.visitedGrid)); } catch(e) {}
@@ -425,10 +477,12 @@
             saveStatusEl.classList.replace('text-lime-500', 'text-yellow-500');
             try {
                 const state = {
-                    stats,
-                    zetaStats,
-                    agentAlpha: { x: agentAlpha.x, y: agentAlpha.y, vx: agentAlpha.vx, vy: agentAlpha.vy },
-                    agentBeta: { x: agentBeta.x, y: agentBeta.y, vx: agentBeta.vx, vy: agentBeta.vy },
+                    stats, zetaStats,
+                    fleet: fleet.map(g => ({
+                        alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
+                        beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
+                        divergence: g.divergence, bounces: g.bounces
+                    })),
                     globalTick, artifacts,
                     visitedGrid: JSON.stringify(Array.from(visitedGrid.entries())),
                     hyperGrid: JSON.stringify(Array.from(hyperGrid.entries()))
@@ -456,7 +510,7 @@
                 return `
                 <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-1 bg-emerald-900/10' : ''}">
                     <div class="flex justify-between w-full items-center">
-                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[8px] ml-1">[${entry.type}]</span></div>
+                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[8px] ml-1">[SWRM-${entry.swarmId} ${entry.type}]</span></div>
                         <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : displayUid}</div>
                     </div>
                     <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
@@ -469,37 +523,32 @@
             if (!art) return;
             
             modalTitle.innerText = `ARTIFACT // ${art.id}`;
-            modalDesc.innerHTML = `<span class="text-cyan-400">Pure Mathematical Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-400">Blade Heuristic Zeta:</span> ${art.zetaStrBeta}<br/>Discovered at T=${art.bounce}. ${art.desc}`;
+            modalDesc.innerHTML = `<span class="text-cyan-400">Triggering Swarm:</span> SWRM ${art.triggerSwarm}<br/><span class="text-cyan-400">Alpha Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-400">Beta Zeta:</span> ${art.zetaStrBeta}<br/>Discovered at T=${art.bounce}. ${art.desc}`;
             artifactModal.classList.remove('hidden');
             artifactModal.classList.add('flex');
 
-            // Render Snapshots
             const tCtx = modalTrajCanvas.getContext('2d');
             const rCtx = modalRuliadCanvas.getContext('2d');
             const w = modalTrajCanvas.width = modalTrajCanvas.parentElement.clientWidth;
-            const h = modalTrajCanvas.height = modalTrajCanvas.parentElement.clientHeight - 30; // account for title
+            const h = modalTrajCanvas.height = modalTrajCanvas.parentElement.clientHeight - 30; 
             modalRuliadCanvas.width = w; modalRuliadCanvas.height = h;
 
-            // Draw Trails
             tCtx.fillStyle = '#050505'; tCtx.fillRect(0, 0, w, h);
             const cx = w/2; const cy = h/2; const scale = Math.min(w,h)/2 * 0.9;
             
             tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
             
-            // Alpha Trail (Cyan/White)
             if (art.trailAlpha && art.trailAlpha.length > 1) {
                 tCtx.beginPath(); tCtx.moveTo(cx + art.trailAlpha[0].x * scale, cy + art.trailAlpha[0].y * scale);
                 for (let i=1; i<art.trailAlpha.length; i++) tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
                 tCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)'; tCtx.stroke();
             }
-            // Beta Trail (Magenta)
             if (art.trailBeta && art.trailBeta.length > 1) {
                 tCtx.beginPath(); tCtx.moveTo(cx + art.trailBeta[0].x * scale, cy + art.trailBeta[0].y * scale);
                 for (let i=1; i<art.trailBeta.length; i++) tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
                 tCtx.strokeStyle = 'rgba(255, 0, 255, 0.7)'; tCtx.stroke();
             }
 
-            // Draw Ruliad Grid Snapshot
             rCtx.fillStyle = '#000'; rCtx.fillRect(0, 0, w, h);
             if (art.gridSnapshot) {
                 const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
@@ -539,33 +588,38 @@
             window.switchTab(activeTab);
         }
 
-        // --- CORE PHYSICS ENGINE (DUAL SIM) ---
+        // --- CORE PHYSICS ENGINE (MULTIWAY SWARM) ---
         function moveAgent(agent, isBetaObserver) {
             let nextX = agent.x + agent.vx;
             let nextY = agent.y + agent.vy;
             let bounced = false;
+            let cornerHit = false;
 
-            // EXACT PHASE SPACE FOLDING (Strict Conservation)
+            // EXACT PHASE SPACE FOLDING
             if (nextX > BOX_SIZE) { nextX = BOX_SIZE - (nextX - BOX_SIZE); agent.vx *= -1; bounced = true; } 
             else if (nextX < -BOX_SIZE) { nextX = -BOX_SIZE + (-BOX_SIZE - nextX); agent.vx *= -1; bounced = true; }
             if (nextY > BOX_SIZE) { nextY = BOX_SIZE - (nextY - BOX_SIZE); agent.vy *= -1; bounced = true; } 
             else if (nextY < -BOX_SIZE) { nextY = -BOX_SIZE + (-BOX_SIZE - nextY); agent.vy *= -1; bounced = true; }
 
-            // Caustic Void Tracking (Min Radius)
+            if (bounced) {
+                const isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
+                const isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
+                cornerHit = isCornerX && isCornerY;
+            }
+
             const radius = Math.sqrt(nextX*nextX + nextY*nextY);
             if (radius < minOrbitRadius) minOrbitRadius = radius;
 
             agent.x = nextX;
             agent.y = nextY;
 
-            // Spatial Hashing Math
+            // HIVE-MIND SHARED KNOWLEDGE GRID
             const gridSegments = 20; 
             const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
             const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
             const gridKey = `${gridX},${gridY}`;
             
             const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
-            // Both agents contribute to the shared Ruliad visual mesh
             visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
 
             let baseZeta = Math.max(0.0, 1.0 - (cellData.density / 15.0));
@@ -576,26 +630,33 @@
             let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
             let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
 
-            if (currentZetaNum >= 0.5) {
-                zetaStats.high++;
-            } else {
-                zetaStats.low++;
-            }
+            if (currentZetaNum >= 0.5) zetaStats.high++;
+            else zetaStats.low++;
 
-            // TRUE POINCARE SECTION: Only map phase space coordinates upon boundary collision.
+            // TRUE POINCARE SECTION
             if (bounced) {
-                const hyperX = Math.floor((agent.x + BOX_SIZE) * 20); // Scale x to 0-40
-                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40); // Scale angle to 0-40
+                let nextTheta = agent.theta;
+                if (nextX !== 0 || nextY !== 0) nextTheta = Math.atan2(nextY, nextX);
+                
+                let dTheta = nextTheta - agent.theta;
+                if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
+                if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
+                
+                agent.accumulatedTheta += dTheta;
+                agent.theta = nextTheta;
+
+                const hyperX = Math.floor((agent.x + BOX_SIZE) * 20); 
+                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40); 
                 const hyperKey = `${hyperX},${hyperTheta}`;
                 const hyperCellData = hyperGrid.get(hyperKey) || { density: 0, lastVisit: 0 };
                 hyperGrid.set(hyperKey, { density: hyperCellData.density + 1, lastVisit: globalTick });
             }
 
-            // BLADE HEURISTIC (Only applied to Beta)
+            // BLADE HEURISTIC (Steer away from shared knowledge map)
             if (isBetaObserver && currentZetaNum < 0.5) {
                 const currentAngle = Math.atan2(agent.vy, agent.vx);
                 const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
-                const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; // Gentle perturbation
+                const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; 
                 agent.vx = Math.cos(steerAngle) * speedMag;
                 agent.vy = Math.sin(steerAngle) * speedMag;
             }
@@ -603,90 +664,125 @@
             agent.trail.push({ x: agent.x, y: agent.y });
             if (agent.trail.length > trailLength) agent.trail.shift();
 
-            return { bounced, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
+            return { bounced, cornerHit, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
         }
 
         function updatePhysics() {
-            let hitBoundary = false;
-            let bestAlphaStr = "0", bestBetaStr = "0";
+            let swarmHitBoundary = false;
             let triggerArtifact = false;
+            let artifactGroup = null;
+            let maxDivergence = 0;
 
             for (let step = 0; step < speed; step++) {
                 globalTick++; 
                 
-                // Advance both agents simultaneously
-                const alphaRes = moveAgent(agentAlpha, false); // PURE CONTROL
-                const betaRes = moveAgent(agentBeta, true);    // OBSERVER
+                fleet.forEach(group => {
+                    const alphaRes = moveAgent(group.alpha, false);
+                    const betaRes = moveAgent(group.beta, true);
 
-                if (alphaRes.bounced || betaRes.bounced) {
-                    hitBoundary = true;
-                    stats.bounces++;
+                    if (alphaRes.bounced || betaRes.bounced) {
+                        swarmHitBoundary = true;
+                        group.bounces++;
+                        stats.bounces++; 
+                        
+                        if (alphaRes.cornerHit || betaRes.cornerHit) stats.cornerHits++;
+
+                        stabilityHistory.push(stats.bounces);
+                        if (stabilityHistory.length > 5) stabilityHistory.shift();
+
+                        if (!triggerArtifact && (alphaRes.zetaNum > 0.95 || betaRes.zetaNum > 0.95)) {
+                            triggerArtifact = true;
+                            artifactGroup = { 
+                                id: group.id, 
+                                zetaStrAlpha: alphaRes.zetaStr, 
+                                zetaStrBeta: betaRes.zetaStr,
+                                trailAlpha: [...group.alpha.trail],
+                                trailBeta: [...group.beta.trail]
+                            };
+                        }
+
+                        // Evaluate Multiway Leaderboard for this specific swarm agent
+                        if (supabaseClient) {
+                            [ {r: alphaRes, t: 'ALPHA'}, {r: betaRes, t: 'BETA'} ].forEach(evalAgent => {
+                                if (evalAgent.r.zetaNum > 0.6) {
+                                    let isGlobalTop = false;
+                                    if (globalLeaderboard.length < 20) {
+                                        isGlobalTop = true;
+                                    } else {
+                                        const lowest = globalLeaderboard[globalLeaderboard.length - 1];
+                                        if (evalAgent.r.zetaStr.localeCompare(lowest.zetaStr) > 0) isGlobalTop = true;
+                                    }
+
+                                    if (isGlobalTop) {
+                                        globalLeaderboard.push({ 
+                                            uid: currentUser.uid, 
+                                            swarmId: group.id + 1,
+                                            type: evalAgent.t, 
+                                            bounce: stats.bounces, 
+                                            zetaStr: evalAgent.r.zetaStr 
+                                        });
+                                        globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
+                                        if (globalLeaderboard.length > 20) globalLeaderboard.pop();
+                                        supabaseClient.from('global_state').update({ leaderboard_data: { entries: globalLeaderboard } }).eq('id', 'main_leaderboard').then();
+                                    }
+                                }
+                            });
+                        }
+                    }
                     
-                    if (alphaRes.zetaStr.localeCompare(bestAlphaStr) > 0) bestAlphaStr = alphaRes.zetaStr;
-                    if (betaRes.zetaStr.localeCompare(bestBetaStr) > 0) bestBetaStr = betaRes.zetaStr;
-
-                    // Stability tracking (Intervals between bounces)
-                    stabilityHistory.push(stats.bounces);
-                    if (stabilityHistory.length > 5) stabilityHistory.shift();
-
-                    if (alphaRes.zetaNum > 0.95 || betaRes.zetaNum > 0.95) triggerArtifact = true;
-                }
+                    group.divergence = Math.sqrt(Math.pow(group.alpha.x - group.beta.x, 2) + Math.pow(group.alpha.y - group.beta.y, 2));
+                    if (group.divergence > maxDivergence) maxDivergence = group.divergence;
+                });
             }
 
-            // DIVERGENCE CALCULATION (Lyapunov Proxy)
-            const divergence = Math.sqrt(Math.pow(agentAlpha.x - agentBeta.x, 2) + Math.pow(agentAlpha.y - agentBeta.y, 2));
+            // Aggregate Winding (Track Swarm 0 as representative)
+            stats.windingNumber = fleet[0].alpha.accumulatedTheta / (2 * Math.PI);
 
-            // MULTIWAY LEADERBOARD PUSH
-            if (hitBoundary && supabaseClient) {
-                let pushed = false;
-                // Evaluate Pure Alpha
-                if (bestAlphaStr > "0.6" && (!globalLeaderboard.length || bestAlphaStr.localeCompare(globalLeaderboard[globalLeaderboard.length-1]?.zetaStr || "0") > 0)) {
-                    globalLeaderboard.push({ uid: currentUser.uid, type: 'ALPHA', bounce: stats.bounces, zetaStr: bestAlphaStr });
-                    pushed = true;
-                }
-                // Evaluate Beta Observer
-                if (bestBetaStr > "0.6" && (!globalLeaderboard.length || bestBetaStr.localeCompare(globalLeaderboard[globalLeaderboard.length-1]?.zetaStr || "0") > 0)) {
-                    globalLeaderboard.push({ uid: currentUser.uid, type: 'BETA', bounce: stats.bounces, zetaStr: bestBetaStr });
-                    pushed = true;
-                }
-                if (pushed) {
-                    globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
-                    if (globalLeaderboard.length > 20) globalLeaderboard.pop();
-                    supabaseClient.from('global_state').update({ leaderboard_data: { entries: globalLeaderboard } }).eq('id', 'main_leaderboard').then();
-                }
-
-                // ARTIFACT STORAGE
-                if (triggerArtifact && artifacts.length < 20) {
-                    artifacts.unshift({ 
-                        id: `ART-${Math.floor(Math.random()*10000)}`, 
-                        bounce: stats.bounces, 
-                        tick: globalTick,
-                        zetaStrAlpha: bestAlphaStr, 
-                        zetaStrBeta: bestBetaStr,
-                        desc: `Divergence: ${divergence.toFixed(4)}. Novel mapping phase.`,
-                        trailAlpha: [...agentAlpha.trail],
-                        trailBeta: [...agentBeta.trail],
-                        gridSnapshot: new Map(visitedGrid) // Heavy, but we limit array to 20
-                    });
-                }
+            // ARTIFACT STORAGE
+            if (triggerArtifact && artifactGroup && artifacts.length < 20) {
+                artifacts.unshift({ 
+                    id: `ART-${Math.floor(Math.random()*10000)}`, 
+                    bounce: stats.bounces, 
+                    tick: globalTick,
+                    triggerSwarm: artifactGroup.id + 1,
+                    zetaStrAlpha: artifactGroup.zetaStrAlpha, 
+                    zetaStrBeta: artifactGroup.zetaStrBeta,
+                    desc: `Max Swarm Divergence: ${maxDivergence.toFixed(4)}. Novel mapping phase.`,
+                    trailAlpha: artifactGroup.trailAlpha,
+                    trailBeta: artifactGroup.trailBeta,
+                    gridSnapshot: new Map(visitedGrid) 
+                });
             }
 
-            if (hitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
+            if (swarmHitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
                 lastSaveBounce = stats.bounces;
                 saveStateToCloud();
             }
 
             // --- UI UPDATES ---
-            if (hitBoundary || Math.random() < 0.05) {
+            if (swarmHitBoundary || Math.random() < 0.05) {
                 statBounces.innerText = stats.bounces;
-                statDivergence.innerText = divergence.toFixed(4);
-                
-                // Color divergence text based on severity
-                statDivergence.className = divergence > 0.5 ? 'text-red-500' : 'text-cyan-500';
+                statDivergence.innerText = maxDivergence.toFixed(4);
+                statDivergence.className = maxDivergence > 0.5 ? 'text-red-500' : 'text-cyan-500';
+                statWinding.innerText = stats.windingNumber.toFixed(3);
+                statCorners.innerText = stats.cornerHits;
+
+                if (activeTab === 'SUPER_BRAIN') {
+                    if (superVoidEl) superVoidEl.innerText = minOrbitRadius.toFixed(4);
+                    if (swarmDivergenceBars) {
+                        swarmDivergenceBars.innerHTML = fleet.map(g => `
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[9px] w-12 text-gray-500">SWRM ${g.id+1}</span>
+                                <div class="flex-1 bg-gray-800 h-2 rounded"><div class="bg-blue-500 h-full transition-all" style="width: ${Math.min(100, g.divergence * 50)}%"></div></div>
+                                <span class="text-[9px] text-blue-400 w-10 text-right">${g.divergence.toFixed(3)}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
 
                 if (activeTab === 'HYPER') {
                     if(hyperDim) hyperDim.innerText = (1.0 + Math.abs(stats.windingNumber * 0.0142)).toFixed(4);
-                    if(hyperErgodicity) hyperErgodicity.style.width = `${Math.min(100, (stats.bounces / 5000) * 100)}%`;
+                    if(hyperErgodicity) hyperErgodicity.style.width = `${Math.min(100, (stats.bounces / 20000) * 100)}%`;
                 }
 
                 if (activeTab === 'ZETA') {
@@ -697,35 +793,37 @@
                 if (activeTab === 'MUSEUM') {
                     museumGallery.innerHTML = artifacts.map(art => `
                         <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer border border-yellow-600 bg-yellow-900/20 hover:bg-yellow-900/40 p-2 rounded flex flex-col transition-colors">
-                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-gray-500 ml-1">CLICK TO VIEW</span></div>
+                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-gray-500 ml-1">SWRM ${art.triggerSwarm}</span></div>
                             <div class="text-[7px] text-cyan-400 break-all leading-tight mt-1">α: ${art.zetaStrAlpha}</div>
                             <div class="text-[7px] text-magenta-400 break-all leading-tight mt-1">β: ${art.zetaStrBeta}</div>
                         </div>
                     `).join('');
                 }
 
-                if (activeTab === 'STABILITY' && hitBoundary) {
+                if (activeTab === 'STABILITY' && swarmHitBoundary) {
                     if (stabilityHistory.length >= 5) {
                         const intervals = [];
                         for(let i=1; i<stabilityHistory.length; i++) intervals.push(stabilityHistory[i] - stabilityHistory[i-1]);
                         const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
-                        const isStable = variance < 5;
+                        const isStable = variance < 10;
                         stabilityLog.innerHTML = `
                             <div class="${isStable ? 'text-lime-400 font-bold bg-lime-900/20' : 'text-gray-500'} p-1 border-b border-gray-800">
-                                Bounces: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '- PERIODIC ORBIT DETECTED' : ''}
+                                Global Bounces: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '- ORBIT DETECTED' : ''}
                             </div>
                         ` + stabilityLog.innerHTML;
                     }
                 }
 
                 if (activeTab === 'VOIDS') {
-                    voidRadius.innerText = minOrbitRadius.toFixed(4);
-                    if (minOrbitRadius > 0.1) {
-                        voidStructure.innerText = "STRUCTURED (Caustic)";
-                        voidStructure.className = "text-lime-400";
-                    } else {
-                        voidStructure.innerText = "CHAOTIC (Origin crossed)";
-                        voidStructure.className = "text-red-400";
+                    if (voidRadius) voidRadius.innerText = minOrbitRadius.toFixed(4);
+                    if (voidStructure) {
+                        if (minOrbitRadius > 0.1) {
+                            voidStructure.innerText = "STRUCTURED (Caustic)";
+                            voidStructure.className = "text-lime-400";
+                        } else {
+                            voidStructure.innerText = "CHAOTIC (Origin crossed)";
+                            voidStructure.className = "text-red-400";
+                        }
                     }
                 }
 
@@ -749,27 +847,27 @@
             ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, w, h);
             ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 2; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
 
-            // Draw Alpha Trail (White/Cyan)
-            if (agentAlpha.trail.length > 1) {
-                ctx.beginPath(); ctx.moveTo(cx + agentAlpha.trail[0].x * scale, cy + agentAlpha.trail[0].y * scale);
-                for (let i = 1; i < agentAlpha.trail.length; i++) ctx.lineTo(cx + agentAlpha.trail[i].x * scale, cy + agentAlpha.trail[i].y * scale);
-                ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
-            }
+            // Render all 7 Swarms (14 Agents)
+            fleet.forEach(group => {
+                // Alpha Trail (White/Cyan)
+                if (group.alpha.trail.length > 1) {
+                    ctx.beginPath(); ctx.moveTo(cx + group.alpha.trail[0].x * scale, cy + group.alpha.trail[0].y * scale);
+                    for (let i = 1; i < group.alpha.trail.length; i++) ctx.lineTo(cx + group.alpha.trail[i].x * scale, cy + group.alpha.trail[i].y * scale);
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)'; ctx.lineWidth = 1.0; ctx.stroke();
+                }
+                // Beta Trail (Magenta)
+                if (group.beta.trail.length > 1) {
+                    ctx.beginPath(); ctx.moveTo(cx + group.beta.trail[0].x * scale, cy + group.beta.trail[0].y * scale);
+                    for (let i = 1; i < group.beta.trail.length; i++) ctx.lineTo(cx + group.beta.trail[i].x * scale, cy + group.beta.trail[i].y * scale);
+                    ctx.strokeStyle = 'rgba(255, 0, 255, 0.2)'; ctx.lineWidth = 1.0; ctx.stroke();
+                }
 
-            // Draw Beta Trail (Magenta)
-            if (agentBeta.trail.length > 1) {
-                ctx.beginPath(); ctx.moveTo(cx + agentBeta.trail[0].x * scale, cy + agentBeta.trail[0].y * scale);
-                for (let i = 1; i < agentBeta.trail.length; i++) ctx.lineTo(cx + agentBeta.trail[i].x * scale, cy + agentBeta.trail[i].y * scale);
-                ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
-            }
-
-            // Draw Alpha Agent
-            ctx.beginPath(); ctx.arc(cx + agentAlpha.x * scale, cy + agentAlpha.y * scale, 3, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
-            
-            // Draw Beta Agent
-            ctx.beginPath(); ctx.arc(cx + agentBeta.x * scale, cy + agentBeta.y * scale, 3, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
+                ctx.beginPath(); ctx.arc(cx + group.alpha.x * scale, cy + group.alpha.y * scale, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
+                
+                ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
+            });
 
             // 1. Draw EYES Heatmap (Combined Spatial Density)
             if (activeTab === 'EYES' && eyesCanvas) {
@@ -786,7 +884,7 @@
                 });
             }
 
-            // 2. Draw HYPER Poincaré Map (Phase Space: x vs theta on Bounce)
+            // 2. Draw HYPER Poincaré Map
             if (activeTab === 'HYPER' && hyperCanvas) {
                 const hCtx = hyperCanvas.getContext('2d');
                 hCtx.clearRect(0, 0, hyperCanvas.width, hyperCanvas.height);
@@ -802,7 +900,7 @@
                 });
             }
 
-            // 3. Draw ZETA Tensor Matrix (Active Heuristic Weights)
+            // 3. Draw ZETA Tensor Matrix (Representative Swarm 0)
             if (activeTab === 'ZETA' && zetaCanvas) {
                 const zCtx = zetaCanvas.getContext('2d');
                 zCtx.clearRect(0, 0, zetaCanvas.width, zetaCanvas.height);
@@ -812,10 +910,7 @@
 
                 for (let ix = 0; ix < zGridSize; ix++) {
                     for (let iy = 0; iy < zGridSize; iy++) {
-                        // Calculate live tensor weight based on Agent Beta (the active observer)
-                        const weight = Math.abs(Math.sin((ix+1) * agentBeta.x * 3.14 + (iy+1) * agentBeta.y * 2.71 + globalTick * 0.005));
-                        
-                        // Treat raw numeric weight as "temporal age" to hijack the Ruliad color palette
+                        const weight = Math.abs(Math.sin((ix+1) * fleet[0].beta.x * 3.14 + (iy+1) * fleet[0].beta.y * 2.71 + globalTick * 0.005));
                         const simulatedAge = (1.0 - weight) * 2400; 
                         
                         zCtx.fillStyle = getRuliadColor(simulatedAge);
