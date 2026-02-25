@@ -24,20 +24,27 @@
         ::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Modal Blur */
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
     </style>
 </head>
-<body class="min-h-screen p-4 flex flex-col selection:bg-cyan-900">
+<body class="min-h-screen p-4 flex flex-col selection:bg-cyan-900 relative">
 
     <!-- HEADER -->
     <header class="flex justify-between items-end border-b border-gray-700 pb-2 mb-4">
         <div>
             <h1 class="text-2xl font-black tracking-tighter text-white">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Rulial Mechanics v2</h2>
+            <h2 class="text-sm font-mono text-gray-500 uppercase tracking-widest mt-1">Sim3Colts Build :: Dual-Sim Cross-Reference v3</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right font-mono text-xs text-gray-500">
                 STATUS: <span class="text-yellow-500 animate-pulse" id="save-status">CONNECTING SUPABASE...</span><br/>
-                ENGINE: RULIAD_KINEMATICS_X1 (MULTIWAY)
+                ENGINE: RULIAD_KINEMATICS_X2 (DUAL-CORE)
             </div>
             <!-- BUY ME A COFFEE TIP JAR -->
             <a href="https://buymeacoffee.com/brandonkennedy" target="_blank" rel="noopener noreferrer" 
@@ -48,7 +55,7 @@
     </header>
 
     <!-- MAIN GRID -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
         
         <!-- LEFT PANE: CANVAS & CONTROLS -->
         <div class="lg:col-span-2 flex flex-col gap-4">
@@ -58,7 +65,8 @@
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[10px] font-mono text-gray-500 select-none pointer-events-none">
                     GEOMETRY: SQUARE_STRICT<br/>
-                    RAY_SPLIT: OFF
+                    MODE: DUAL_CROSS_REFERENCE<br/>
+                    <span class="text-cyan-400">ALPHA (PURE INERTIAL)</span> | <span class="text-magenta-400">BETA (BLADE OBSERVER)</span>
                 </div>
             </div>
 
@@ -85,9 +93,10 @@
         <div class="flex flex-col gap-4 h-full">
             
             <!-- MACRO OBSERVABLES DASHBOARD -->
-            <div class="bg-gray-900 p-4 border border-gray-800 rounded grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs">
-                <div class="col-span-2 border-b border-gray-800 pb-1 mb-1 text-gray-500 font-bold tracking-widest">
-                    SYSTEM MACROSTATES
+            <div class="bg-gray-900 p-4 border border-gray-800 rounded grid grid-cols-2 gap-y-4 gap-x-2 font-mono text-xs relative overflow-hidden">
+                <div class="col-span-2 border-b border-gray-800 pb-1 mb-1 text-gray-500 font-bold tracking-widest flex justify-between">
+                    <span>SYSTEM MACROSTATES</span>
+                    <span class="text-cyan-500">Δ DIVERGENCE: <span id="statDivergence">0.000</span></span>
                 </div>
                 
                 <div class="flex flex-col">
@@ -120,38 +129,39 @@
                 <div class="flex-1 p-2 relative">
                     <!-- EYES TAB -->
                     <div id="tab-EYES" class="hidden h-full flex flex-col font-mono text-xs text-blue-400 p-4 bg-gray-900 border border-blue-800 rounded">
-                        <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">SENSORY RECEPTORS (HEATMAP)</h3>
+                        <h3 class="text-blue-200 mb-2 border-b border-blue-800 pb-1">SENSORY RECEPTORS (COMBINED HEATMAP)</h3>
                         <div class="flex-1 relative bg-black border border-blue-900 overflow-hidden">
                             <canvas id="eyesCanvas" class="absolute inset-0 w-full h-full opacity-80"></canvas>
                         </div>
                     </div>
 
-                    <!-- BRAIN TAB -->
-                    <div id="tab-BRAIN" class="hidden h-full flex flex-col font-mono text-xs text-purple-400 p-4 bg-gray-900 border border-purple-800 rounded">
-                        <h3 class="text-purple-200 mb-2 border-b border-purple-800 pb-1">COGNITIVE HEURISTICS (AVOIDANCE)</h3>
-                        <div class="flex-1 flex flex-col gap-2">
-                            <div class="bg-black p-2 border border-purple-900">
-                                <p class="text-gray-500">BLADE PERTURBATION PROTOCOL</p>
-                                <p>Status: <span class="text-lime-400">ACTIVE (Anti-Remapping)</span></p>
-                                <p>Steering events: <span id="brain-steers" class="text-white">0</span></p>
-                            </div>
-                            <div class="bg-black p-2 border border-purple-900 flex-1 overflow-y-auto" id="brain-log">
-                                <!-- Brain decisions -->
-                            </div>
+                    <!-- STABILITY / ORBITS TAB -->
+                    <div id="tab-STABILITY" class="hidden h-full flex flex-col font-mono text-xs text-indigo-400 p-4 bg-gray-900 border border-indigo-800 rounded">
+                        <h3 class="text-indigo-200 mb-2 border-b border-indigo-800 pb-1">ORBITAL STABILITY METRICS</h3>
+                        <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="stability-log">
+                            <div class="text-gray-500">Calculating periodic orbital variance...</div>
                         </div>
                     </div>
 
-                    <!-- REALITY TAB -->
-                    <div id="tab-REALITY" class="hidden h-full flex flex-col font-mono text-xs text-orange-400 p-4 bg-gray-900 border border-orange-800 rounded">
-                        <h3 class="text-orange-200 mb-2 border-b border-orange-800 pb-1">DISCRETE COORDINATE MATRIX</h3>
-                        <div class="flex-1 bg-black border border-orange-900 p-2 overflow-y-auto" id="reality-grid-log">
-                            <!-- Matrix coords -->
+                    <!-- VOIDS TAB -->
+                    <div id="tab-VOIDS" class="hidden h-full flex flex-col font-mono text-xs text-teal-400 p-4 bg-gray-900 border border-teal-800 rounded">
+                        <h3 class="text-teal-200 mb-2 border-b border-teal-800 pb-1">CAUSTIC VOID TOPOLOGY</h3>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div class="bg-black border border-teal-900 p-2">
+                                <p class="text-gray-500">Void Structure</p>
+                                <p class="text-white" id="void-structure">Analyzing...</p>
+                            </div>
+                            <div class="bg-black border border-teal-900 p-2">
+                                <p class="text-gray-500">Min. Radius (r)</p>
+                                <p class="text-teal-400" id="void-radius">0.000</p>
+                            </div>
                         </div>
+                        <div class="text-gray-400 mt-2">Structured voids (circles) indicate a whispering gallery effect and conserved angular momentum. Random voids indicate chaotic multiway dispersion.</div>
                     </div>
 
                     <!-- MUSEUM TAB -->
                     <div id="tab-MUSEUM" class="hidden h-full flex flex-col font-mono text-xs text-yellow-400 p-4 bg-gray-900 border border-yellow-800 rounded">
-                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800 pb-1">ARTIFACT STORAGE (NOVEL CONFIGS)</h3>
+                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800 pb-1">ARTIFACT STORAGE (CLICK TO RENDER)</h3>
                         <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery">
                             <!-- Artifact Cards -->
                         </div>
@@ -174,13 +184,13 @@
                             <div class="col-span-2 mt-2">
                                 <p class="text-gray-400 mb-1">Poincaré Section (x, θ) Map</p>
                                 <div class="w-full h-32 bg-black border border-cyan-900 relative overflow-hidden">
-                                    <canvas id="hyperCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                                    <canvas id="hyperCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ZETA TAB -->
+                    <!-- ZETA TAB (RESTORED) -->
                     <div id="tab-ZETA" class="hidden h-full flex flex-col font-mono text-xs text-magenta-400 p-4 bg-gray-900 border border-magenta-800 rounded">
                         <h3 class="text-magenta-200 mb-2 border-b border-magenta-800 pb-1">BLADE ALGORITHMIC HEURISTICS</h3>
                         <div class="grid grid-cols-2 gap-4 mb-2">
@@ -195,23 +205,15 @@
                         </div>
                         <p class="mb-2 text-gray-400 mt-2">Quadratic Reality Tensor Matrix (Active weights)</p>
                         <div class="flex-1 relative bg-black border border-magenta-900 min-h-[150px]">
-                            <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- LOG TAB -->
-                    <div id="tab-LOG" class="hidden h-full flex flex-col font-mono text-xs text-lime-400 p-4 bg-black border border-lime-800 rounded overflow-hidden">
-                        <h3 class="text-lime-200 mb-2 border-b border-lime-800 pb-1">CAUSAL GRAPH EVENT STREAM</h3>
-                        <div id="log-container" class="flex-1 overflow-y-auto space-y-1 pr-2">
-                            <span class="text-gray-600">Awaiting boundary interactions...</span>
+                            <canvas id="zetaCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
                         </div>
                     </div>
 
                     <!-- RANK TAB (GLOBAL LEADERBOARD) -->
                     <div id="tab-RANK" class="hidden h-full flex flex-col font-mono text-xs text-emerald-400 p-4 bg-gray-900 border border-emerald-800 rounded overflow-hidden">
-                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">GLOBAL NOVELTY LEADERBOARD</h3>
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800 pb-1">CROSS-REF GLOBAL LEADERBOARD</h3>
                         <div class="flex justify-between text-[10px] text-gray-500 mb-2 px-1">
-                            <span>RANK / USER ID / BOUNCE</span>
+                            <span>RANK / TYPE / UID</span>
                             <span>ZETA SCORE (ζ)</span>
                         </div>
                         <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-1 pr-2">
@@ -220,12 +222,39 @@
                     </div>
 
                     <!-- FALLBACK TAB -->
-                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 border border-gray-800 bg-gray-900 rounded">
+                    <div id="tab-OTHER" class="hidden h-full flex items-center justify-center font-mono text-gray-500 border border-gray-800 bg-gray-900 rounded text-center p-4">
                         <span id="other-tab-name"></span>
                     </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- ARTIFACT RENDER MODAL -->
+    <div id="artifactModal" class="fixed inset-0 z-50 hidden items-center justify-center p-8 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-4xl h-[80vh] flex flex-col rounded shadow-2xl overflow-hidden">
+            <div class="bg-gray-900 border-b border-cyan-800 p-4 flex justify-between items-center">
+                <h2 class="text-cyan-400 font-mono font-bold tracking-widest" id="modal-title">ARTIFACT RENDER</h2>
+                <button onclick="closeModal()" class="text-red-500 hover:text-red-400 font-mono text-xl font-bold px-2">&times;</button>
+            </div>
+            <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black relative">
+                <div class="flex flex-col border border-gray-800 rounded bg-gray-900 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800 p-2 z-10 text-center font-mono text-xs text-gray-400">
+                        2D TRAJECTORY SPACE (ALPHA + BETA)
+                    </div>
+                    <canvas id="modalTrajCanvas" class="w-full h-full"></canvas>
+                </div>
+                <div class="flex flex-col border border-gray-800 rounded bg-gray-900 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 bg-black/80 border-b border-gray-800 p-2 z-10 text-center font-mono text-xs text-gray-400">
+                        RULIAD BLOCK PATTERN
+                    </div>
+                    <canvas id="modalRuliadCanvas" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            <div class="bg-gray-900 p-4 border-t border-cyan-800 text-xs font-mono text-gray-400" id="modal-desc">
+                Data description.
+            </div>
         </div>
     </div>
 
@@ -243,7 +272,7 @@
         let isSaving = false;
         let lastSaveBounce = 0;
 
-        // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED) ---
+        // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED LCG) ---
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
             let seed = Math.abs(Math.floor(x * 10000000) ^ Math.floor(y * 10000000));
@@ -257,23 +286,29 @@
             return str.substring(0, 103);
         }
 
-        // --- SIMULATION STATE ---
-        let activeTab = 'LOG';
+        // --- DUAL-SIMULATION STATE ---
+        let activeTab = 'RANK';
         let speed = 5;
         let trailLength = 800;
         
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0, freeConfigs: 180360 };
-        let agent = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), accumulatedTheta: 0, trail: [] };
-        let eventLog = [];
+        let zetaStats = { high: 0, low: 0, steers: 0 };
+        
+        // Agent Alpha: Pure Inertial Mathematical Control
+        let agentAlpha = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), trail: [] };
+        // Agent Beta: Blade Heuristic Observer
+        let agentBeta = { x: 0.1, y: 0.2, vx: INITIAL_SPEED * 0.8, vy: INITIAL_SPEED * 1.2, theta: Math.atan2(0.2, 0.1), trail: [] };
 
+        let eventLog = [];
         let visitedGrid = new Map();
         let hyperGrid = new Map(); 
         let globalTick = 0; 
         let artifacts = [];
         let globalLeaderboard = []; 
-        let zetaStats = { high: 0, low: 0, steers: 0 };
-        let brainLog = [];
-        let realityLog = [];
+        
+        // Voids & Stability Tracking
+        let stabilityHistory = [];
+        let minOrbitRadius = Infinity;
 
         // --- DOM ELEMENTS ---
         const canvas = document.getElementById('simCanvas');
@@ -286,25 +321,32 @@
         const statWinding = document.getElementById('statWinding');
         const statCorners = document.getElementById('statCorners');
         const statBounces = document.getElementById('statBounces');
+        const statDivergence = document.getElementById('statDivergence');
         
-        const logContainer = document.getElementById('log-container');
-        const hyperDim = document.getElementById('hyper-dim');
-        const hyperErgodicity = document.getElementById('hyper-ergodicity');
-
         const eyesCanvas = document.getElementById('eyesCanvas');
         const hyperCanvas = document.getElementById('hyperCanvas');
         const zetaCanvas = document.getElementById('zetaCanvas');
-        const brainSteers = document.getElementById('brain-steers');
-        const brainLogEl = document.getElementById('brain-log');
-        const realityGridLog = document.getElementById('reality-grid-log');
         const museumGallery = document.getElementById('museum-gallery');
-        const zetaHighEl = document.getElementById('zeta-high');
-        const zetaLowEl = document.getElementById('zeta-low');
         const leaderboardContainer = document.getElementById('leaderboard-container');
         const saveStatusEl = document.getElementById('save-status');
+        
+        const stabilityLog = document.getElementById('stability-log');
+        const voidStructure = document.getElementById('void-structure');
+        const voidRadius = document.getElementById('void-radius');
+        const hyperDim = document.getElementById('hyper-dim');
+        const hyperErgodicity = document.getElementById('hyper-ergodicity');
+        const zetaHighEl = document.getElementById('zeta-high');
+        const zetaLowEl = document.getElementById('zeta-low');
+
+        // Modal Elements
+        const artifactModal = document.getElementById('artifactModal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalTrajCanvas = document.getElementById('modalTrajCanvas');
+        const modalRuliadCanvas = document.getElementById('modalRuliadCanvas');
 
         // --- SETUP TABS ---
-        const tabs = ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG', 'RANK'];
+        const tabs = ['EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
         const tabHeaders = document.getElementById('tab-headers');
 
         function renderTabButtons() {
@@ -326,18 +368,18 @@
             activeTab = tab;
             renderTabButtons();
             
-            ['EYES', 'BRAIN', 'REALITY', 'MUSEUM', 'HYPER', 'ZETA', 'LOG', 'RANK', 'OTHER'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
+            ['EYES', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK', 'OTHER'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
             });
 
             if (tabs.includes(tab)) {
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
                 if (tab === 'RANK') renderLeaderboardUI();
-                
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
             } else {
                 document.getElementById('tab-OTHER').classList.remove('hidden');
-                document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE CONNECTED ELSEWHERE ]`;
+                document.getElementById('other-tab-name').innerText = `[ ${tab} MODULE ARCHIVED ]\nConsolidated into Dual-Sim layout.`;
             }
         };
 
@@ -345,58 +387,35 @@
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
-                const { data, error } = await supabaseClient
-                    .from('saves')
-                    .select('state_data')
-                    .eq('user_id', currentUser.uid)
-                    .single();
-
+                const { data } = await supabaseClient.from('saves').select('state_data').eq('user_id', currentUser.uid).single();
                 if (data && data.state_data) {
                     const saved = data.state_data;
                     stats = saved.stats || stats;
-                    agent = { ...agent, ...saved.agent, trail: [] }; 
+                    zetaStats = saved.zetaStats || zetaStats;
+                    agentAlpha = { ...agentAlpha, ...saved.agentAlpha, trail: [] }; 
+                    agentBeta = { ...agentBeta, ...saved.agentBeta, trail: [] }; 
                     globalTick = saved.globalTick || 0;
                     artifacts = saved.artifacts || [];
-                    zetaStats = saved.zetaStats || zetaStats;
-                    
-                    if (saved.visitedGrid) {
-                        try { visitedGrid = new Map(JSON.parse(saved.visitedGrid)); } catch(e) {}
-                    }
-                    if (saved.hyperGrid) {
-                        try { hyperGrid = new Map(JSON.parse(saved.hyperGrid)); } catch(e) {}
-                    }
+                    if (saved.visitedGrid) try { visitedGrid = new Map(JSON.parse(saved.visitedGrid)); } catch(e) {}
+                    if (saved.hyperGrid) try { hyperGrid = new Map(JSON.parse(saved.hyperGrid)); } catch(e) {}
                     lastSaveBounce = stats.bounces;
                 }
-            } catch (e) {
-                console.error("Private cloud load failed", e);
-            }
+            } catch (e) { console.error("Private cloud load failed", e); }
         }
 
         async function setupGlobalLeaderboardListener() {
             if (!supabaseClient) return;
-            
-            // Initial fetch
-            const { data } = await supabaseClient
-                .from('global_state')
-                .select('leaderboard_data')
-                .eq('id', 'main_leaderboard')
-                .single();
-                
+            const { data } = await supabaseClient.from('global_state').select('leaderboard_data').eq('id', 'main_leaderboard').single();
             if (data && data.leaderboard_data) {
                 globalLeaderboard = data.leaderboard_data.entries || [];
                 if (activeTab === 'RANK') renderLeaderboardUI();
             }
-
-            // Realtime Subscription
-            supabaseClient
-                .channel('public:global_state')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'global_state', filter: 'id=eq.main_leaderboard' }, payload => {
-                    if (payload.new && payload.new.leaderboard_data) {
-                        globalLeaderboard = payload.new.leaderboard_data.entries || [];
-                        if (activeTab === 'RANK') renderLeaderboardUI();
-                    }
-                })
-                .subscribe();
+            supabaseClient.channel('public:global_state').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'global_state', filter: 'id=eq.main_leaderboard' }, payload => {
+                if (payload.new && payload.new.leaderboard_data) {
+                    globalLeaderboard = payload.new.leaderboard_data.entries || [];
+                    if (activeTab === 'RANK') renderLeaderboardUI();
+                }
+            }).subscribe();
         }
 
         async function saveStateToCloud() {
@@ -404,29 +423,20 @@
             isSaving = true;
             saveStatusEl.innerText = 'SYNCING REALITY...';
             saveStatusEl.classList.replace('text-lime-500', 'text-yellow-500');
-            
             try {
                 const state = {
                     stats,
-                    agent: { 
-                        x: agent.x, y: agent.y, vx: agent.vx, vy: agent.vy, 
-                        theta: agent.theta, accumulatedTheta: agent.accumulatedTheta
-                    },
-                    globalTick,
-                    artifacts,
                     zetaStats,
+                    agentAlpha: { x: agentAlpha.x, y: agentAlpha.y, vx: agentAlpha.vx, vy: agentAlpha.vy },
+                    agentBeta: { x: agentBeta.x, y: agentBeta.y, vx: agentBeta.vx, vy: agentBeta.vy },
+                    globalTick, artifacts,
                     visitedGrid: JSON.stringify(Array.from(visitedGrid.entries())),
                     hyperGrid: JSON.stringify(Array.from(hyperGrid.entries()))
                 };
-                
-                await supabaseClient
-                    .from('saves')
-                    .upsert({ user_id: currentUser.uid, state_data: state });
-                
+                await supabaseClient.from('saves').upsert({ user_id: currentUser.uid, state_data: state });
                 saveStatusEl.innerText = 'MULTIWAY CLOUD SYNCED';
                 saveStatusEl.classList.replace('text-yellow-500', 'text-lime-500');
             } catch (e) {
-                console.error("Cloud save failed", e);
                 saveStatusEl.innerText = 'SYNC ERROR';
                 saveStatusEl.classList.replace('text-yellow-500', 'text-red-500');
             }
@@ -441,260 +451,282 @@
             }
             leaderboardContainer.innerHTML = globalLeaderboard.map((entry, index) => {
                 const isMe = currentUser && entry.uid === currentUser.uid;
-                // Obfuscate UUID slightly for display safety
                 const displayUid = entry.uid.split('-')[0] + '...';
+                const color = entry.type === 'ALPHA' ? 'text-cyan-400' : 'text-magenta-400';
                 return `
                 <div class="flex flex-col border-b border-emerald-900/50 py-1 ${index === 0 ? 'bg-emerald-900/20 px-1' : ''} ${isMe ? 'border-l-2 border-l-lime-400 pl-1 bg-emerald-900/10' : ''}">
-                    <div class="flex justify-between w-full">
-                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1}</div>
+                    <div class="flex justify-between w-full items-center">
+                        <div class="${index === 0 ? 'text-emerald-300 font-bold' : 'text-emerald-500'}">#${index + 1} <span class="${color} text-[8px] ml-1">[${entry.type}]</span></div>
                         <div class="text-[9px] text-gray-500 font-bold">${isMe ? '<span class="text-lime-400">YOU</span>' : displayUid}</div>
-                        <div class="text-emerald-600 text-[9px]">[T=${entry.bounce}]</div>
                     </div>
                     <div class="font-bold text-[7.5px] text-emerald-400 break-all leading-tight mt-1">ζ: ${entry.zetaStr}</div>
                 </div>
             `}).join('');
         }
 
+        function openArtifactModal(id) {
+            const art = artifacts.find(a => a.id === id);
+            if (!art) return;
+            
+            modalTitle.innerText = `ARTIFACT // ${art.id}`;
+            modalDesc.innerHTML = `<span class="text-cyan-400">Pure Mathematical Zeta:</span> ${art.zetaStrAlpha}<br/><span class="text-magenta-400">Blade Heuristic Zeta:</span> ${art.zetaStrBeta}<br/>Discovered at T=${art.bounce}. ${art.desc}`;
+            artifactModal.classList.remove('hidden');
+            artifactModal.classList.add('flex');
+
+            // Render Snapshots
+            const tCtx = modalTrajCanvas.getContext('2d');
+            const rCtx = modalRuliadCanvas.getContext('2d');
+            const w = modalTrajCanvas.width = modalTrajCanvas.parentElement.clientWidth;
+            const h = modalTrajCanvas.height = modalTrajCanvas.parentElement.clientHeight - 30; // account for title
+            modalRuliadCanvas.width = w; modalRuliadCanvas.height = h;
+
+            // Draw Trails
+            tCtx.fillStyle = '#050505'; tCtx.fillRect(0, 0, w, h);
+            const cx = w/2; const cy = h/2; const scale = Math.min(w,h)/2 * 0.9;
+            
+            tCtx.strokeStyle = '#33ff00'; tCtx.lineWidth = 1; tCtx.strokeRect(cx - scale, cy - scale, scale*2, scale*2);
+            
+            // Alpha Trail (Cyan/White)
+            if (art.trailAlpha && art.trailAlpha.length > 1) {
+                tCtx.beginPath(); tCtx.moveTo(cx + art.trailAlpha[0].x * scale, cy + art.trailAlpha[0].y * scale);
+                for (let i=1; i<art.trailAlpha.length; i++) tCtx.lineTo(cx + art.trailAlpha[i].x * scale, cy + art.trailAlpha[i].y * scale);
+                tCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)'; tCtx.stroke();
+            }
+            // Beta Trail (Magenta)
+            if (art.trailBeta && art.trailBeta.length > 1) {
+                tCtx.beginPath(); tCtx.moveTo(cx + art.trailBeta[0].x * scale, cy + art.trailBeta[0].y * scale);
+                for (let i=1; i<art.trailBeta.length; i++) tCtx.lineTo(cx + art.trailBeta[i].x * scale, cy + art.trailBeta[i].y * scale);
+                tCtx.strokeStyle = 'rgba(255, 0, 255, 0.7)'; tCtx.stroke();
+            }
+
+            // Draw Ruliad Grid Snapshot
+            rCtx.fillStyle = '#000'; rCtx.fillRect(0, 0, w, h);
+            if (art.gridSnapshot) {
+                const gridSize = 40; const cellW = w/gridSize; const cellH = h/gridSize;
+                art.gridSnapshot.forEach((cell, key) => {
+                    const [gx, gy] = key.split(',').map(Number);
+                    const age = art.tick - cell.lastVisit;
+                    rCtx.fillStyle = getRuliadColor(age);
+                    rCtx.fillRect((gx/gridSize)*w+1, (gy/gridSize)*h+1, cellW-2, cellH-2);
+                });
+            }
+        }
+
+        window.closeModal = function() {
+            artifactModal.classList.add('hidden');
+            artifactModal.classList.remove('flex');
+        }
+
         // --- INITIALIZATION ---
         function setupUI() {
             function resize() {
                 const rect = canvas.parentElement.getBoundingClientRect();
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                
+                canvas.width = rect.width; canvas.height = rect.height;
                 [eyesCanvas, hyperCanvas, zetaCanvas].forEach(c => {
                     if(c && c.parentElement) {
                         const r = c.parentElement.getBoundingClientRect();
-                        if (r.width > 0 && r.height > 0) {
-                            c.width = r.width;
-                            c.height = r.height;
-                        }
+                        if (r.width > 0 && r.height > 0) { c.width = r.width; c.height = r.height; }
                     }
                 });
             }
             window.addEventListener('resize', resize);
             resize();
 
-            speedInput.addEventListener('input', (e) => {
-                speed = parseInt(e.target.value);
-                speedLabel.innerText = `x${speed}`;
-            });
-            trailInput.addEventListener('input', (e) => {
-                trailLength = parseInt(e.target.value);
-                trailLabel.innerText = `${trailLength} steps`;
-            });
-
+            speedInput.addEventListener('input', (e) => { speed = parseInt(e.target.value); speedLabel.innerText = `x${speed}`; });
+            trailInput.addEventListener('input', (e) => { trailLength = parseInt(e.target.value); trailLabel.innerText = `${trailLength} steps`; });
+            
             renderTabButtons();
             window.switchTab(activeTab);
         }
 
-        // --- PHYSICS LOOP ---
-        function updatePhysics() {
-            let newEvents = [];
-            let hitBoundary = false;
+        // --- CORE PHYSICS ENGINE (DUAL SIM) ---
+        function moveAgent(agent, isBetaObserver) {
+            let nextX = agent.x + agent.vx;
+            let nextY = agent.y + agent.vy;
+            let bounced = false;
 
-            for (let step = 0; step < speed; step++) {
-                let nextX = agent.x + agent.vx;
-                let nextY = agent.y + agent.vy;
-                let bouncedX = false;
-                let bouncedY = false;
-                let isCornerX = false;
-                let isCornerY = false;
+            // EXACT PHASE SPACE FOLDING (Strict Conservation)
+            if (nextX > BOX_SIZE) { nextX = BOX_SIZE - (nextX - BOX_SIZE); agent.vx *= -1; bounced = true; } 
+            else if (nextX < -BOX_SIZE) { nextX = -BOX_SIZE + (-BOX_SIZE - nextX); agent.vx *= -1; bounced = true; }
+            if (nextY > BOX_SIZE) { nextY = BOX_SIZE - (nextY - BOX_SIZE); agent.vy *= -1; bounced = true; } 
+            else if (nextY < -BOX_SIZE) { nextY = -BOX_SIZE + (-BOX_SIZE - nextY); agent.vy *= -1; bounced = true; }
 
-                // EXACT PHASE SPACE FOLDING
-                if (nextX > BOX_SIZE) { 
-                    let overlap = nextX - BOX_SIZE;
-                    nextX = BOX_SIZE - overlap; 
-                    agent.vx *= -1; 
-                    bouncedX = true; 
-                } else if (nextX < -BOX_SIZE) { 
-                    let overlap = -BOX_SIZE - nextX;
-                    nextX = -BOX_SIZE + overlap; 
-                    agent.vx *= -1; 
-                    bouncedX = true; 
-                }
-                
-                if (nextY > BOX_SIZE) { 
-                    let overlap = nextY - BOX_SIZE;
-                    nextY = BOX_SIZE - overlap; 
-                    agent.vy *= -1; 
-                    bouncedY = true; 
-                } else if (nextY < -BOX_SIZE) { 
-                    let overlap = -BOX_SIZE - nextY;
-                    nextY = -BOX_SIZE + overlap; 
-                    agent.vy *= -1; 
-                    bouncedY = true; 
-                }
+            // Caustic Void Tracking (Min Radius)
+            const radius = Math.sqrt(nextX*nextX + nextY*nextY);
+            if (radius < minOrbitRadius) minOrbitRadius = radius;
 
-                if (bouncedX || bouncedY) {
-                    hitBoundary = true;
-                    stats.bounces++;
-                    
-                    isCornerX = Math.abs(nextX) >= BOX_SIZE - CORNER_TOLERANCE;
-                    isCornerY = Math.abs(nextY) >= BOX_SIZE - CORNER_TOLERANCE;
-                    
-                    if (isCornerX && isCornerY) {
-                        stats.cornerHits++;
-                        newEvents.push(`[T=${stats.bounces}] PRECISION CORNER HIT DETECTED @ (${nextX.toFixed(2)}, ${nextY.toFixed(2)})`);
-                    } else {
-                        newEvents.push(`[T=${stats.bounces}] Vector Reflection @ (${nextX.toFixed(2)}, ${nextY.toFixed(2)})`);
-                    }
-                }
+            agent.x = nextX;
+            agent.y = nextY;
 
-                let nextTheta = agent.theta;
-                if (nextX !== 0 || nextY !== 0) {
-                    nextTheta = Math.atan2(nextY, nextX);
-                }
-                
-                let dTheta = nextTheta - agent.theta;
-                if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
-                if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
-                
-                agent.accumulatedTheta += dTheta;
-                agent.theta = nextTheta;
-                stats.windingNumber = agent.accumulatedTheta / (2 * Math.PI);
+            // Spatial Hashing Math
+            const gridSegments = 20; 
+            const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
+            const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
+            const gridKey = `${gridX},${gridY}`;
+            
+            const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
+            // Both agents contribute to the shared Ruliad visual mesh
+            visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
 
-                agent.x = nextX;
-                agent.y = nextY;
-                globalTick++; 
+            let baseZeta = Math.max(0.0, 1.0 - (cellData.density / 15.0));
+            let fracX = Math.abs((agent.x + BOX_SIZE) * gridSegments - gridX - 0.5); 
+            let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
+            let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
+            
+            let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
+            let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
 
-                const gridSegments = 20; 
-                const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
-                const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
-                const gridKey = `${gridX},${gridY}`;
-                
-                const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
-                visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
+            if (currentZetaNum >= 0.5) {
+                zetaStats.high++;
+            } else {
+                zetaStats.low++;
+            }
 
-                let baseZeta = Math.max(0.0, 1.0 - (cellData.density / 15.0));
-                let fracX = Math.abs((agent.x + BOX_SIZE) * gridSegments - gridX - 0.5); 
-                let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
-                let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
-                
-                const hyperX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
-                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40);
+            // TRUE POINCARE SECTION: Only map phase space coordinates upon boundary collision.
+            if (bounced) {
+                const hyperX = Math.floor((agent.x + BOX_SIZE) * 20); // Scale x to 0-40
+                const hyperTheta = Math.floor(((agent.theta + Math.PI) / (2 * Math.PI)) * 40); // Scale angle to 0-40
                 const hyperKey = `${hyperX},${hyperTheta}`;
                 const hyperCellData = hyperGrid.get(hyperKey) || { density: 0, lastVisit: 0 };
                 hyperGrid.set(hyperKey, { density: hyperCellData.density + 1, lastVisit: globalTick });
+            }
+
+            // BLADE HEURISTIC (Only applied to Beta)
+            if (isBetaObserver && currentZetaNum < 0.5) {
+                const currentAngle = Math.atan2(agent.vy, agent.vx);
+                const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
+                const steerAngle = currentAngle + (Math.random() - 0.5) * 0.1; // Gentle perturbation
+                agent.vx = Math.cos(steerAngle) * speedMag;
+                agent.vy = Math.sin(steerAngle) * speedMag;
+            }
+
+            agent.trail.push({ x: agent.x, y: agent.y });
+            if (agent.trail.length > trailLength) agent.trail.shift();
+
+            return { bounced, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
+        }
+
+        function updatePhysics() {
+            let hitBoundary = false;
+            let bestAlphaStr = "0", bestBetaStr = "0";
+            let triggerArtifact = false;
+
+            for (let step = 0; step < speed; step++) {
+                globalTick++; 
                 
-                let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
-                let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
-                
-                if (currentZetaNum >= 0.5) {
-                    zetaStats.high++;
-                } else {
-                    zetaStats.low++;
-                    zetaStats.steers++;
-                    const currentAngle = Math.atan2(agent.vy, agent.vx);
-                    const speedMag = Math.sqrt(agent.vx**2 + agent.vy**2);
-                    const steerAngle = currentAngle + (Math.random() - 0.5) * 0.2; 
-                    agent.vx = Math.cos(steerAngle) * speedMag;
-                    agent.vy = Math.sin(steerAngle) * speedMag;
+                // Advance both agents simultaneously
+                const alphaRes = moveAgent(agentAlpha, false); // PURE CONTROL
+                const betaRes = moveAgent(agentBeta, true);    // OBSERVER
+
+                if (alphaRes.bounced || betaRes.bounced) {
+                    hitBoundary = true;
+                    stats.bounces++;
                     
-                    if(Math.random() < 0.01) {
-                        brainLog.push(`Steering away from [${gridX},${gridY}], Zeta: 0.${currentZetaStr.substring(2, 7)}...`);
-                    }
-                }
+                    if (alphaRes.zetaStr.localeCompare(bestAlphaStr) > 0) bestAlphaStr = alphaRes.zetaStr;
+                    if (betaRes.zetaStr.localeCompare(bestBetaStr) > 0) bestBetaStr = betaRes.zetaStr;
 
-                if (Math.random() < 0.05) {
-                    realityLog.push(`{ x: ${agent.x.toFixed(4)}, y: ${agent.y.toFixed(4)} }<br/><span class="text-[7px] text-cyan-500 break-all leading-none">ζ: ${currentZetaStr}</span>`);
-                }
+                    // Stability tracking (Intervals between bounces)
+                    stabilityHistory.push(stats.bounces);
+                    if (stabilityHistory.length > 5) stabilityHistory.shift();
 
-                // MULTI-USER GLOBAL LEADERBOARD LOGIC
-                if ((bouncedX || bouncedY) && currentZetaNum > 0.6 && supabaseClient) {
-                    let isGlobalTop = false;
-                    if (globalLeaderboard.length < 20) {
-                        isGlobalTop = true;
-                    } else {
-                        const lowest = globalLeaderboard[globalLeaderboard.length - 1];
-                        if (currentZetaStr.localeCompare(lowest.zetaStr) > 0) {
-                            isGlobalTop = true;
-                        }
-                    }
-
-                    if (isGlobalTop) {
-                        globalLeaderboard.push({
-                            uid: currentUser.uid,
-                            bounce: stats.bounces, 
-                            zetaStr: currentZetaStr, 
-                            x: agent.x, 
-                            y: agent.y 
-                        });
-                        globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
-                        if (globalLeaderboard.length > 20) globalLeaderboard.pop();
-                        
-                        supabaseClient.from('global_state').update({
-                            leaderboard_data: { entries: globalLeaderboard }
-                        }).eq('id', 'main_leaderboard').then();
-                    }
-                }
-
-                if ((bouncedX || bouncedY) && currentZetaNum > 0.95 && stats.bounces > 10 && Math.random() < 0.1) {
-                    artifacts.unshift({ id: `ART-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, zetaStr: currentZetaStr, desc: 'Novel Phase Space Config' });
-                }
-                if ((bouncedX || bouncedY) && isCornerX && isCornerY) {
-                    artifacts.unshift({ id: `ART-CRN-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, zetaStr: currentZetaStr, desc: 'Precision Corner Singularity' });
-                }
-                if (artifacts.length > 20) artifacts.pop();
-
-                agent.trail.push({ x: agent.x, y: agent.y, zeta: currentZetaNum });
-                if (agent.trail.length > trailLength) {
-                    agent.trail.shift();
+                    if (alphaRes.zetaNum > 0.95 || betaRes.zetaNum > 0.95) triggerArtifact = true;
                 }
             }
 
-            if (hitBoundary && (stats.bounces - lastSaveBounce >= 100)) {
+            // DIVERGENCE CALCULATION (Lyapunov Proxy)
+            const divergence = Math.sqrt(Math.pow(agentAlpha.x - agentBeta.x, 2) + Math.pow(agentAlpha.y - agentBeta.y, 2));
+
+            // MULTIWAY LEADERBOARD PUSH
+            if (hitBoundary && supabaseClient) {
+                let pushed = false;
+                // Evaluate Pure Alpha
+                if (bestAlphaStr > "0.6" && (!globalLeaderboard.length || bestAlphaStr.localeCompare(globalLeaderboard[globalLeaderboard.length-1]?.zetaStr || "0") > 0)) {
+                    globalLeaderboard.push({ uid: currentUser.uid, type: 'ALPHA', bounce: stats.bounces, zetaStr: bestAlphaStr });
+                    pushed = true;
+                }
+                // Evaluate Beta Observer
+                if (bestBetaStr > "0.6" && (!globalLeaderboard.length || bestBetaStr.localeCompare(globalLeaderboard[globalLeaderboard.length-1]?.zetaStr || "0") > 0)) {
+                    globalLeaderboard.push({ uid: currentUser.uid, type: 'BETA', bounce: stats.bounces, zetaStr: bestBetaStr });
+                    pushed = true;
+                }
+                if (pushed) {
+                    globalLeaderboard.sort((a, b) => b.zetaStr.localeCompare(a.zetaStr));
+                    if (globalLeaderboard.length > 20) globalLeaderboard.pop();
+                    supabaseClient.from('global_state').update({ leaderboard_data: { entries: globalLeaderboard } }).eq('id', 'main_leaderboard').then();
+                }
+
+                // ARTIFACT STORAGE
+                if (triggerArtifact && artifacts.length < 20) {
+                    artifacts.unshift({ 
+                        id: `ART-${Math.floor(Math.random()*10000)}`, 
+                        bounce: stats.bounces, 
+                        tick: globalTick,
+                        zetaStrAlpha: bestAlphaStr, 
+                        zetaStrBeta: bestBetaStr,
+                        desc: `Divergence: ${divergence.toFixed(4)}. Novel mapping phase.`,
+                        trailAlpha: [...agentAlpha.trail],
+                        trailBeta: [...agentBeta.trail],
+                        gridSnapshot: new Map(visitedGrid) // Heavy, but we limit array to 20
+                    });
+                }
+            }
+
+            if (hitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
                 lastSaveBounce = stats.bounces;
                 saveStateToCloud();
             }
 
             // --- UI UPDATES ---
-            if (newEvents.length > 0) {
-                eventLog = [...newEvents.reverse(), ...eventLog].slice(0, 50); 
-                if (activeTab === 'LOG') {
-                    logContainer.innerHTML = eventLog.map((log, i) => {
-                        const highlight = log.includes('CORNER') ? 'text-magenta-400 font-bold bg-gray-900' : '';
-                        return `<div class="${highlight}" style="opacity: ${1 - Math.min(i*0.05, 0.8)}">${log}</div>`;
-                    }).join('');
-                }
-            }
-
             if (hitBoundary || Math.random() < 0.05) {
-                stats.lyapunovProxy = Math.abs(stats.windingNumber * 0.0142); 
-                statWinding.innerText = stats.windingNumber.toFixed(3);
-                statCorners.innerText = stats.cornerHits;
                 statBounces.innerText = stats.bounces;
+                statDivergence.innerText = divergence.toFixed(4);
+                
+                // Color divergence text based on severity
+                statDivergence.className = divergence > 0.5 ? 'text-red-500' : 'text-cyan-500';
 
                 if (activeTab === 'HYPER') {
-                    hyperDim.innerText = (1.0 + Math.abs(stats.lyapunovProxy)).toFixed(4);
-                    hyperErgodicity.style.width = `${Math.min(100, (stats.bounces / 5000) * 100)}%`;
+                    if(hyperDim) hyperDim.innerText = (1.0 + Math.abs(stats.windingNumber * 0.0142)).toFixed(4);
+                    if(hyperErgodicity) hyperErgodicity.style.width = `${Math.min(100, (stats.bounces / 5000) * 100)}%`;
                 }
-                
+
                 if (activeTab === 'ZETA') {
-                    zetaHighEl.innerText = zetaStats.high.toLocaleString();
-                    zetaLowEl.innerText = zetaStats.low.toLocaleString();
-                }
-
-                if (activeTab === 'BRAIN') {
-                    brainSteers.innerText = zetaStats.steers.toLocaleString();
-                    if (brainLog.length > 10) brainLog = brainLog.slice(-10);
-                    brainLogEl.innerHTML = brainLog.map(msg => `<div>&gt; ${msg}</div>`).join('');
-                }
-
-                if (activeTab === 'REALITY') {
-                    if (realityLog.length > 10) realityLog = realityLog.slice(-10); 
-                    realityGridLog.innerHTML = realityLog.map(msg => `<div class="mb-2 border-b border-orange-900/50 pb-1">${msg}</div>`).join('');
+                    if(zetaHighEl) zetaHighEl.innerText = zetaStats.high.toLocaleString();
+                    if(zetaLowEl) zetaLowEl.innerText = zetaStats.low.toLocaleString();
                 }
 
                 if (activeTab === 'MUSEUM') {
                     museumGallery.innerHTML = artifacts.map(art => `
-                        <div class="border ${art.desc.includes('Corner') ? 'border-magenta-600 bg-magenta-900/20' : 'border-yellow-600 bg-yellow-900/20'} p-2 rounded flex flex-col">
-                            <div class="text-white font-bold">${art.id}</div>
-                            <div class="text-gray-400">Bounce: ${art.bounce}</div>
-                            <div class="text-[7px] text-cyan-400 break-all leading-tight mt-1">ζ: ${art.zetaStr}</div>
-                            <div class="text-[9px] mt-1 text-gray-300 mt-auto">${art.desc}</div>
+                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer border border-yellow-600 bg-yellow-900/20 hover:bg-yellow-900/40 p-2 rounded flex flex-col transition-colors">
+                            <div class="text-white font-bold">${art.id} <span class="text-[8px] text-gray-500 ml-1">CLICK TO VIEW</span></div>
+                            <div class="text-[7px] text-cyan-400 break-all leading-tight mt-1">α: ${art.zetaStrAlpha}</div>
+                            <div class="text-[7px] text-magenta-400 break-all leading-tight mt-1">β: ${art.zetaStrBeta}</div>
                         </div>
                     `).join('');
+                }
+
+                if (activeTab === 'STABILITY' && hitBoundary) {
+                    if (stabilityHistory.length >= 5) {
+                        const intervals = [];
+                        for(let i=1; i<stabilityHistory.length; i++) intervals.push(stabilityHistory[i] - stabilityHistory[i-1]);
+                        const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
+                        const isStable = variance < 5;
+                        stabilityLog.innerHTML = `
+                            <div class="${isStable ? 'text-lime-400 font-bold bg-lime-900/20' : 'text-gray-500'} p-1 border-b border-gray-800">
+                                Bounces: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '- PERIODIC ORBIT DETECTED' : ''}
+                            </div>
+                        ` + stabilityLog.innerHTML;
+                    }
+                }
+
+                if (activeTab === 'VOIDS') {
+                    voidRadius.innerText = minOrbitRadius.toFixed(4);
+                    if (minOrbitRadius > 0.1) {
+                        voidStructure.innerText = "STRUCTURED (Caustic)";
+                        voidStructure.className = "text-lime-400";
+                    } else {
+                        voidStructure.innerText = "CHAOTIC (Origin crossed)";
+                        voidStructure.className = "text-red-400";
+                    }
                 }
 
                 if (activeTab === 'RANK') renderLeaderboardUI();
@@ -711,101 +743,79 @@
 
         // --- RENDER LOOP ---
         function renderCanvas() {
-            const w = canvas.width;
-            const h = canvas.height;
-            const cx = w / 2;
-            const cy = h / 2;
-            const scale = Math.min(w, h) / 2 * 0.9;
+            const w = canvas.width; const h = canvas.height;
+            const cx = w / 2; const cy = h / 2; const scale = Math.min(w, h) / 2 * 0.9;
 
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 2; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
 
-            ctx.strokeStyle = '#33ff00';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
-
-            ctx.fillStyle = 'rgba(255, 0, 128, 0.3)';
-            const cSize = scale * CORNER_TOLERANCE * 2;
-            ctx.fillRect(cx - scale - cSize/2, cy - scale - cSize/2, cSize, cSize); 
-            ctx.fillRect(cx + scale - cSize/2, cy - scale - cSize/2, cSize, cSize); 
-            ctx.fillRect(cx - scale - cSize/2, cy + scale - cSize/2, cSize, cSize); 
-            ctx.fillRect(cx + scale - cSize/2, cy + scale - cSize/2, cSize, cSize); 
-
-            if (agent.trail.length > 1) {
-                for (let i = 1; i < agent.trail.length; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(cx + agent.trail[i-1].x * scale, cy + agent.trail[i-1].y * scale);
-                    ctx.lineTo(cx + agent.trail[i].x * scale, cy + agent.trail[i].y * scale);
-                    
-                    let z = agent.trail[i].zeta;
-                    let hue = 300 - (z * 120); 
-                    ctx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.8)`;
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                }
+            // Draw Alpha Trail (White/Cyan)
+            if (agentAlpha.trail.length > 1) {
+                ctx.beginPath(); ctx.moveTo(cx + agentAlpha.trail[0].x * scale, cy + agentAlpha.trail[0].y * scale);
+                for (let i = 1; i < agentAlpha.trail.length; i++) ctx.lineTo(cx + agentAlpha.trail[i].x * scale, cy + agentAlpha.trail[i].y * scale);
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
             }
 
-            ctx.beginPath();
-            ctx.arc(cx + agent.x * scale, cy + agent.y * scale, 4, 0, 2 * Math.PI);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00ffff';
-            ctx.closePath();
-            ctx.shadowBlur = 0; 
+            // Draw Beta Trail (Magenta)
+            if (agentBeta.trail.length > 1) {
+                ctx.beginPath(); ctx.moveTo(cx + agentBeta.trail[0].x * scale, cy + agentBeta.trail[0].y * scale);
+                for (let i = 1; i < agentBeta.trail.length; i++) ctx.lineTo(cx + agentBeta.trail[i].x * scale, cy + agentBeta.trail[i].y * scale);
+                ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+            }
 
-            // 1. Draw EYES Heatmap (Spatial Density)
+            // Draw Alpha Agent
+            ctx.beginPath(); ctx.arc(cx + agentAlpha.x * scale, cy + agentAlpha.y * scale, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.closePath();
+            
+            // Draw Beta Agent
+            ctx.beginPath(); ctx.arc(cx + agentBeta.x * scale, cy + agentBeta.y * scale, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
+
+            // 1. Draw EYES Heatmap (Combined Spatial Density)
             if (activeTab === 'EYES' && eyesCanvas) {
                 const eCtx = eyesCanvas.getContext('2d');
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
-                const ew = eyesCanvas.width;
-                const eh = eyesCanvas.height;
-                const gridSize = 40; 
-                const cellW = ew / gridSize; 
-                const cellH = eh / gridSize;
+                const ew = eyesCanvas.width; const eh = eyesCanvas.height;
+                const gridSize = 40; const cellW = ew / gridSize; const cellH = eh / gridSize;
                 
                 visitedGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
                     const age = globalTick - cell.lastVisit;
-                    
                     eCtx.fillStyle = getRuliadColor(age);
                     eCtx.fillRect((gx/gridSize)*ew + 1, (gy/gridSize)*eh + 1, cellW - 2, cellH - 2);
                 });
             }
 
-            // 2. Draw HYPER Poincaré Map (Phase Space: x vs theta)
+            // 2. Draw HYPER Poincaré Map (Phase Space: x vs theta on Bounce)
             if (activeTab === 'HYPER' && hyperCanvas) {
                 const hCtx = hyperCanvas.getContext('2d');
                 hCtx.clearRect(0, 0, hyperCanvas.width, hyperCanvas.height);
-                const hw = hyperCanvas.width;
-                const hh = hyperCanvas.height;
-                const hGridX = 40; 
-                const hGridY = 40; 
-                const hCellW = hw / hGridX;
-                const hCellH = hh / hGridY;
+                const hw = hyperCanvas.width; const hh = hyperCanvas.height;
+                const hGridX = 40; const hGridY = 40; 
+                const hCellW = hw / hGridX; const hCellH = hh / hGridY;
 
                 hyperGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
                     const age = globalTick - cell.lastVisit;
-                    
                     hCtx.fillStyle = getRuliadColor(age);
                     hCtx.fillRect((gx/hGridX)*hw + 1, (gy/hGridY)*hh + 1, hCellW - 2, hCellH - 2);
                 });
             }
 
-            // 3. Draw ZETA Tensor Matrix (Active 8x8 Algorithm Weights)
+            // 3. Draw ZETA Tensor Matrix (Active Heuristic Weights)
             if (activeTab === 'ZETA' && zetaCanvas) {
                 const zCtx = zetaCanvas.getContext('2d');
                 zCtx.clearRect(0, 0, zetaCanvas.width, zetaCanvas.height);
-                const zw = zetaCanvas.width;
-                const zh = zetaCanvas.height;
+                const zw = zetaCanvas.width; const zh = zetaCanvas.height;
                 const zGridSize = 8;
-                const zCellW = zw / zGridSize;
-                const zCellH = zh / zGridSize;
+                const zCellW = zw / zGridSize; const zCellH = zh / zGridSize;
 
                 for (let ix = 0; ix < zGridSize; ix++) {
                     for (let iy = 0; iy < zGridSize; iy++) {
-                        const weight = Math.abs(Math.sin((ix+1) * agent.x * 3.14 + (iy+1) * agent.y * 2.71 + globalTick * 0.005));
+                        // Calculate live tensor weight based on Agent Beta (the active observer)
+                        const weight = Math.abs(Math.sin((ix+1) * agentBeta.x * 3.14 + (iy+1) * agentBeta.y * 2.71 + globalTick * 0.005));
+                        
+                        // Treat raw numeric weight as "temporal age" to hijack the Ruliad color palette
                         const simulatedAge = (1.0 - weight) * 2400; 
                         
                         zCtx.fillStyle = getRuliadColor(simulatedAge);
@@ -824,19 +834,11 @@
 
         async function initSupabaseAndStart() {
             try {
-                // 👇 --- SUPABASE CONFIGURATION --- 👇
-                // Extracted from your provided Edge Function URL string
                 const SUPABASE_URL = "https://xoolmbmnzbsvcqeyqvyi.supabase.co";
-                
-                // You provided the project ID below. If this fails to connect, replace this string
-                // with the long "anon / public" API key from your Supabase Project API Settings.
                 const SUPABASE_ANON_KEY = "xoolmbmnzbsvcqeyqvyi";
 
-                // Initialize client
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-                // ZERO-FRICTION ANONYMOUS AUTHENTICATION
-                // We generate a strict UUID locally and store it to track the user invisibly
                 let localUid = localStorage.getItem('ruliad_uid');
                 if (!localUid) {
                     localUid = 'USR-' + crypto.randomUUID();
@@ -844,7 +846,6 @@
                 }
                 currentUser = { uid: localUid };
 
-                // 2. Wait for user object and sync cloud data
                 await loadStateFromCloud();
                 await setupGlobalLeaderboardListener();
                 
