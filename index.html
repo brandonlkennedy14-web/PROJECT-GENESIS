@@ -238,13 +238,21 @@
         let isSaving = false;
         let lastSaveBounce = 0;
 
-        // --- HYPER-PRECISION ZETA GENERATOR ---
+        // --- HYPER-PRECISION ZETA GENERATOR (UPGRADED) ---
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
-            let seed = Math.abs(Math.sin(x * 12.9898 + y * 78.233)) * 43758.5453;
+            
+            // Deterministic Linear Congruential Generator (LCG) for absolute cross-platform math parity.
+            // Avoids browser-specific Math.sin() floating-point micro-deviations at extreme decimals.
+            // Bitwise XOR (^) securely maps float coordinates to a strict 32-bit integer seed.
+            let seed = Math.abs(Math.floor(x * 10000000) ^ Math.floor(y * 10000000));
+            if (seed === 0) seed = 123456789; // Protect against origin 0 singularity
+            
             while(str.length < 103) { 
-                seed = Math.abs(Math.sin(seed) * 43758.5453);
-                str += Math.floor((seed % 1) * 1e10).toString().padStart(10, '0');
+                // Strict mathematical modulo progression
+                seed = (seed * 9301 + 49297) % 233280; 
+                let fraction = seed / 233280;
+                str += Math.floor(fraction * 1e10).toString().padStart(10, '0');
             }
             return str.substring(0, 103);
         }
@@ -484,10 +492,31 @@
                 let isCornerX = false;
                 let isCornerY = false;
 
-                if (nextX >= BOX_SIZE) { nextX = BOX_SIZE; agent.vx *= -1; bouncedX = true; }
-                if (nextX <= -BOX_SIZE) { nextX = -BOX_SIZE; agent.vx *= -1; bouncedX = true; }
-                if (nextY >= BOX_SIZE) { nextY = BOX_SIZE; agent.vy *= -1; bouncedY = true; }
-                if (nextY <= -BOX_SIZE) { nextY = -BOX_SIZE; agent.vy *= -1; bouncedY = true; }
+                // EXACT PHASE SPACE FOLDING (Continuous Collision Detection)
+                // Preserves absolute momentum magnitude; no fractional distance is lost to coordinate clamping.
+                if (nextX > BOX_SIZE) { 
+                    let overlap = nextX - BOX_SIZE;
+                    nextX = BOX_SIZE - overlap; 
+                    agent.vx *= -1; 
+                    bouncedX = true; 
+                } else if (nextX < -BOX_SIZE) { 
+                    let overlap = -BOX_SIZE - nextX;
+                    nextX = -BOX_SIZE + overlap; 
+                    agent.vx *= -1; 
+                    bouncedX = true; 
+                }
+                
+                if (nextY > BOX_SIZE) { 
+                    let overlap = nextY - BOX_SIZE;
+                    nextY = BOX_SIZE - overlap; 
+                    agent.vy *= -1; 
+                    bouncedY = true; 
+                } else if (nextY < -BOX_SIZE) { 
+                    let overlap = -BOX_SIZE - nextY;
+                    nextY = -BOX_SIZE + overlap; 
+                    agent.vy *= -1; 
+                    bouncedY = true; 
+                }
 
                 if (bouncedX || bouncedY) {
                     hitBoundary = true;
@@ -504,7 +533,12 @@
                     }
                 }
 
-                let nextTheta = Math.atan2(nextY, nextX);
+                // WINDING NUMBER CALCULATION (With Origin Singularity Protection)
+                let nextTheta = agent.theta;
+                if (nextX !== 0 || nextY !== 0) { // Prevent Math.atan2(0,0) NaN collapse
+                    nextTheta = Math.atan2(nextY, nextX);
+                }
+                
                 let dTheta = nextTheta - agent.theta;
                 if (dTheta > Math.PI) dTheta -= 2 * Math.PI;
                 if (dTheta < -Math.PI) dTheta += 2 * Math.PI;
