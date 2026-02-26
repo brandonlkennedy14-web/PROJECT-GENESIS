@@ -97,9 +97,8 @@
             <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.15)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/80 px-2 py-1 rounded border border-cyan-900/50">
-                    GEOMETRY: SQUARE_STRICT <span class="text-gray-500">+ VIRTUAL CIRCLE + VIRTUAL DIAMOND</span><br/>
-                    MODE: DEEP INVERSION + EXCLUSION PHYSICS + MEMORY BOUNDS<br/>
-                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span><br/>
+                    GEOMETRY: <span class="text-lime-400 font-bold" id="val-geometry">SQUARE_STRICT</span><br/>
+                    MODE: AUTO-GENERATING BOUNDARIES + PAULI EXCLUSION<br/>
                     EPSILON (ε): <span id="val-epsilon" class="text-cyan-400">0.00e+0</span>
                 </div>
             </div>
@@ -361,16 +360,19 @@
         let zetaStats = { high: 0, low: 0 };
         let activeTab = 'STRUCTURE_RATIO';
         let speed = 5;
-        let maxAllowedSpeed = 50; // Dynamic Overclocking threshold
+        let maxAllowedSpeed = 50; 
         let trailLength = 200;
         let stabilityHistory = [];
         let stabilityLogArray = [];
         let globalLeaderboard = [];
         let virtualHits = { circle: 0, diamond: 0 };
 
-        // CA Background State
+        // DYNAMIC BOUNDARIES: Simulation tests itself against the shapes it discovers
+        let activeBounds = { minX: -BOX_SIZE, maxX: BOX_SIZE, minY: -BOX_SIZE, maxY: BOX_SIZE };
+
+        // CA Background State & Fleet Colors
         let bgCols = 0, bgRows = 0, bgGridCA = [];
-        const colorMapPalette = ['#ffffff', '#00ffff', '#00ff88', '#ffff00', '#ff8800', '#ff00ff', '#220044'];
+        const colorMapPalette = ['#ff00ff', '#00ffff', '#00ff88', '#ffff00', '#ff8800', '#ff0044', '#8800ff'];
 
         let supabaseClient, currentUser, isSaving = false, lastSaveBounce = 0, lastSaveTime = 0;
         let frameCount = 0;
@@ -440,10 +442,20 @@
 
         function initializeFleet(angleShift, invertBasis = false) {
             const multiplier = invertBasis ? -1 : 1;
+            
+            // Spawn relative to dynamic bounds
+            const w = activeBounds.maxX - activeBounds.minX;
+            const h = activeBounds.maxY - activeBounds.minY;
+            const spawnR = Math.min(w, h) * 0.3; 
+            const midX = (activeBounds.maxX + activeBounds.minX) / 2;
+            const midY = (activeBounds.maxY + activeBounds.minY) / 2;
+
             const newFleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
                 const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
-                const sx = Math.cos(angle) * 0.3 * multiplier, sy = Math.sin(angle) * 0.3 * multiplier;
-                const vx = Math.cos(angle + Math.PI/4) * INITIAL_SPEED * multiplier, vy = Math.sin(angle + Math.PI/4) * INITIAL_SPEED * multiplier;
+                const sx = midX + Math.cos(angle) * spawnR * multiplier;
+                const sy = midY + Math.sin(angle) * spawnR * multiplier;
+                const vx = Math.cos(angle + Math.PI/4) * INITIAL_SPEED * multiplier;
+                const vy = Math.sin(angle + Math.PI/4) * INITIAL_SPEED * multiplier;
                 
                 // Offset Beta slightly so it doesn't violate the Pauli exclusion principle at spawn
                 const betaOffset = PARTICLE_RADIUS * 2.1;
@@ -455,6 +467,7 @@
                     divergence: 0, bounces: 0
                 };
             });
+            
             // Snapshot baseline for Re-emergence logic
             initialFleetState = newFleet.map(g => ({
                 alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy },
@@ -491,7 +504,6 @@
         }
 
         // --- UNIFIED RENDERING HELPER ---
-        // Maps continuous age gradients into the 7 discrete states of the Ruliad
         function getRuliadColorState(age, maxAge = 2400) {
             if (age < 5) return colorMapPalette[0];                  
             if (age < maxAge * 0.02) return colorMapPalette[1];      
@@ -511,6 +523,25 @@
             if (w === 0 || h === 0) return null;
             if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
             return c;
+        }
+
+        // Exposed functions properly to window to avoid reference errors
+        function switchTab(t) {
+            activeTab = t; renderTabButtons();
+            ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'].forEach(id => { const el = document.getElementById(`tab-${id}`); if(el) el.classList.add('hidden'); });
+            const curr = document.getElementById(`tab-${t}`); 
+            if(curr) { 
+                curr.classList.remove('hidden'); 
+                if(t==='MUSEUM') renderMuseum(); 
+                if(t==='RANK') renderLeaderboardUI();
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 10); 
+            }
+        }
+        window.switchTab = switchTab;
+
+        function renderTabButtons() {
+            const tabsList = ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
+            document.getElementById('tab-headers').innerHTML = tabsList.map(t => `<button onclick="switchTab('${t}')" class="px-3 py-2 flex-shrink-0 transition-all ${activeTab === t ? 'bg-cyan-900/50 text-white border-t-2 border-cyan-400 font-bold shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'text-gray-400 hover:text-cyan-200'}">${t.replace('_', ' ')}</button>`).join('');
         }
 
         function renderMuseum() {
@@ -650,23 +681,29 @@
 
                 let allAgents = [];
 
-                // Phase 1: Boundary Interactions (Factoring Particle Radius)
+                // Phase 1: Dynamic Boundary Interactions & Kinematics
                 fleet.forEach(g => {
                     [g.alpha, g.beta].forEach((a, idx) => {
                         a.prevX = a.x; a.prevY = a.y;
                         let nx = a.x + a.vx, ny = a.y + a.vy, b = false;
                         
-                        if (nx > BOX_SIZE - PARTICLE_RADIUS) { a.vx *= -1; b = true; nx = BOX_SIZE - PARTICLE_RADIUS; }
-                        if (nx < -BOX_SIZE + PARTICLE_RADIUS) { a.vx *= -1; b = true; nx = -BOX_SIZE + PARTICLE_RADIUS; }
-                        if (ny > BOX_SIZE - PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = BOX_SIZE - PARTICLE_RADIUS; }
-                        if (ny < -BOX_SIZE + PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = -BOX_SIZE + PARTICLE_RADIUS; }
+                        // Strict testing against the Auto-Generated Dynamic Artifact Boundary
+                        if (nx > activeBounds.maxX - PARTICLE_RADIUS) { a.vx *= -1; b = true; nx = activeBounds.maxX - PARTICLE_RADIUS; }
+                        if (nx < activeBounds.minX + PARTICLE_RADIUS) { a.vx *= -1; b = true; nx = activeBounds.minX + PARTICLE_RADIUS; }
+                        if (ny > activeBounds.maxY - PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = activeBounds.maxY - PARTICLE_RADIUS; }
+                        if (ny < activeBounds.minY + PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = activeBounds.minY + PARTICLE_RADIUS; }
                         
                         if (b && idx === 0) { 
                             swarmHit = true; stats.bounces++; epochBounces++; 
-                            if (Math.abs(nx) > BOX_SIZE - PARTICLE_RADIUS - CORNER_TOLERANCE && Math.abs(ny) > BOX_SIZE - PARTICLE_RADIUS - CORNER_TOLERANCE) { 
+                            
+                            // Corner hit dynamically adjusted to current bounds
+                            const isCornerX = nx >= activeBounds.maxX - PARTICLE_RADIUS - CORNER_TOLERANCE || nx <= activeBounds.minX + PARTICLE_RADIUS + CORNER_TOLERANCE;
+                            const isCornerY = ny >= activeBounds.maxY - PARTICLE_RADIUS - CORNER_TOLERANCE || ny <= activeBounds.minY + PARTICLE_RADIUS + CORNER_TOLERANCE;
+                            if (isCornerX && isCornerY) { 
                                 stats.cornerHits++; 
                                 structuredEvents++; 
                             } 
+
                             // Phase-Space Poincare logging
                             let ht = Math.atan2(ny, nx);
                             const hyperX = Math.floor((nx + BOX_SIZE) * 20); 
@@ -724,7 +761,6 @@
                 }
 
                 // Phase 2.5: MEMORY EXCLUSION PRINCIPLE (Observer Beta interacts with Alpha memory boundary)
-                // We sample the trail every 10 steps to maintain 60fps performance while creating a massive interference web
                 fleet.forEach(g => {
                     let betaAgent = g.beta;
                     fleet.forEach(otherG => {
@@ -741,12 +777,10 @@
                                 let nx = dx / dist;
                                 let ny = dy / dist;
                                 
-                                // Soft deflection from the memory ghost
                                 let currentV = Math.sqrt(betaAgent.vx*betaAgent.vx + betaAgent.vy*betaAgent.vy);
                                 betaAgent.vx -= nx * 0.005; 
                                 betaAgent.vy -= ny * 0.005;
                                 
-                                // Normalize back to initial speed to conserve momentum
                                 let newV = Math.sqrt(betaAgent.vx*betaAgent.vx + betaAgent.vy*betaAgent.vy);
                                 betaAgent.vx = (betaAgent.vx / newV) * currentV;
                                 betaAgent.vy = (betaAgent.vy / newV) * currentV;
@@ -792,7 +826,7 @@
                 if (epochBounces > 5000 && checkReEmergence()) {
                     reEmergenceCount++;
                     const drift = firstRunRatio !== null ? (curRatio - firstRunRatio).toFixed(5) : "Awaiting Baseline";
-                    artifacts.unshift({ id: `RECURRENCE-${simCount}-${reEmergenceCount}`, bounce: stats.bounces, tick: globalTick, desc: `POINCARÉ RE-EMERGENCE: System returned to t=0 phase-space.<br/>Drift ΔΦ: ${drift}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
+                    artifacts.unshift({ id: `RECURRENCE-${simCount}-${reEmergenceCount}`, bounce: stats.bounces, tick: globalTick, desc: `POINCARÉ RE-EMERGENCE: System returned to absolute phase-space.<br/>Drift ΔΦ: ${drift}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
                     if (artifacts.length > 25) { const idx = artifacts.findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE')); if (idx !== -1) artifacts.splice(idx, 1); else artifacts.pop(); }
                     epochBounces = 0;
                 }
@@ -806,6 +840,7 @@
                     }
                 }
 
+                // DYNAMIC ARTIFACT BOUNDARY GENERATION ON DEEP THERMALIZATION
                 if (epochBounces > flatlineBaseline && ratioHistory.length >= 300) {
                     const mean = ratioHistory.reduce((a,b)=>a+b,0) / ratioHistory.length;
                     const variance = ratioHistory.reduce((a,b)=>a+Math.pow(b-mean,2),0) / ratioHistory.length;
@@ -813,8 +848,27 @@
                         const sens = calculateTemporalSensitivity();
                         if (firstRunRatio === null) firstRunRatio = mean;
                         const label = sens.stability > 95 ? `<span class="text-lime-400 font-bold">[SPEED-INVARIANT]</span>` : `<span class="text-yellow-500 font-bold">[TEMPORAL ARTIFACT]</span>`;
-                        epochSignatures.push({ id: `EPOCH-${simCount}`, ...generateSwarmSignature() });
-                        artifacts.unshift({ id: `EPOCH-FLATLINE-${simCount}`, bounce: stats.bounces, tick: globalTick, desc: `DEEP THERMALIZATION: Quarter-million threshold exhausted.<br/>${label}<br/>Stability: ${sens.stability}% | Var: ${variance.toExponential(2)}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
+                        
+                        const finalSig = generateSwarmSignature();
+                        epochSignatures.push(finalSig);
+
+                        // COLLAPSE REALITY: Calculate the convex hull/bounds of the artifact and set it as the new simulation boundary
+                        const padX = Math.max(0.1, (finalSig.bounds.maxX - finalSig.bounds.minX) * 0.1);
+                        const padY = Math.max(0.1, (finalSig.bounds.maxY - finalSig.bounds.minY) * 0.1);
+                        
+                        activeBounds = {
+                            minX: Math.max(-BOX_SIZE, finalSig.bounds.minX - padX),
+                            maxX: Math.min(BOX_SIZE, finalSig.bounds.maxX + padX),
+                            minY: Math.max(-BOX_SIZE, finalSig.bounds.minY - padY),
+                            maxY: Math.min(BOX_SIZE, finalSig.bounds.maxY + padY)
+                        };
+
+                        const bW = (activeBounds.maxX - activeBounds.minX).toFixed(2);
+                        const bH = (activeBounds.maxY - activeBounds.minY).toFixed(2);
+                        document.getElementById('val-geometry').innerText = `DYNAMIC_MORPH [${bW}x${bH}]`;
+
+                        artifacts.unshift({ id: `EPOCH-FLATLINE-${simCount}`, bounce: stats.bounces, tick: globalTick, desc: `DEEP THERMALIZATION: Boundary Collapse.<br/>${label}<br/>Stability: ${sens.stability}% | Var: ${variance.toExponential(2)}<br/>New Bounds: ${bW}x${bH}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
+                        
                         simCount++; isEpochInverted = !isEpochInverted; if (!isEpochInverted) baseAngleShift += 1e-15;
                         fleet = initializeFleet(baseAngleShift, isEpochInverted);
                         epochBounces = 0; ratioHistory = []; speedHistory = []; recentRadii = [];
@@ -835,12 +889,10 @@
                 document.getElementById('val-epsilon').innerText = baseAngleShift.toExponential(2);
                 
                 // DEGREES OF FREEDOM & REALITY GAP MATH
-                // Base DoF (14 particles * 4 states) + Memory DoF (Trail Length * 14 * 2)
                 const activeDoF = (NUM_SWARMS * 2 * 4) + (NUM_SWARMS * 2 * trailLength * 2);
                 const dofEl = document.getElementById('statDoF');
                 if (dofEl) dofEl.innerText = activeDoF.toLocaleString();
                 
-                // Reality Gap Mapping (Exponential representation of necessary parallel sims to map constraints)
                 const gapEl = document.getElementById('statGap');
                 if (gapEl) {
                     const gap = Math.pow(10, activeDoF / 100);
@@ -873,39 +925,42 @@
 
         // --- RENDER MAIN VIEWPORT ---
         function renderCanvas() {
-            const canvas_el = document.getElementById('simCanvas');
-            if(!canvas_el) return;
-            const ctx_el = canvas_el.getContext('2d');
-            const w = canvas_el.width, h = canvas_el.height, cx = w/2, cy = h/2, sc = Math.min(w,h)/2 * 0.9;
+            const c = ensureCanvasSize('simCanvas');
+            if(!c) return;
+            const ctx_el = c.getContext('2d');
+            const w = c.width, h = c.height, cx = w/2, cy = h/2, sc = Math.min(w,h)/2 * 0.9;
             ctx_el.fillStyle = 'rgba(0,0,0,0.8)'; ctx_el.fillRect(0,0,w,h);
-            ctx_el.strokeStyle = '#33ff00'; ctx_el.lineWidth = 1; ctx_el.strokeRect(cx-sc, cy-sc, sc*2, sc*2);
             
-            // Draw Multi-colored Age-Based Trails from the 7-color Palette
-            const colorBatches = {};
-            fleet.forEach(group => {
-                [group.alpha, group.beta].forEach(agent => {
-                    if (agent.trail.length > 1) {
-                        for (let i = 1; i < agent.trail.length; i++) {
-                            const color = getRuliadColorState(globalTick - agent.trail[i].tick);
-                            if (!colorBatches[color]) colorBatches[color] = [];
-                            colorBatches[color].push({ x1: cx + agent.trail[i-1].x * sc, y1: cy + agent.trail[i-1].y * sc, x2: cx + agent.trail[i].x * sc, y2: cy + agent.trail[i].y * sc });
-                        }
-                    }
-                });
-            });
-
+            // Draw Dynamic Artifact Bounds
+            ctx_el.strokeStyle = '#33ff00'; ctx_el.lineWidth = 1; 
+            const bX = cx + activeBounds.minX * sc;
+            const bY = cy + activeBounds.minY * sc;
+            const bW = (activeBounds.maxX - activeBounds.minX) * sc;
+            const bH = (activeBounds.maxY - activeBounds.minY) * sc;
+            ctx_el.strokeRect(bX, bY, bW, bH);
+            
             ctx_el.globalAlpha = 0.9; ctx_el.lineWidth = 2;
-            for (const color in colorBatches) {
-                ctx_el.beginPath();
-                colorBatches[color].forEach(line => { ctx_el.moveTo(line.x1, line.y1); ctx_el.lineTo(line.x2, line.y2); });
-                ctx_el.strokeStyle = color; ctx_el.stroke();
-            }
-            ctx_el.globalAlpha = 1.0;
 
-            fleet.forEach(g => {
-                ctx_el.beginPath(); ctx_el.arc(cx+g.alpha.x*sc, cy+g.alpha.y*sc, PARTICLE_RADIUS * sc, 0, Math.PI*2); ctx_el.fillStyle = '#fff'; ctx_el.fill();
-                ctx_el.beginPath(); ctx_el.arc(cx+g.beta.x*sc, cy+g.beta.y*sc, PARTICLE_RADIUS * sc, 0, Math.PI*2); ctx_el.fillStyle = '#ff00ff'; ctx_el.fill();
+            // Render each of the 7 swarms in their distinct color
+            fleet.forEach((g, idx) => {
+                const swarmColor = colorMapPalette[idx % 7];
+                
+                // Draw Trails mapping to swarm color but fading via alpha based on length
+                ctx_el.beginPath(); 
+                g.alpha.trail.forEach((p, i) => { if(i===0) ctx_el.moveTo(cx+p.x*sc, cy+p.y*sc); else ctx_el.lineTo(cx+p.x*sc, cy+p.y*sc); });
+                ctx_el.strokeStyle = swarmColor; 
+                ctx_el.stroke();
+
+                // Solid Core Alpha Particle
+                ctx_el.beginPath(); ctx_el.arc(cx+g.alpha.x*sc, cy+g.alpha.y*sc, PARTICLE_RADIUS * sc, 0, Math.PI*2); 
+                ctx_el.fillStyle = swarmColor; ctx_el.fill();
+                
+                // Hollow Shell Beta Particle
+                ctx_el.beginPath(); ctx_el.arc(cx+g.beta.x*sc, cy+g.beta.y*sc, PARTICLE_RADIUS * sc * 0.8, 0, Math.PI*2); 
+                ctx_el.strokeStyle = swarmColor; ctx_el.stroke();
             });
+
+            ctx_el.globalAlpha = 1.0;
 
             // Ruliad Background CA Engine
             const bgC = document.getElementById('globalBgCanvas');
@@ -920,7 +975,6 @@
                     if (!bgGridCA[x]) continue;
                     for(let y=0; y<bgRows; y++) {
                         const s = bgGridCA[x][y]; 
-                        // Render all 7 states for maximum Ruliad impact
                         bCtx.fillStyle = colorMapPalette[s]; 
                         bCtx.fillRect(x*25, y*25, 23, 23); 
                     }
@@ -942,10 +996,8 @@
                 else if (stats.bounces > globalLeaderboard[globalLeaderboard.length - 1].bounce) isGlobalTop = true;
 
                 if (isGlobalTop) {
-                    // Update user's top score in the active leaderboard
                     const existingIndex = globalLeaderboard.findIndex(e => e.uid === currentUser.uid);
                     if (existingIndex !== -1) globalLeaderboard.splice(existingIndex, 1);
-                    
                     globalLeaderboard.push({ uid: currentUser.uid, bounce: stats.bounces, timestamp: Date.now() });
                     globalLeaderboard.sort((a, b) => b.bounce - a.bounce);
                     if (globalLeaderboard.length > 20) globalLeaderboard.pop();
@@ -1008,26 +1060,13 @@
             }).join('');
         }
 
-        // --- UI INTERACTIVITY ---
-        window.switchTab = function(t) {
-            activeTab = t; renderTabButtons();
-            ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'].forEach(id => { const el = document.getElementById(`tab-${id}`); if(el) el.classList.add('hidden'); });
-            const curr = document.getElementById(`tab-${t}`); 
-            if(curr) { 
-                curr.classList.remove('hidden'); 
-                if(t==='MUSEUM') renderMuseum(); 
-                if(t==='RANK') renderLeaderboardUI();
-            }
-        };
-
-        function renderTabButtons() {
-            const tabsList = ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
-            document.getElementById('tab-headers').innerHTML = tabsList.map(t => `<button onclick="window.switchTab('${t}')" class="px-3 py-2 flex-shrink-0 transition-all ${activeTab === t ? 'bg-cyan-900/50 text-white border-t-2 border-cyan-400 font-bold shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'text-gray-400 hover:text-cyan-200'}">${t.replace('_', ' ')}</button>`).join('');
+        function resetEngine() {
+            simCount = 1; epochBounces = 0; inversionIncidences = 0; reEmergenceCount = 0; artifacts = []; epochSignatures = []; firstRunRatio = null; baseAngleShift = 0; 
+            activeBounds = { minX: -BOX_SIZE, maxX: BOX_SIZE, minY: -BOX_SIZE, maxY: BOX_SIZE };
+            document.getElementById('val-geometry').innerText = `SQUARE_STRICT`;
+            fleet = initializeFleet(0, false); visitedGrid.clear(); hyperGrid.clear(); renderMuseum(); saveStateToCloud();
         }
-
-        window.resetEngine = function() {
-            simCount = 1; epochBounces = 0; inversionIncidences = 0; reEmergenceCount = 0; artifacts = []; epochSignatures = []; firstRunRatio = null; baseAngleShift = 0; fleet = initializeFleet(0, false); visitedGrid.clear(); hyperGrid.clear(); renderMuseum(); saveStateToCloud();
-        };
+        window.resetEngine = resetEngine;
 
         // --- MODAL REPLAY ---
         let modalArt = null, modalTick = 0, modalAnimId = null, modalLocalGrid = new Map();
@@ -1053,15 +1092,20 @@
             modalAnimId = requestAnimationFrame(playModal);
         }
 
-        window.openArtifactModal = (id) => {
+        function openArtifactModal(id) {
             const art = artifacts.find(a => a.id === id); if(!art) return;
             modalArt = art; document.getElementById('modal-title').innerText = art.id; document.getElementById('modal-desc').innerHTML = art.desc;
             document.getElementById('artifactModal').classList.remove('hidden'); document.getElementById('artifactModal').classList.add('flex');
             const c1 = document.getElementById('modalTrajCanvas'); c1.width = c1.parentElement.clientWidth; c1.height = c1.parentElement.clientHeight;
             const c2 = document.getElementById('modalRuliadCanvas'); c2.width = c1.width; c2.height = c1.height;
             modalTick = 0; cancelAnimationFrame(modalAnimId); playModal();
-        };
-        window.closeModal = () => { cancelAnimationFrame(modalAnimId); document.getElementById('artifactModal').classList.add('hidden'); document.getElementById('artifactModal').classList.remove('flex'); };
+        }
+        window.openArtifactModal = openArtifactModal;
+
+        function closeModal() { 
+            cancelAnimationFrame(modalAnimId); document.getElementById('artifactModal').classList.add('hidden'); document.getElementById('artifactModal').classList.remove('flex'); 
+        }
+        window.closeModal = closeModal;
 
         // --- MASTER LOOP WITH OVERCLOCK PROFILER ---
         function loopMain(timestamp) { 
@@ -1072,7 +1116,6 @@
                 frameCount = 0;
                 lastFpsTime = timestamp;
                 
-                // If user's compute holds 55+ FPS while at max speed, unlock higher speeds for deeper data farming
                 if (currentFps >= 55 && speed >= maxAllowedSpeed * 0.8 && maxAllowedSpeed < 1000) {
                     maxAllowedSpeed = Math.min(1000, maxAllowedSpeed * 2);
                     const speedInput = document.getElementById('speedInput');
@@ -1092,7 +1135,7 @@
 
         window.onload = async () => {
             initBgGrid(window.innerWidth, window.innerHeight);
-            window.switchTab('STRUCTURE_RATIO'); // Default tab
+            switchTab('STRUCTURE_RATIO'); // Default tab
             document.getElementById('speedInput').oninput = (e) => { speed = parseInt(e.target.value); document.getElementById('speedLabel').innerText = `x${speed}`; };
             document.getElementById('trailInput').oninput = (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailLabel').innerText = `${trailLength} steps`; };
 
