@@ -716,14 +716,38 @@
             const w = canvas_el.width, h = canvas_el.height, cx = w/2, cy = h/2, sc = Math.min(w,h)/2 * 0.9;
             ctx_el.fillStyle = 'rgba(0,0,0,0.8)'; ctx_el.fillRect(0,0,w,h);
             ctx_el.strokeStyle = '#33ff00'; ctx_el.lineWidth = 1; ctx_el.strokeRect(cx-sc, cy-sc, sc*2, sc*2);
+            
+            // --- RESTORED: MULTI-COLORED AGE-BASED TRAILS ---
+            const colorBatches = {};
+            fleet.forEach(group => {
+                [group.alpha, group.beta].forEach(agent => {
+                    if (agent.trail.length > 1) {
+                        for (let i = 1; i < agent.trail.length; i++) {
+                            const color = getRuliadColorState(globalTick - agent.trail[i].tick);
+                            if (!colorBatches[color]) colorBatches[color] = [];
+                            colorBatches[color].push({ 
+                                x1: cx + agent.trail[i-1].x * sc, y1: cy + agent.trail[i-1].y * sc, 
+                                x2: cx + agent.trail[i].x * sc, y2: cy + agent.trail[i].y * sc 
+                            });
+                        }
+                    }
+                });
+            });
+
+            ctx_el.globalAlpha = 0.9; ctx_el.lineWidth = 2;
+            for (const color in colorBatches) {
+                ctx_el.beginPath();
+                colorBatches[color].forEach(line => { ctx_el.moveTo(line.x1, line.y1); ctx_el.lineTo(line.x2, line.y2); });
+                ctx_el.strokeStyle = color; ctx_el.stroke();
+            }
+            ctx_el.globalAlpha = 1.0;
+
             fleet.forEach(g => {
-                ctx_el.beginPath(); g.alpha.trail.forEach((p, i) => { if(i===0) ctx_el.moveTo(cx+p.x*sc, cy+p.y*sc); else ctx_el.lineTo(cx+p.x*sc, cy+p.y*sc); });
-                ctx_el.strokeStyle = 'rgba(0,255,255,0.3)'; ctx_el.stroke();
-                
                 // Draw Alpha (White) and Beta (Magenta) reflecting dynamic physical particle radius
                 ctx_el.beginPath(); ctx_el.arc(cx+g.alpha.x*sc, cy+g.alpha.y*sc, PARTICLE_RADIUS * sc, 0, Math.PI*2); ctx_el.fillStyle = '#fff'; ctx_el.fill();
                 ctx_el.beginPath(); ctx_el.arc(cx+g.beta.x*sc, cy+g.beta.y*sc, PARTICLE_RADIUS * sc, 0, Math.PI*2); ctx_el.fillStyle = '#ff00ff'; ctx_el.fill();
             });
+
             if(globalBgCanvas && bgCols > 0) {
                 const bCtx = globalBgCanvas.getContext('2d'); bCtx.fillStyle = 'rgba(0,0,0,0.4)'; bCtx.fillRect(0,0,globalBgCanvas.width,globalBgCanvas.height);
                 for(let x=0; x<bgCols; x++) for(let y=0; y<bgRows; y++) {
