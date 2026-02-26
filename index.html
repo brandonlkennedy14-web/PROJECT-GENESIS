@@ -98,23 +98,23 @@
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/80 px-2 py-1 rounded border border-cyan-900/50">
                     GEOMETRY: SQUARE_STRICT <span class="text-gray-500">+ VIRTUAL CIRCLE + VIRTUAL DIAMOND</span><br/>
-                    MODE: DEEP INVERSION + EXCLUSION PHYSICS<br/>
+                    MODE: DEEP INVERSION + EXCLUSION PHYSICS + MEMORY BOUNDS<br/>
                     <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span><br/>
                     EPSILON (ε): <span id="val-epsilon" class="text-cyan-400">0.00e+0</span>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 glass-panel p-4 rounded-lg text-sm">
-                <div class="glass-sub-panel p-3 rounded">
+                <div class="glass-sub-panel p-3 rounded border border-cyan-900/30">
                     <label class="flex justify-between text-cyan-100 mb-1">
                         <span>SONIC DRIVE (Time Δt)</span>
                         <span class="text-cyan-400 font-bold" id="speedLabel">x5</span>
                     </label>
                     <input type="range" id="speedInput" min="1" max="50" value="5" class="w-full accent-cyan-500" />
                 </div>
-                <div class="glass-sub-panel p-3 rounded">
+                <div class="glass-sub-panel p-3 rounded border border-magenta-900/30">
                     <label class="flex justify-between text-magenta-100 mb-1">
-                        <span>SMITH TRAIL MEMORY</span>
+                        <span>SMITH MEMORY (Exclusion Cutoff)</span>
                         <span class="text-magenta-400 font-bold" id="trailLabel">200 steps</span>
                     </label>
                     <input type="range" id="trailInput" min="10" max="800" value="200" class="w-full accent-magenta-500" />
@@ -161,7 +161,19 @@
                     <span class="text-xl text-cyan-400 font-bold mt-1" id="statRecurrences">0</span>
                 </div>
 
-                <div class="col-span-2 flex justify-between glass-sub-panel p-2 rounded items-center border border-yellow-900/80 bg-yellow-900/10">
+                <!-- NEW: DEGREES OF FREEDOM & REALITY GAP DASHBOARD -->
+                <div class="col-span-2 glass-sub-panel p-2 rounded text-center border border-purple-900/80 bg-purple-900/10 grid grid-cols-2 gap-2 mt-2">
+                    <div class="flex flex-col">
+                        <span class="text-purple-300 text-[9px] tracking-widest font-bold uppercase">Phase Space DoF</span>
+                        <span class="text-[14px] text-purple-400 font-bold mt-1" id="statDoF">0</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-purple-300 text-[9px] tracking-widest font-bold uppercase">Reality Gap (Δ)</span>
+                        <span class="text-[14px] text-purple-400 font-bold mt-1" id="statGap">0.00e0 Sims</span>
+                    </div>
+                </div>
+
+                <div class="col-span-2 flex justify-between glass-sub-panel p-2 rounded items-center border border-yellow-900/80 bg-yellow-900/10 mt-2">
                     <div class="flex flex-col text-left">
                         <span class="text-yellow-300 text-[9px] tracking-widest font-bold uppercase">Stability Analysis</span>
                         <span class="text-[10px] text-yellow-500 font-bold" id="val-variance">DEPTH: 0k / 250k | Scanning...</span>
@@ -274,7 +286,11 @@
                     </div>
 
                     <div id="tab-RANK" class="hidden h-full flex flex-col text-sm text-emerald-300">
-                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800/80 pb-1 font-bold tracking-widest uppercase">Global Rank</h3>
+                        <h3 class="text-emerald-200 mb-2 border-b border-emerald-800/80 pb-1 font-bold tracking-widest uppercase">Global Rank (Total Compute)</h3>
+                        <div class="flex justify-between text-[11px] text-gray-400 mb-2 px-1">
+                            <span>RANK / UID</span>
+                            <span>COMPUTE (BNCS)</span>
+                        </div>
                         <div id="leaderboard-container" class="flex-1 overflow-y-auto space-y-1 pr-2"></div>
                     </div>
                 </div>
@@ -345,17 +361,20 @@
         let zetaStats = { high: 0, low: 0 };
         let activeTab = 'STRUCTURE_RATIO';
         let speed = 5;
+        let maxAllowedSpeed = 50; // Dynamic Overclocking threshold
         let trailLength = 200;
         let stabilityHistory = [];
         let stabilityLogArray = [];
         let globalLeaderboard = [];
         let virtualHits = { circle: 0, diamond: 0 };
 
-        // 7-Color Ruliad Palette (Shared across Background, Trails, and Eyes/Hyper Tabs)
+        // CA Background State
         let bgCols = 0, bgRows = 0, bgGridCA = [];
         const colorMapPalette = ['#ffffff', '#00ffff', '#00ff88', '#ffff00', '#ff8800', '#ff00ff', '#220044'];
 
         let supabaseClient, currentUser, isSaving = false, lastSaveBounce = 0, lastSaveTime = 0;
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
 
         // --- MATH ENGINE & SYMMETRY ---
         function getHyperPrecisionZeta(baseNum, x, y) {
@@ -704,6 +723,38 @@
                     }
                 }
 
+                // Phase 2.5: MEMORY EXCLUSION PRINCIPLE (Observer Beta interacts with Alpha memory boundary)
+                // We sample the trail every 10 steps to maintain 60fps performance while creating a massive interference web
+                fleet.forEach(g => {
+                    let betaAgent = g.beta;
+                    fleet.forEach(otherG => {
+                        let targetTrail = otherG.alpha.trail;
+                        for(let k = targetTrail.length - 1; k >= 0 && k >= targetTrail.length - trailLength; k -= 10) {
+                            let tPoint = targetTrail[k];
+                            let dx = tPoint.x - betaAgent.x;
+                            let dy = tPoint.y - betaAgent.y;
+                            let distSq = dx*dx + dy*dy;
+                            let memRadius = PARTICLE_RADIUS * 1.5; // Soft memory boundary
+                            
+                            if(distSq < memRadius*memRadius && distSq > 0.00001) {
+                                let dist = Math.sqrt(distSq);
+                                let nx = dx / dist;
+                                let ny = dy / dist;
+                                
+                                // Soft deflection from the memory ghost
+                                let currentV = Math.sqrt(betaAgent.vx*betaAgent.vx + betaAgent.vy*betaAgent.vy);
+                                betaAgent.vx -= nx * 0.005; 
+                                betaAgent.vy -= ny * 0.005;
+                                
+                                // Normalize back to initial speed to conserve momentum
+                                let newV = Math.sqrt(betaAgent.vx*betaAgent.vx + betaAgent.vy*betaAgent.vy);
+                                betaAgent.vx = (betaAgent.vx / newV) * currentV;
+                                betaAgent.vy = (betaAgent.vy / newV) * currentV;
+                            }
+                        }
+                    });
+                });
+
                 // Phase 3: Post-Collision Updating
                 fleet.forEach(g => {
                     [g.alpha, g.beta].forEach((a, idx) => {
@@ -721,12 +772,6 @@
                         let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
                         let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
                         if (currentZetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
-                        
-                        if (idx === 1 && Math.random() < 0.1) {
-                             const curA = Math.atan2(a.vy, a.vx), sp = Math.sqrt(a.vx**2 + a.vy**2);
-                             const st = curA + (Math.random() - 0.5) * 0.02;
-                             a.vx = Math.cos(st) * sp; a.vy = Math.sin(st) * sp;
-                        }
                     });
                     
                     g.divergence = Math.sqrt(Math.pow(g.alpha.x - g.beta.x, 2) + Math.pow(g.alpha.y - g.beta.y, 2));
@@ -777,7 +822,7 @@
                 }
             }
 
-            // Sync UI
+            // Sync UI & Dashboard
             if (swarmHit || globalTick % 20 === 0) {
                 stats.windingNumber = fleet[0].alpha.accumulatedTheta / (2 * Math.PI);
                 document.getElementById('statBounces').innerText = stats.bounces.toLocaleString();
@@ -789,6 +834,19 @@
                 document.getElementById('statDivergence').innerText = maxDiv.toFixed(4);
                 document.getElementById('val-epsilon').innerText = baseAngleShift.toExponential(2);
                 
+                // DEGREES OF FREEDOM & REALITY GAP MATH
+                // Base DoF (14 particles * 4 states) + Memory DoF (Trail Length * 14 * 2)
+                const activeDoF = (NUM_SWARMS * 2 * 4) + (NUM_SWARMS * 2 * trailLength * 2);
+                const dofEl = document.getElementById('statDoF');
+                if (dofEl) dofEl.innerText = activeDoF.toLocaleString();
+                
+                // Reality Gap Mapping (Exponential representation of necessary parallel sims to map constraints)
+                const gapEl = document.getElementById('statGap');
+                if (gapEl) {
+                    const gap = Math.pow(10, activeDoF / 100);
+                    gapEl.innerText = gap.toExponential(2) + " Sims";
+                }
+
                 const pr = document.getElementById('flatline-progress');
                 if (pr) {
                     pr.style.width = `${Math.min(100, (epochBounces / flatlineBaseline) * 100)}%`;
@@ -815,10 +873,10 @@
 
         // --- RENDER MAIN VIEWPORT ---
         function renderCanvas() {
-            const c = ensureCanvasSize('simCanvas');
-            if(!c) return;
-            const ctx_el = c.getContext('2d');
-            const w = c.width, h = c.height, cx = w/2, cy = h/2, sc = Math.min(w,h)/2 * 0.9;
+            const canvas_el = document.getElementById('simCanvas');
+            if(!canvas_el) return;
+            const ctx_el = canvas_el.getContext('2d');
+            const w = canvas_el.width, h = canvas_el.height, cx = w/2, cy = h/2, sc = Math.min(w,h)/2 * 0.9;
             ctx_el.fillStyle = 'rgba(0,0,0,0.8)'; ctx_el.fillRect(0,0,w,h);
             ctx_el.strokeStyle = '#33ff00'; ctx_el.lineWidth = 1; ctx_el.strokeRect(cx-sc, cy-sc, sc*2, sc*2);
             
@@ -870,13 +928,30 @@
             }
         }
 
-        // --- CLOUD SYNC ---
+        // --- CLOUD SYNC & LEADERBOARD (Total Compute Storage) ---
         async function saveStateToCloud() {
             if (!supabaseClient || !currentUser || isSaving) return;
             isSaving = true; document.getElementById('save-status').innerText = 'SYNCING...';
             try {
                 const s = { stats, simCount, epochBounces, isEpochInverted, baseAngleShift, speedHistory, firstRunRatio, inversionIncidences, reEmergenceCount, epochSignatures, initialFleetState, globalTick, artifacts, fleet: fleet.map(g => ({ alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy }, beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy } })) };
                 await supabaseClient.from('saves').upsert({ user_id: currentUser.uid, state_data: s });
+                
+                // Track Total Compute on Leaderboard
+                let isGlobalTop = false;
+                if (globalLeaderboard.length < 20) isGlobalTop = true;
+                else if (stats.bounces > globalLeaderboard[globalLeaderboard.length - 1].bounce) isGlobalTop = true;
+
+                if (isGlobalTop) {
+                    // Update user's top score in the active leaderboard
+                    const existingIndex = globalLeaderboard.findIndex(e => e.uid === currentUser.uid);
+                    if (existingIndex !== -1) globalLeaderboard.splice(existingIndex, 1);
+                    
+                    globalLeaderboard.push({ uid: currentUser.uid, bounce: stats.bounces, timestamp: Date.now() });
+                    globalLeaderboard.sort((a, b) => b.bounce - a.bounce);
+                    if (globalLeaderboard.length > 20) globalLeaderboard.pop();
+                    await supabaseClient.from('global_state').upsert({ id: 'main_leaderboard', leaderboard_data: { entries: globalLeaderboard } });
+                }
+
                 document.getElementById('save-status').innerText = 'DEEP SYNCED';
             } catch (e) { document.getElementById('save-status').innerText = 'OFFLINE'; }
             isSaving = false;
@@ -900,11 +975,49 @@
             } catch (e) {}
         }
 
+        async function setupGlobalLeaderboardListener() {
+            if (!supabaseClient) return;
+            const { data } = await supabaseClient.from('global_state').select('leaderboard_data').eq('id', 'main_leaderboard').single();
+            if (data && data.leaderboard_data) {
+                globalLeaderboard = data.leaderboard_data.entries || [];
+                if (activeTab === 'RANK') renderLeaderboardUI();
+            }
+            supabaseClient.channel('public:global_state').on('postgres_changes', { event: '*', schema: 'public', table: 'global_state', filter: 'id=eq.main_leaderboard' }, payload => {
+                if (payload.new && payload.new.leaderboard_data) {
+                    globalLeaderboard = payload.new.leaderboard_data.entries || [];
+                    if (activeTab === 'RANK') renderLeaderboardUI();
+                }
+            }).subscribe();
+        }
+
+        function renderLeaderboardUI() {
+            const lc = document.getElementById('leaderboard-container');
+            if (!lc) return;
+            if (globalLeaderboard.length === 0) { lc.innerHTML = `<span class="text-gray-500">No configurations cataloged yet.</span>`; return; }
+            lc.innerHTML = globalLeaderboard.map((entry, index) => {
+                const isMe = currentUser && entry.uid === currentUser.uid;
+                const displayUid = entry.uid.split('-')[0] + '...';
+                return `
+                <div class="flex flex-col border-b border-emerald-900/50 py-2 ${index === 0 ? 'bg-emerald-900/50 px-2 rounded border border-emerald-400' : ''} ${isMe ? 'border-l-4 border-l-lime-400 pl-2 bg-emerald-900/30' : ''}">
+                    <div class="flex justify-between w-full items-center">
+                        <div class="${index === 0 ? 'text-emerald-200 font-bold text-lg' : 'text-emerald-500'}">#${index + 1}</div>
+                        <div class="text-[10px] text-gray-300 font-bold tracking-widest">${isMe ? '<span class="text-lime-400 drop-shadow-[0_0_5px_rgba(0,255,0,0.8)]">YOU</span>' : displayUid}</div>
+                    </div>
+                    <div class="font-bold text-xs text-lime-300 mt-1">${entry.bounce.toLocaleString()} Total Compute</div>
+                </div>`
+            }).join('');
+        }
+
         // --- UI INTERACTIVITY ---
         window.switchTab = function(t) {
             activeTab = t; renderTabButtons();
             ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'].forEach(id => { const el = document.getElementById(`tab-${id}`); if(el) el.classList.add('hidden'); });
-            const curr = document.getElementById(`tab-${t}`); if(curr) { curr.classList.remove('hidden'); if(t==='MUSEUM') renderMuseum(); }
+            const curr = document.getElementById(`tab-${t}`); 
+            if(curr) { 
+                curr.classList.remove('hidden'); 
+                if(t==='MUSEUM') renderMuseum(); 
+                if(t==='RANK') renderLeaderboardUI();
+            }
         };
 
         function renderTabButtons() {
@@ -916,6 +1029,7 @@
             simCount = 1; epochBounces = 0; inversionIncidences = 0; reEmergenceCount = 0; artifacts = []; epochSignatures = []; firstRunRatio = null; baseAngleShift = 0; fleet = initializeFleet(0, false); visitedGrid.clear(); hyperGrid.clear(); renderMuseum(); saveStateToCloud();
         };
 
+        // --- MODAL REPLAY ---
         let modalArt = null, modalTick = 0, modalAnimId = null, modalLocalGrid = new Map();
         function playModal() {
             if (!modalArt) return;
@@ -949,8 +1063,26 @@
         };
         window.closeModal = () => { cancelAnimationFrame(modalAnimId); document.getElementById('artifactModal').classList.add('hidden'); document.getElementById('artifactModal').classList.remove('flex'); };
 
-        // --- MASTER LOOP ---
-        function loopMain() { 
+        // --- MASTER LOOP WITH OVERCLOCK PROFILER ---
+        function loopMain(timestamp) { 
+            // FPS Tracking & Overclock unlocking
+            frameCount++;
+            if (timestamp - lastFpsTime >= 1000) {
+                let currentFps = frameCount;
+                frameCount = 0;
+                lastFpsTime = timestamp;
+                
+                // If user's compute holds 55+ FPS while at max speed, unlock higher speeds for deeper data farming
+                if (currentFps >= 55 && speed >= maxAllowedSpeed * 0.8 && maxAllowedSpeed < 1000) {
+                    maxAllowedSpeed = Math.min(1000, maxAllowedSpeed * 2);
+                    const speedInput = document.getElementById('speedInput');
+                    if (speedInput) {
+                        speedInput.max = maxAllowedSpeed;
+                        document.getElementById('speedLabel').innerHTML = `x${speed} <span class="text-lime-400 text-[9px] animate-pulse absolute ml-2 mt-1">[OVERCLOCK UNLOCKED: ${maxAllowedSpeed}]</span>`;
+                    }
+                }
+            }
+
             updatePhysics(); 
             renderCanvas(); 
             renderActiveTabCanvases(); // Constant 60fps refresh for dynamic UI canvases
@@ -971,11 +1103,12 @@
                 let uid = localStorage.getItem('ruliad_uid') || `USR-${crypto.randomUUID()}`;
                 localStorage.setItem('ruliad_uid', uid); currentUser = { uid };
                 await loadStateFromCloud();
+                await setupGlobalLeaderboardListener();
                 document.getElementById('save-status').innerText = 'READY';
                 document.getElementById('save-status').className = 'text-lime-500 font-bold';
             } catch (e) { document.getElementById('save-status').innerText = 'LOCAL'; }
             
-            loopMain(); // IGNITION
+            requestAnimationFrame(loopMain); // IGNITION
         };
     </script>
 </body>
