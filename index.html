@@ -186,7 +186,7 @@
                 <div class="flex-1 p-3 relative">
                     <div id="tab-MUSEUM" class="hidden h-full flex flex-col text-sm text-yellow-300">
                         <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest uppercase text-[10px]">Ruliad Artifacts & Epochs</h3>
-                        <p class="text-[10px] text-gray-400 mb-2 uppercase">Preserving Speed-Invariant symmetries and Re-emergences.</p>
+                        <p class="text-[10px] text-gray-400 mb-2 uppercase">Permanently Mapping the Flatline (Epochs Retained)</p>
                         <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="museum-gallery"></div>
                     </div>
 
@@ -836,11 +836,11 @@
                         desc: artifactDesc, trailAlpha: [...artifactGroup.alpha.trail], trailBeta: [...artifactGroup.beta.trail],
                         kinematics: { alpha: {...artifactGroup.alpha}, beta: {...artifactGroup.beta} }
                     });
-                    // Smart Archive: Keep Epochs, pop normal INVs if we hit the limit
-                    if (artifacts.length > 25) { 
+                    
+                    // Smart Archive: Keep Epochs, Inversions and Recurrences indefinitely. Only pop trivial INVs.
+                    if (artifacts.length > 50) { 
                         const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
                         if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
-                        else artifacts.pop();
                     }
                 }
 
@@ -852,7 +852,7 @@
                     reEmergenceCount++;
                     const drift = firstRunRatio !== null ? (curRatio - firstRunRatio).toFixed(5) : "Awaiting Baseline";
                     artifacts.unshift({ id: `RECURRENCE-${simCount}-${reEmergenceCount}`, bounce: stats.bounces, tick: globalTick, desc: `POINCARÉ RE-EMERGENCE: System returned to absolute phase-space.<br/>Drift ΔΦ: ${drift}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
-                    if (artifacts.length > 25) { const idx = artifacts.findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE')); if (idx !== -1) artifacts.splice(idx, 1); else artifacts.pop(); }
+                    if (artifacts.length > 50) { const idx = artifacts.findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION')); if (idx !== -1) artifacts.splice(idx, 1); }
                     epochBounces = 0;
                 }
 
@@ -861,7 +861,7 @@
                     if (inv) {
                         inversionIncidences++;
                         artifacts.unshift({ id: `INVERSION-${simCount}-${inversionIncidences}`, bounce: stats.bounces, tick: globalTick, desc: `GEOMETRIC INVERSION: Mirrors ${inv.matchedEpoch}.<br/>Type: <span class="text-magenta-400 font-bold">${inv.type}</span>`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
-                        if (artifacts.length > 25) { const idx = artifacts.findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('INVERSION')); if (idx !== -1) artifacts.splice(idx, 1); else artifacts.pop(); }
+                        if (artifacts.length > 50) { const idx = artifacts.findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION')); if (idx !== -1) artifacts.splice(idx, 1); }
                     }
                 }
 
@@ -892,7 +892,26 @@
                         const bH = (activeBounds.maxY - activeBounds.minY).toFixed(2);
                         document.getElementById('val-geometry').innerText = `DYNAMIC_MORPH [${bW}x${bH}]`;
 
-                        artifacts.unshift({ id: `EPOCH-FLATLINE-${simCount}`, bounce: stats.bounces, tick: globalTick, desc: `DEEP THERMALIZATION: Boundary Collapse.<br/>${label}<br/>Stability: ${sens.stability}% | Var: ${variance.toExponential(2)}<br/>New Bounds: ${bW}x${bH}`, trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail], kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } });
+                        // AUTONOMOUS MEMORY EXCLUSION REDUCTION
+                        // Forces the swarm to adapt to less memory constraints inside the new boundary
+                        const oldMemory = trailLength;
+                        trailLength = Math.max(10, Math.floor(trailLength * 0.8)); // 20% reduction per Epoch, down to a min of 10
+                        
+                        // Sync slider UI to the automated mathematical reduction
+                        const tInput = document.getElementById('trailInput');
+                        if (tInput) tInput.value = trailLength;
+                        const tLabel = document.getElementById('trailLabel');
+                        if (tLabel) tLabel.innerText = `${trailLength} steps`;
+
+                        artifacts.unshift({ 
+                            id: `EPOCH-FLATLINE-${simCount}`, 
+                            bounce: stats.bounces, 
+                            tick: globalTick, 
+                            desc: `DEEP THERMALIZATION: Boundary Collapse.<br/>${label}<br/>Stability: ${sens.stability}% | Var: ${variance.toExponential(2)}<br/>New Bounds: ${bW}x${bH}<br/><span class="text-magenta-400 font-bold">MEMORY EXCLUSION REDUCED: ${oldMemory} ➔ ${trailLength}</span>`, 
+                            trailAlpha: [...fleet[0].alpha.trail], 
+                            trailBeta: [...fleet[0].beta.trail], 
+                            kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} } 
+                        });
                         
                         simCount++; isEpochInverted = !isEpochInverted; if (!isEpochInverted) baseAngleShift += 1e-15;
                         fleet = initializeFleet(baseAngleShift, isEpochInverted);
@@ -1086,7 +1105,11 @@
         }
 
         function resetEngine() {
-            simCount = 1; epochBounces = 0; inversionIncidences = 0; reEmergenceCount = 0; artifacts = []; epochSignatures = []; firstRunRatio = null; baseAngleShift = 0; 
+            simCount = 1; epochBounces = 0; inversionIncidences = 0; reEmergenceCount = 0; 
+            artifacts = []; epochSignatures = []; firstRunRatio = null; baseAngleShift = 0; 
+            globalTick = 0; stats = { bounces: 0, cornerHits: 0, windingNumber: 0 }; zetaStats = { high: 0, low: 0 };
+            structuredEvents = 0; chaoticEvents = 0; currentTickCaustic = Infinity;
+            ratioHistory = []; speedHistory = []; causticHistory = []; recentRadii = [];
             activeBounds = { minX: -BOX_SIZE, maxX: BOX_SIZE, minY: -BOX_SIZE, maxY: BOX_SIZE };
             document.getElementById('val-geometry').innerText = `SQUARE_STRICT`;
             fleet = initializeFleet(0, false); visitedGrid.clear(); hyperGrid.clear(); renderMuseum(); saveStateToCloud();
@@ -1141,8 +1164,9 @@
                 frameCount = 0;
                 lastFpsTime = timestamp;
                 
-                if (currentFps >= 55 && speed >= maxAllowedSpeed * 0.8 && maxAllowedSpeed < 1000) {
-                    maxAllowedSpeed = Math.min(1000, maxAllowedSpeed * 2);
+                // Allow Infinite Overclocking (Removed hard limit of 1000)
+                if (currentFps >= 55 && speed >= maxAllowedSpeed * 0.8) {
+                    maxAllowedSpeed = Math.floor(maxAllowedSpeed * 1.5);
                     const speedInput = document.getElementById('speedInput');
                     if (speedInput) {
                         speedInput.max = maxAllowedSpeed;
@@ -1159,8 +1183,11 @@
         }
 
         window.onload = async () => {
+            const canvas_el = document.getElementById('simCanvas');
+            const r = canvas_el.parentElement.getBoundingClientRect(); canvas_el.width = r.width; canvas_el.height = r.height;
             initBgGrid(window.innerWidth, window.innerHeight);
-            switchTab('MUSEUM'); // Default tab set to MUSEUM to instantly see the new artifacts!
+            ['ratioCanvas', 'causticCanvas', 'eyesCanvas', 'hyperCanvas', 'zetaCanvas'].forEach(id => { const c = document.getElementById(id); if(c){ c.width = c.parentElement.clientWidth; c.height = c.parentElement.clientHeight; }});
+            renderTabButtons(); window.switchTab('MUSEUM');
             document.getElementById('speedInput').oninput = (e) => { speed = parseInt(e.target.value); document.getElementById('speedLabel').innerText = `x${speed}`; };
             document.getElementById('trailInput').oninput = (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailLabel').innerText = `${trailLength} steps`; };
 
