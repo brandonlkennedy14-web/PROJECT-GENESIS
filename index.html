@@ -5,18 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Genesis // Inversion</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SUPABASE CLIENT -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* Digital Calculator & LCD Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
+
         body {
             font-family: 'Share Tech Mono', monospace;
             background-color: #000000;
             color: #d1d5db;
         }
-        
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 4px; }
@@ -45,7 +44,7 @@
             border: 1px solid rgba(0, 255, 255, 0.2);
             box-shadow: 0 4px 30px rgba(0,0,0,0.8);
         }
-        
+
         .glass-sub-panel {
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
@@ -67,7 +66,7 @@
     <header class="flex justify-between items-end border-b border-cyan-900/80 pb-2 mb-4 relative z-10 glass-panel p-4 rounded-lg">
         <div>
             <h1 class="text-3xl font-black tracking-widest text-white glitch-text">PROJECT GENESIS <span class="text-cyan-500">//</span> INVERSION</h1>
-            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Flatline Epoch Architecture v12</h2>
+            <h2 class="text-md text-cyan-200 uppercase tracking-widest mt-1">Sim3Colts Build :: Flatline Epoch Architecture v13</h2>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right text-xs text-gray-400">
@@ -83,16 +82,17 @@
 
     <!-- MAIN GRID -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-        
+
         <!-- LEFT PANE: CANVAS & CONTROLS -->
         <div class="lg:col-span-2 flex flex-col gap-4">
-            
+
             <div class="relative w-full h-[500px] glass-panel rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.15)]" id="canvas-container">
                 <canvas id="simCanvas" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="absolute top-2 left-2 text-[11px] text-cyan-100/90 select-none pointer-events-none bg-black/80 px-2 py-1 rounded border border-cyan-900/50">
                     GEOMETRY: SQUARE_STRICT <span class="text-gray-500">+ VIRTUAL CIRCLE + VIRTUAL DIAMOND</span><br/>
                     MODE: INVERSION MAPPING (14 AGENTS)<br/>
-                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span>
+                    <span class="text-cyan-400">7x ALPHA (CONTROL)</span> | <span class="text-magenta-400">7x BETA (OBSERVER)</span><br/>
+                    EPSILON (ε): <span id="val-epsilon" class="text-cyan-400">0.00e+0</span>
                 </div>
             </div>
 
@@ -116,18 +116,18 @@
 
         <!-- RIGHT PANE: QUADRATIC REALITY MATRIX & OBSERVABLES -->
         <div class="flex flex-col gap-4 h-full">
-            
+
             <div class="glass-panel p-4 rounded-lg grid grid-cols-2 gap-y-4 gap-x-2 text-sm relative overflow-hidden">
                 <div class="col-span-2 border-b border-cyan-800/80 pb-2 mb-1 text-cyan-300 font-bold tracking-widest flex justify-between text-base">
                     <span>SYSTEM MACROSTATES</span>
                     <span class="text-cyan-400">Δ DIVERGENCE: <span id="statDivergence" class="text-white">0.000</span></span>
                 </div>
-                
+
                 <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
                     <span class="text-gray-400 text-[11px] tracking-widest">AGG. WINDING ($W$)</span>
                     <span class="text-2xl text-cyan-400 font-bold mt-1" id="statWinding">0.000</span>
                 </div>
-                
+
                 <div class="flex flex-col glass-sub-panel p-2 rounded text-center">
                     <span class="text-gray-400 text-[11px] tracking-widest">CORNER HITS (ε)</span>
                     <span class="text-2xl text-magenta-400 font-bold mt-1" id="statCorners">0</span>
@@ -136,19 +136,26 @@
                 <div class="flex flex-col glass-sub-panel p-2 rounded text-center relative overflow-hidden">
                     <span class="text-gray-400 text-[11px] tracking-widest relative z-10">EPOCH IMPACTS</span>
                     <span class="text-xl text-white mt-1 relative z-10" id="statBounces">0</span>
-                    <div class="absolute bottom-0 left-0 h-1 bg-cyan-500/50 transition-all" id="flatline-progress" style="width: 0%"></div>
+                    <div class="absolute bottom-0 left-0 h-1 bg-yellow-500 transition-all" id="flatline-progress" style="width: 0%"></div>
                 </div>
 
-                <!-- NEW SIM COUNT AND INVERSION TRACKER -->
+                <!-- SIM COUNT AND INVERSION TRACKER -->
                 <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-lime-900/80 bg-lime-900/10">
                     <span class="text-lime-300 text-[11px] tracking-widest font-bold">SIM / INVERSION</span>
                     <span class="text-xl text-lime-400 font-bold mt-1" id="statSim">1 / FALSE</span>
+                </div>
+                
+                <div class="col-span-2 flex justify-between glass-sub-panel p-2 rounded items-center border border-yellow-900/80 bg-yellow-900/10">
+                    <div class="flex flex-col text-left">
+                        <span class="text-yellow-300 text-[9px] tracking-widest font-bold uppercase">FLATLINE STABILITY (Var &lt; 1e-10)</span>
+                        <span class="text-[10px] text-yellow-500" id="val-variance">Calculating...</span>
+                    </div>
                 </div>
             </div>
 
             <div class="flex-1 flex flex-col glass-panel rounded-lg overflow-hidden min-h-[300px]">
                 <div class="flex glass-sub-panel border-b border-cyan-800/80 text-xs overflow-x-auto" id="tab-headers"></div>
-                
+
                 <div class="flex-1 p-3 relative">
                     <div id="tab-SUPER_BRAIN" class="hidden h-full flex flex-col text-sm text-blue-200">
                         <h3 class="text-blue-300 mb-2 border-b border-blue-800/80 pb-1 font-bold tracking-widest">HIVE-MIND CROSS-REFERENCE</h3>
@@ -172,10 +179,10 @@
                     <div id="tab-STRUCTURE_RATIO" class="hidden h-full flex flex-col text-sm text-purple-300">
                         <h3 class="text-purple-200 mb-2 border-b border-purple-800/80 pb-1 font-bold tracking-widest">MORPHOLOGICAL RATIO (Φ)</h3>
                         <div class="flex-1 flex flex-col gap-2">
-                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events vs Chaotic Dispersion. Epoch iterations wait for Deep Fully Inverted flatlines (Var < 1e-10).</p>
+                            <p class="text-[9px] text-gray-400">Tracking the convergence of Structured Events vs Chaotic Dispersion. Epoch iterations wait for Deep Fully Inverted flatlines (Var &lt; 1e-10).</p>
                             <div class="glass-sub-panel p-2 rounded grid grid-cols-3 gap-2 text-center text-xs">
                                 <div><span class="text-gray-400 text-[10px]">STRUCTURED</span><br><span id="val-structured" class="text-lime-400 font-bold">0</span></div>
-                                <div><span class="text-gray-400 text-[10px]">RATIO (Φ)</span><br><span id="val-ratio" class="text-purple-400 font-bold text-lg">0.000</span></div>
+                                <div><span class="text-gray-400 text-[10px]">RATIO (Φ)</span><br><span id="val-ratio-current" class="text-purple-400 font-bold text-lg">0.000</span></div>
                                 <div><span class="text-gray-400 text-[10px]">CHAOTIC</span><br><span id="val-chaotic" class="text-red-400 font-bold">0</span></div>
                             </div>
                             <div class="mt-1 text-center text-[10px] font-bold tracking-widest text-cyan-500 bg-black/50 p-1 rounded border border-cyan-900/50" id="chaos-trend">
@@ -219,10 +226,13 @@
                         </div>
                     </div>
 
+                    <!-- CHUNK 1: MUSEUM CONTAINER FIX -->
                     <div id="tab-MUSEUM" class="hidden h-full flex flex-col text-sm text-yellow-300">
-                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest">INVERSION SHAPE ARTIFACTS</h3>
+                        <h3 class="text-yellow-200 mb-2 border-b border-yellow-800/80 pb-1 font-bold tracking-widest uppercase text-[10px]">Ruliad Artifacts & Epochs</h3>
                         <p class="text-[10px] text-gray-400 mb-2">Logging Epochs, structural inversions, and KAM Torus resonances. Click to Replay.</p>
-                        <div class="flex-1 grid grid-cols-2 gap-2 overflow-y-auto pr-2" id="museum-gallery"></div>
+                        <div class="flex-1 overflow-y-auto space-y-2 pr-2" id="museum-gallery">
+                            <!-- Artifacts Render via JS -->
+                        </div>
                     </div>
 
                     <div id="tab-HYPER" class="hidden h-full flex flex-col text-sm text-cyan-300">
@@ -287,7 +297,7 @@
                 <h2 class="text-cyan-400 font-bold tracking-widest text-xl glitch-text" id="modal-title">ARTIFACT RENDER</h2>
                 <button onclick="closeModal()" class="text-red-500 hover:text-red-300 text-3xl font-bold px-2 transition-colors leading-none">&times;</button>
             </div>
-            
+
             <div class="flex-1 grid grid-cols-2 p-4 gap-4 bg-black/60 relative" id="modal-canvases-container">
                 <div class="flex flex-col glass-sub-panel rounded-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 bg-black/90 border-b border-cyan-800/80 p-2 z-10 text-center text-xs text-cyan-300 font-bold tracking-widest flex justify-between px-4">
@@ -303,7 +313,7 @@
                     <canvas id="modalRuliadCanvas" class="w-full h-full"></canvas>
                 </div>
             </div>
-            
+
             <!-- REPRODUCIBILITY MANIFEST -->
             <div class="bg-gray-900/90 p-4 border-t border-cyan-500 text-sm text-gray-300" id="modal-desc"></div>
         </div>
@@ -340,6 +350,7 @@
         let isEpochInverted = false;
         let baseAngleShift = 0;
         let lastKamBounce = 0;
+        let flatlineBaseline = 100000;
 
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
@@ -356,10 +367,10 @@
         let activeTab = 'STRUCTURE_RATIO';
         let speed = 5;
         let trailLength = 200; 
-        
+
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0 };
         let zetaStats = { high: 0, low: 0 };
-        
+
         function initializeFleet(angleShift, invertBasis = false) {
             const multiplier = invertBasis ? -1 : 1;
             return Array.from({ length: NUM_SWARMS }, (_, i) => {
@@ -379,7 +390,7 @@
                 };
             });
         }
-        
+
         let fleet = initializeFleet(baseAngleShift, isEpochInverted);
 
         let visitedGrid = new Map(); 
@@ -387,7 +398,7 @@
         let globalTick = 0; 
         let artifacts = [];
         let globalLeaderboard = []; 
-        
+
         let stabilityHistory = [];
         let stabilityLogArray = []; 
 
@@ -431,7 +442,7 @@
         const zetaCanvas = document.getElementById('zetaCanvas');
         const ratioCanvas = document.getElementById('ratioCanvas');
         const causticCanvas = document.getElementById('causticCanvas');
-        
+
         const tabs = ['SUPER_BRAIN', 'EYES', 'STRUCTURE_RATIO', 'STABILITY', 'VOIDS', 'MUSEUM', 'HYPER', 'ZETA', 'RANK'];
 
         function renderTabButtons() {
@@ -440,18 +451,58 @@
             `).join('');
         }
 
+        // --- CHUNK 7: TAB REFRESH LOGIC ---
         window.switchTab = function(tab) {
             activeTab = tab;
             renderTabButtons();
-            [...tabs, 'OTHER'].forEach(t => { const el = document.getElementById(`tab-${t}`); if (el) el.classList.add('hidden'); });
+            [...tabs, 'OTHER'].forEach(t => { 
+                const el = document.getElementById(`tab-${t}`); 
+                if (el) el.classList.add('hidden'); 
+            });
+            
             if (tabs.includes(tab)) {
                 document.getElementById(`tab-${tab}`).classList.remove('hidden');
                 if (tab === 'RANK') renderLeaderboardUI();
+                
+                // FORCE IMMEDIATE MUSEUM RENDER ON CLICK
+                if (tab === 'MUSEUM') renderMuseum(); 
+                
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
             }
         };
 
-        // --- CLOUD SYNC LOGIC ---
+        // --- CHUNK 6: INTERACTIVE MUSEUM RENDERER ---
+        function renderMuseum() {
+            if (activeTab !== 'MUSEUM') return;
+            const container = document.getElementById('museum-gallery');
+            if (!container) return;
+
+            if (!artifacts || artifacts.length === 0) {
+                container.innerHTML = '<div class="text-gray-600 text-center mt-10 uppercase text-[10px] tracking-widest">Awaiting First Flatline...</div>';
+                return;
+            }
+
+            container.innerHTML = artifacts.map(art => {
+                const isEpoch = art.id.includes('EPOCH');
+                // Added cursor-pointer, hover glow effects, and the modal click handler
+                return `
+                <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel p-3 rounded border-l-2 ${isEpoch ? 'border-lime-500 bg-lime-900/10 hover:bg-lime-900/30' : 'border-yellow-500 bg-yellow-900/10 hover:bg-yellow-900/30'} mb-2 transition-all shadow-[0_0_10px_rgba(${isEpoch ? '0,255,0' : '255,255,0'},0.1)] hover:shadow-[0_0_20px_rgba(${isEpoch ? '0,255,0' : '255,255,0'},0.4)]">
+                    <div class="flex justify-between font-bold ${isEpoch ? 'text-lime-400' : 'text-yellow-400'} text-[11px] uppercase border-b ${isEpoch ? 'border-lime-900/50' : 'border-yellow-900/50'} pb-1 mb-1">
+                        <span>${art.id}</span>
+                        <span>BNCS: ${art.bounce.toLocaleString()}</span>
+                    </div>
+                    <div class="text-[9px] ${isEpoch ? 'text-lime-300' : 'text-gray-400'} font-bold mb-1">
+                        TRIGGER: ${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}
+                    </div>
+                    <div class="text-[10px] ${isEpoch ? 'text-lime-100' : 'text-gray-300'} mt-1 leading-relaxed break-words">
+                        ${art.desc}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- CLOUD SYNC LOGIC & CHUNK 8: EMPTY STATE INSTANT HYDRATION ---
         async function loadStateFromCloud() {
             if (!supabaseClient || !currentUser) return;
             try {
@@ -467,7 +518,7 @@
                     epochBounces = saved.epochBounces || 0;
                     isEpochInverted = saved.isEpochInverted || false;
                     baseAngleShift = saved.baseAngleShift || 0;
-                    
+
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
                         fleet = saved.fleet.map((g, i) => ({
                             id: i,
@@ -481,7 +532,11 @@
                     artifacts = (saved.artifacts || []).filter(art => 
                         art.kinematics && art.kinematics.alpha && !art.id.includes('undefined')
                     );
+                    fleet = initializeFleet(baseAngleShift, isEpochInverted); 
                     lastSaveBounce = stats.bounces;
+                    
+                    // NEW: Force the UI to instantly clear the empty state and render cloud data
+                    if (activeTab === 'MUSEUM') renderMuseum();
                 }
             } catch (e) { console.error("Cloud load failed:", e); }
         }
@@ -506,7 +561,7 @@
             isSaving = true;
             document.getElementById('save-status').innerText = 'SYNCING REALITY...';
             document.getElementById('save-status').className = 'text-yellow-500 animate-pulse font-bold';
-            
+
             try {
                 const state = {
                     stats, zetaStats, virtualHits, 
@@ -518,7 +573,7 @@
                     })),
                     globalTick, artifacts
                 };
-                
+
                 const { error: saveError } = await supabaseClient.from('saves').upsert({ user_id: currentUser.uid, state_data: state });
                 if (saveError) throw saveError;
 
@@ -551,7 +606,7 @@
             }).join('');
         }
 
-        // --- ARTIFACT MODAL PLAYBACK LOGIC ---
+        // --- CHUNK 4: ARTIFACT MODAL PLAYBACK LOGIC ---
         let modalArt = null;
         let modalTick = 0;
         let modalAnimId = null;
@@ -559,7 +614,7 @@
 
         function playModal() {
             if (!modalArt || !modalArt.trailAlpha) return;
-            
+
             const tCtx = document.getElementById('modalTrajCanvas').getContext('2d');
             const rCtx = document.getElementById('modalRuliadCanvas').getContext('2d');
             const w = tCtx.canvas.width; const h = tCtx.canvas.height;
@@ -586,7 +641,7 @@
                         const p1 = aTrail[modalTick-1]; const p2 = aTrail[modalTick];
                         tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
                         tCtx.strokeStyle = '#00ffff'; tCtx.lineWidth = 2; tCtx.stroke();
-                        
+
                         const gx = Math.floor((p2.x + BOX_SIZE) * 20); const gy = Math.floor((p2.y + BOX_SIZE) * 20);
                         modalLocalGrid.set(`${gx},${gy}`, modalTick);
                     }
@@ -594,7 +649,7 @@
                         const p1 = bTrail[modalTick-1]; const p2 = bTrail[modalTick];
                         tCtx.beginPath(); tCtx.moveTo(cx + p1.x * scale, cy + p1.y * scale); tCtx.lineTo(cx + p2.x * scale, cy + p2.y * scale);
                         tCtx.strokeStyle = '#ff00ff'; tCtx.lineWidth = 2; tCtx.stroke();
-                        
+
                         const gx = Math.floor((p2.x + BOX_SIZE) * 20); const gy = Math.floor((p2.y + BOX_SIZE) * 20);
                         modalLocalGrid.set(`${gx},${gy}`, modalTick);
                     }
@@ -621,10 +676,10 @@
         function openArtifactModal(id) {
             const art = artifacts.find(a => a.id === id);
             if (!art) return;
-            
+
             modalArt = art;
             document.getElementById('modal-title').innerText = `ARTIFACT // ${art.id}`;
-            
+
             const k = art.kinematics;
             const kinHTML = k ? `
                 <div class="bg-black/80 p-2 rounded border border-gray-700 text-[10px] text-gray-400">
@@ -636,37 +691,35 @@
                 </div>
             ` : ``;
 
+            // CHUNK 4 FIX: Ensure the full description with <br/> tags renders safely in the modal
             document.getElementById('modal-desc').innerHTML = `
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <div class="text-cyan-400 font-bold mb-1 border-b border-cyan-800 tracking-widest">TRIGGER: ${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</div>
+                        <div class="text-cyan-400 font-bold mb-1 border-b border-cyan-800 tracking-widest">TRIGGER: ${art.triggerSwarm === 'ALL' ? 'GLOBAL EPOCH SHIFT' : 'SWRM ' + art.triggerSwarm}</div>
                         <div class="text-gray-300">α Zeta: <span class="text-cyan-300">${art.zetaStrAlpha.substring(0,25)}...</span></div>
                         <div class="text-gray-300">β Zeta: <span class="text-magenta-300">${art.zetaStrBeta.substring(0,25)}...</span></div>
-                        <div class="text-yellow-400 font-bold mt-2 text-xs uppercase border border-yellow-500/50 p-1 bg-yellow-900/20">${art.desc}</div>
+                        <div class="text-yellow-400 font-bold mt-2 text-[10px] uppercase border border-yellow-500/50 p-2 bg-yellow-900/20 leading-relaxed">${art.desc}</div>
                     </div>
                     ${kinHTML}
                 </div>
             `;
-            
+
             document.getElementById('artifactModal').classList.remove('hidden');
             document.getElementById('artifactModal').classList.add('flex');
 
-            if (art.triggerSwarm !== 'ALL') {
-                document.getElementById('modal-canvases-container').classList.remove('hidden');
-                document.getElementById('modal-canvases-container').classList.add('grid');
-                const tCtx = document.getElementById('modalTrajCanvas');
-                tCtx.width = tCtx.parentElement.clientWidth;
-                tCtx.height = tCtx.parentElement.clientHeight - 30; 
-                document.getElementById('modalRuliadCanvas').width = tCtx.width; 
-                document.getElementById('modalRuliadCanvas').height = tCtx.height;
-                modalTick = 0;
-                cancelAnimationFrame(modalAnimId);
-                playModal();
-            } else {
-                document.getElementById('modal-canvases-container').classList.add('hidden');
-                document.getElementById('modal-canvases-container').classList.remove('grid');
-                cancelAnimationFrame(modalAnimId);
-            }
+            // CHUNK 4 FIX: Always show the playback canvases, even for 'ALL' (Epochs)
+            document.getElementById('modal-canvases-container').classList.remove('hidden');
+            document.getElementById('modal-canvases-container').classList.add('grid');
+            
+            const tCtx = document.getElementById('modalTrajCanvas');
+            tCtx.width = tCtx.parentElement.clientWidth;
+            tCtx.height = tCtx.parentElement.clientHeight - 30; 
+            document.getElementById('modalRuliadCanvas').width = tCtx.width; 
+            document.getElementById('modalRuliadCanvas').height = tCtx.height;
+            
+            modalTick = 0;
+            cancelAnimationFrame(modalAnimId);
+            playModal(); // Start the 200X Reconstruction
         }
 
         window.closeModal = function() {
@@ -732,7 +785,7 @@
             const gridX = Math.floor((agent.x + BOX_SIZE) * gridSegments);
             const gridY = Math.floor((agent.y + BOX_SIZE) * gridSegments);
             const gridKey = `${gridX},${gridY}`;
-            
+
             const cellData = visitedGrid.get(gridKey) || { density: 0, lastVisit: 0 };
             visitedGrid.set(gridKey, { density: cellData.density + 1, lastVisit: globalTick });
 
@@ -740,7 +793,7 @@
             let fracX = Math.abs((agent.x + BOX_SIZE) * gridSegments - gridX - 0.5); 
             let fracY = Math.abs((agent.y + BOX_SIZE) * gridSegments - gridY - 0.5);
             let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
-            
+
             let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
             let currentZetaStr = getHyperPrecisionZeta(currentZetaNum, agent.x, agent.y);
 
@@ -770,6 +823,31 @@
             return { bounced, cornerHit, originCross, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
         }
 
+        // Add the missing function definition here
+        function renderRatioChart() {
+            // Check if active tab is STRUCTURE_RATIO to prevent unnecessary rendering
+            if (activeTab === 'STRUCTURE_RATIO' && ratioCanvas) {
+                const rCtx = ratioCanvas.getContext('2d');
+                const rw = ratioCanvas.width; const rh = ratioCanvas.height;
+                rCtx.clearRect(0, 0, rw, rh);
+                if (ratioHistory.length > 1) {
+                    const maxRatio = Math.max(...ratioHistory, 1.0);
+                    rCtx.beginPath();
+                    for (let i=0; i<ratioHistory.length; i++) {
+                        const x = (i / 300) * rw;
+                        const y = rh - (ratioHistory[i] / maxRatio) * rh;
+                        if (i===0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
+                    }
+                    rCtx.strokeStyle = '#ff00ff'; rCtx.lineWidth = 2; rCtx.stroke();
+                    rCtx.lineTo(rw, rh); rCtx.lineTo(0, rh);
+                    const grad = rCtx.createLinearGradient(0,0,0,rh);
+                    grad.addColorStop(0, 'rgba(255,0,255,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    rCtx.fillStyle = grad; rCtx.fill();
+                }
+            }
+        }
+
+
         function updatePhysics() {
             let swarmHitBoundary = false;
             let triggerArtifact = false;
@@ -780,11 +858,11 @@
             for (let step = 0; step < speed; step++) {
                 globalTick++; 
                 if(globalTick % 5 === 0) updateBgGrid(); 
-                
+
                 fleet.forEach(group => {
                     const alphaRes = moveAgent(group.alpha, false);
                     const betaRes = moveAgent(group.beta, true);
-                    
+
                     const rAlpha = Math.sqrt(group.alpha.x**2 + group.alpha.y**2);
                     const rBeta = Math.sqrt(group.beta.x**2 + group.beta.y**2);
                     recentRadii.push(Math.min(rAlpha, rBeta));
@@ -795,8 +873,8 @@
                         swarmHitBoundary = true;
                         group.bounces++;
                         stats.bounces++; 
-                        epochBounces++; // Local tracking for the flatline
-                        
+                        epochBounces++;
+
                         if (alphaRes.zetaNum >= 0.5 || betaRes.zetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
                         if (alphaRes.cornerHit || betaRes.cornerHit) { stats.cornerHits++; structuredEvents++; }
                         if (alphaRes.originCross || betaRes.originCross) structuredEvents++;
@@ -821,7 +899,7 @@
                             });
                         }
                     }
-                    
+
                     if (!triggerArtifact) {
                         if (alphaRes.cornerHit || betaRes.cornerHit) { triggerArtifact = true; artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped."; } 
                         else if (alphaRes.originCross || betaRes.originCross) { triggerArtifact = true; artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing."; }
@@ -836,7 +914,7 @@
 
                     group.divergence = Math.sqrt(Math.pow(group.alpha.x - group.beta.x, 2) + Math.pow(group.alpha.y - group.beta.y, 2));
                     if (group.divergence > maxDivergence) maxDivergence = group.divergence;
-                    
+
                     if (swarmHitBoundary && group.divergence > 0.3) chaoticEvents++;
                 });
 
@@ -852,44 +930,64 @@
                         trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
                         kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
                     });
-                    if (artifacts.length > 20) artifacts.pop();
+                    if (artifacts.length > 20) {
+                        const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                        if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
+                        else artifacts.pop();
+                    }
                 }
 
                 // --- PERFECT FLATLINE DETECTOR (TRUE EPOCHS) ---
                 let variance = 1;
-                if (epochBounces > 100000 && ratioHistory.length >= 300) {
+                if (epochBounces > flatlineBaseline && ratioHistory.length >= 300) {
                     const mean = ratioHistory.reduce((a,b)=>a+b,0) / ratioHistory.length;
                     variance = ratioHistory.reduce((a,b)=>a+Math.pow(b-mean,2),0) / ratioHistory.length;
-                }
-
-                if (epochBounces > 100000 && variance < 1e-10) {
-                    // Log the perfect flatline epoch
-                    artifacts.unshift({ 
-                        id: `EPOCH-FLATLINE-${simCount}`, bounce: stats.bounces, tick: globalTick,
-                        triggerSwarm: "ALL", zetaStrAlpha: fleet[0].alpha.zetaStr || "0", zetaStrBeta: fleet[0].beta.zetaStr || "0",
-                        desc: `TRUE FLATLINE (Sim ${simCount}): Ratio variance hit 0. <br/>Basis Inverted: ${isEpochInverted} <br/>Epsilon Shift: +${baseAngleShift.toExponential(2)}`,
-                        trailAlpha: [...fleet[0].alpha.trail], trailBeta: [...fleet[0].beta.trail],
-                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
-                    });
-                    if (artifacts.length > 20) artifacts.pop();
-
-                    simCount++;
-                    isEpochInverted = !isEpochInverted;
-                    if (!isEpochInverted) baseAngleShift += 1e-15; // Infinitesimal shift after a full cycle
                     
-                    fleet = initializeFleet(baseAngleShift, isEpochInverted);
-                    epochBounces = 0;
-                    ratioHistory = [];
-                    causticHistory = [];
-                    currentTickCaustic = Infinity;
-                    recentRadii = [];
+                    const varEl = document.getElementById('val-variance');
+                    if(varEl) varEl.innerText = variance.toExponential(3);
+                    const progressEl = document.getElementById('flatline-progress');
+                    if(progressEl) progressEl.style.width = `${Math.min(100, (epochBounces / (flatlineBaseline*2))*100)}%`;
+
+                    if (variance < 1e-10) {
+                        // CHUNK 3: FIXED MUSEUM PAYLOAD FOR MODAL REPLAY
+                        artifacts.unshift({ 
+                            id: `EPOCH-FLATLINE-${simCount}`, 
+                            bounce: stats.bounces, 
+                            tick: globalTick,
+                            triggerSwarm: "ALL", 
+                            zetaStrAlpha: fleet[0].alpha.zetaStr || "0", 
+                            zetaStrBeta: fleet[0].beta.zetaStr || "0",
+                            desc: `TRUE FLATLINE (Sim ${simCount}): Ratio variance hit 0.<br/>Basis Inverted: ${isEpochInverted}<br/>Epsilon Shift: +${baseAngleShift.toExponential(2)}`,
+                            trailAlpha: [...fleet[0].alpha.trail], 
+                            trailBeta: [...fleet[0].beta.trail],
+                            kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
+                        });
+                        
+                        if (artifacts.length > 20) {
+                            const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                            if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
+                            else artifacts.pop();
+                        }
+
+                        // RESET & SHIFT
+                        simCount++;
+                        isEpochInverted = !isEpochInverted;
+                        if (!isEpochInverted) baseAngleShift += 1e-15; 
+
+                        fleet = initializeFleet(baseAngleShift, isEpochInverted);
+                        epochBounces = 0;
+                        ratioHistory = [];
+                        causticHistory = [];
+                        currentTickCaustic = Infinity;
+                        recentRadii = [];
+                    }
                 }
 
                 if (globalTick % 20 === 0) {
                     ratioHistory.push(currentRatio);
                     if (ratioHistory.length > 300) ratioHistory.shift();
                 }
-                
+
                 if (globalTick % 50 === 0) {
                     causticHistory.push(currentTickCaustic === Infinity ? 1.414 : currentTickCaustic);
                     if (causticHistory.length > 300) causticHistory.shift();
@@ -898,13 +996,20 @@
 
             stats.windingNumber = fleet[0].alpha.accumulatedTheta / (2 * Math.PI);
 
-            if (triggerArtifact && artifactGroup && artifacts.length < 20) {
+            // CHUNK 9: SMART ARCHIVE DEPTH
+            if (triggerArtifact && artifactGroup) {
                 artifacts.unshift({ 
                     id: `INV-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
                     triggerSwarm: artifactGroup.id + 1, zetaStrAlpha: artifactGroup.zetaStrAlpha, zetaStrBeta: artifactGroup.zetaStrBeta,
                     desc: artifactDesc, trailAlpha: artifactGroup.trailAlpha, trailBeta: artifactGroup.trailBeta,
                     kinematics: artifactGroup.kinematics
                 });
+
+                if (artifacts.length > 20) {
+                    const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                    if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
+                    else artifacts.pop();
+                }
             }
 
             if (swarmHitBoundary && (stats.bounces - lastSaveBounce >= 200)) {
@@ -915,19 +1020,24 @@
                 }
             }
 
-            // --- UI UPDATES ---
-            if (swarmHitBoundary || Math.random() < 0.05) {
+            // CHUNK 10: CONVERGENCE UI HOOK
+            if (swarmHitBoundary || globalTick % 20 === 0) {
                 document.getElementById('statBounces').innerText = stats.bounces.toLocaleString();
-                document.getElementById('statDivergence').innerText = maxDivergence.toFixed(4);
-                document.getElementById('statDivergence').className = maxDivergence > 0.5 ? 'text-red-400 font-bold' : 'text-white';
-                document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
                 document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
-                
                 document.getElementById('statSim').innerText = `${simCount} / ${isEpochInverted ? 'TRUE' : 'FALSE'}`;
                 
-                const progressWidth = Math.min(100, (epochBounces / 100000) * 100);
-                document.getElementById('flatline-progress').style.width = `${progressWidth}%`;
-
+                const divEl = document.getElementById('statDivergence');
+                if (divEl) {
+                    divEl.innerText = maxDivergence.toFixed(4);
+                    divEl.className = maxDivergence > 0.5 ? 'text-red-400 font-bold bg-red-900/20 px-1 rounded' : 'text-white';
+                }
+                
+                document.getElementById('statWinding').innerText = stats.windingNumber.toFixed(3);
+                document.getElementById('val-epsilon').innerText = baseAngleShift.toExponential(2);
+                
+                const ratioEl = document.getElementById('val-ratio-current');
+                if (ratioEl) ratioEl.innerText = ratioHistory.length ? ratioHistory[ratioHistory.length-1].toFixed(4) : "0.0000";
+                
                 if (activeTab === 'SUPER_BRAIN') {
                     if (document.getElementById('super-void')) document.getElementById('super-void').innerText = currentTickCaustic === Infinity ? '1.414' : currentTickCaustic.toFixed(4);
                     if (document.getElementById('virt-circle')) document.getElementById('virt-circle').innerText = virtualHits.circle.toLocaleString();
@@ -946,9 +1056,7 @@
                 if (activeTab === 'STRUCTURE_RATIO') {
                     document.getElementById('val-structured').innerText = structuredEvents.toLocaleString();
                     document.getElementById('val-chaotic').innerText = chaoticEvents.toLocaleString();
-                    let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
-                    document.getElementById('val-ratio').innerText = currentRatio.toFixed(4);
-
+                    
                     const trendEl = document.getElementById('chaos-trend');
                     if (trendEl && ratioHistory.length > 20) {
                         const recentAvg = ratioHistory.slice(-10).reduce((a,b)=>a+b,0)/10;
@@ -977,25 +1085,13 @@
                     if(zl) zl.innerText = zetaStats.low.toLocaleString();
                 }
 
-                if (activeTab === 'MUSEUM') {
-                    document.getElementById('museum-gallery').innerHTML = artifacts.map(art => {
-                        const isShake = art.id.includes('KAM') || art.id.includes('EPOCH');
-                        return `
-                        <div onclick="openArtifactModal('${art.id}')" class="cursor-pointer glass-sub-panel hover:bg-yellow-900/40 border-${isShake ? 'lime' : 'yellow'}-500/50 p-3 rounded flex flex-col transition-all shadow-[0_0_10px_rgba(${isShake ? '0,255,0' : '255,255,0'},0.1)] hover:shadow-[0_0_20px_rgba(${isShake ? '0,255,0' : '255,255,0'},0.4)]">
-                            <div class="text-white font-bold text-lg">${art.id} <span class="text-[10px] text-${isShake ? 'lime-400' : 'yellow-400/80'} ml-1">${art.triggerSwarm === 'ALL' ? 'GLOBAL SHIFT' : 'SWRM ' + art.triggerSwarm}</span></div>
-                            <div class="text-[9px] text-cyan-300 break-all leading-tight mt-1">α: ${art.zetaStrAlpha.substring(0,25)}...</div>
-                            <div class="text-[10px] text-${isShake ? 'lime-400' : 'gray-400'} font-bold mt-2 border-t border-yellow-900/50 pt-1 uppercase">${art.desc.split(':')[0]}</div>
-                        </div>
-                    `}).join('');
-                }
-
                 if (activeTab === 'STABILITY' && swarmHitBoundary) {
                     if (stabilityHistory.length >= 5) {
                         const intervals = [];
                         for(let i=1; i<stabilityHistory.length; i++) intervals.push(stabilityHistory[i] - stabilityHistory[i-1]);
-                        const variance = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
-                        const isStable = variance < 10;
-                        const logHTML = `<div class="${isStable ? 'text-lime-300 font-bold bg-lime-900/40' : 'text-gray-400'} p-2 border-b border-gray-800/80 text-xs">Global: [${intervals.join(', ')}] | Var: ${variance} ${isStable ? '⚡ ORBIT DETECTED' : ''}</div>`;
+                        const varOrb = intervals.reduce((a,b)=>a+Math.abs(b-intervals[0]), 0);
+                        const isStable = varOrb < 10;
+                        const logHTML = `<div class="${isStable ? 'text-lime-300 font-bold bg-lime-900/40' : 'text-gray-400'} p-2 border-b border-gray-800/80 text-xs">Global: [${intervals.join(', ')}] | Var: ${varOrb} ${isStable ? '⚡ ORBIT DETECTED' : ''}</div>`;
                         stabilityLogArray.unshift(logHTML);
                         if (stabilityLogArray.length > 30) stabilityLogArray.pop(); 
                         document.getElementById('stability-log').innerHTML = stabilityLogArray.join('');
@@ -1005,6 +1101,22 @@
                 if (activeTab === 'VOIDS') {
                     const vr = document.getElementById('void-radius');
                     if (vr) vr.innerText = currentTickCaustic === Infinity ? '1.414' : currentTickCaustic.toFixed(4);
+                }
+
+                renderRatioChart();
+                if (activeTab === 'MUSEUM') renderMuseum();
+                if (activeTab === 'EYES') renderEyes();
+
+                // Dynamic Convergence Visuals
+                const progressEl = document.getElementById('flatline-progress');
+                if (progressEl) {
+                    if (epochBounces > flatlineBaseline) {
+                        progressEl.classList.add('animate-pulse', 'bg-lime-500');
+                        progressEl.classList.remove('bg-yellow-500');
+                    } else {
+                        progressEl.classList.remove('animate-pulse', 'bg-lime-500');
+                        progressEl.classList.add('bg-yellow-500');
+                    }
                 }
             }
         }
@@ -1027,9 +1139,9 @@
             const cx = w / 2; const cy = h / 2; const scale = Math.min(w, h) / 2 * 0.9;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, w, h);
-            
+
             ctx.strokeStyle = '#33ff00'; ctx.lineWidth = 1; ctx.strokeRect(cx - scale, cy - scale, scale * 2, scale * 2);
-            
+
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)'; 
             ctx.beginPath(); ctx.arc(cx, cy, scale, 0, Math.PI*2); ctx.stroke(); 
             ctx.beginPath(); ctx.moveTo(cx, cy - scale); ctx.lineTo(cx + scale, cy); ctx.lineTo(cx, cy + scale); ctx.lineTo(cx - scale, cy); ctx.closePath(); ctx.stroke(); 
@@ -1060,26 +1172,8 @@
                 ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 3, 0, 2 * Math.PI); ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
             });
 
-            if (activeTab === 'STRUCTURE_RATIO' && ratioCanvas) {
-                const rCtx = ratioCanvas.getContext('2d');
-                const rw = ratioCanvas.width; const rh = ratioCanvas.height;
-                rCtx.clearRect(0, 0, rw, rh);
-                if (ratioHistory.length > 1) {
-                    const maxRatio = Math.max(...ratioHistory, 1.0);
-                    rCtx.beginPath();
-                    for (let i=0; i<ratioHistory.length; i++) {
-                        const x = (i / 300) * rw;
-                        const y = rh - (ratioHistory[i] / maxRatio) * rh;
-                        if (i===0) rCtx.moveTo(x, y); else rCtx.lineTo(x, y);
-                    }
-                    rCtx.strokeStyle = '#ff00ff'; rCtx.lineWidth = 2; rCtx.stroke();
-                    rCtx.lineTo(rw, rh); rCtx.lineTo(0, rh);
-                    const grad = rCtx.createLinearGradient(0,0,0,rh);
-                    grad.addColorStop(0, 'rgba(255,0,255,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
-                    rCtx.fillStyle = grad; rCtx.fill();
-                }
-            }
-
+            // The rendering logic inside here was moved to the new function renderRatioChart
+            
             if (activeTab === 'VOIDS' && causticCanvas) {
                 const cCtx = causticCanvas.getContext('2d');
                 const cw = causticCanvas.width; const ch = causticCanvas.height;
@@ -1104,12 +1198,12 @@
                 eCtx.clearRect(0, 0, eyesCanvas.width, eyesCanvas.height);
                 const ew = eyesCanvas.width; const eh = eyesCanvas.height;
                 const gridSize = 40; const cellW = ew / gridSize; const cellH = eh / gridSize;
-                
+
                 visitedGrid.forEach((cell, key) => {
                     const [gx, gy] = key.split(',').map(Number);
                     let age = globalTick - cell.lastVisit;
                     let displayAge = age;
-                    
+
                     if (cell.density > 2) {
                         const timeMod = Math.floor(globalTick * 0.15); 
                         const magicHash = (gx ^ gy ^ timeMod) % 25;
@@ -1153,7 +1247,7 @@
             if (globalBgCanvas && bgCols > 0) {
                 const bgCtx = globalBgCanvas.getContext('2d');
                 const bgW = bgCtx.canvas.width; const bgH = bgCtx.canvas.height;
-                
+
                 bgCtx.fillStyle = 'rgba(0, 0, 0, 0.4)';
                 bgCtx.fillRect(0, 0, bgW, bgH);
 
@@ -1191,10 +1285,10 @@
 
                 await loadStateFromCloud();
                 await setupGlobalLeaderboardListener();
-                
+
                 document.getElementById('save-status').innerText = 'MULTIWAY SYNCED';
                 document.getElementById('save-status').className = 'text-lime-500 font-bold';
-                
+
                 if (!isLoopRunning) {
                     isLoopRunning = true;
                     setupUI();
