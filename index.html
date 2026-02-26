@@ -144,6 +144,16 @@
                     <span class="text-lime-300 text-[11px] tracking-widest font-bold">SIM / INVERSION</span>
                     <span class="text-xl text-lime-400 font-bold mt-1" id="statSim">1 / FALSE</span>
                 </div>
+
+                <!-- CHUNK 10: NEW PHASE-SPACE OBSERVABLES -->
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-magenta-900/80 bg-magenta-900/10">
+                    <span class="text-magenta-300 text-[10px] tracking-widest font-bold">INVERSIONS</span>
+                    <span class="text-xl text-magenta-400 font-bold mt-1" id="statInversions">0</span>
+                </div>
+                <div class="flex flex-col glass-sub-panel p-2 rounded text-center border border-cyan-900/80 bg-cyan-900/10">
+                    <span class="text-cyan-300 text-[10px] tracking-widest font-bold">RECURRENCES</span>
+                    <span class="text-xl text-cyan-400 font-bold mt-1" id="statRecurrences">0</span>
+                </div>
                 
                 <div class="col-span-2 flex justify-between glass-sub-panel p-2 rounded items-center border border-yellow-900/80 bg-yellow-900/10">
                     <div class="flex flex-col text-left">
@@ -352,6 +362,13 @@
         let lastKamBounce = 0;
         let flatlineBaseline = 100000;
 
+        // --- CHUNK 1: RE-EMERGENCE & INVERSION TRACKERS ---
+        let firstRunRatio = null;         // Logs the Structure-to-Chaos ratio of the very first run
+        let reEmergenceCount = 0;         // Tracks Poincaré recurrences back to t=0
+        let inversionIncidences = 0;      // Tracks times the system mirrors a previous pattern
+        let epochSignatures = [];         // Stores past pattern signatures (bounds, momentum) for symmetry matching
+        let initialFleetState = [];       // Will capture the exact t=0 phase-space vectors
+
         function getHyperPrecisionZeta(baseNum, x, y) {
             let str = baseNum.toFixed(15);
             let seed = Math.abs(Math.floor(x * 10000000) ^ Math.floor(y * 10000000));
@@ -371,9 +388,10 @@
         let stats = { bounces: 0, cornerHits: 0, windingNumber: 0, lyapunovProxy: 0.0 };
         let zetaStats = { high: 0, low: 0 };
 
+        // --- CHUNK 4: CAPTURE ABSOLUTE t=0 BASELINE ---
         function initializeFleet(angleShift, invertBasis = false) {
             const multiplier = invertBasis ? -1 : 1;
-            return Array.from({ length: NUM_SWARMS }, (_, i) => {
+            const newFleet = Array.from({ length: NUM_SWARMS }, (_, i) => {
                 const angle = (i / NUM_SWARMS) * Math.PI * 2 + angleShift;
                 const r = 0.3;
                 const sx = Math.cos(angle) * r * multiplier;
@@ -389,6 +407,102 @@
                     divergence: 0, bounces: 0
                 };
             });
+
+            // We deeply clone the exact starting vectors for the Re-emergence detector
+            initialFleetState = newFleet.map(g => ({
+                alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy },
+                beta:  { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy }
+            }));
+
+            return newFleet;
+        }
+
+        // --- CHUNK 2: RE-EMERGENCE MATH ENGINE ---
+        function checkReEmergence() {
+            // Ensure we have a baseline to compare against
+            if (!initialFleetState || initialFleetState.length === 0) return false;
+            
+            let totalDrift = 0;
+            const TOLERANCE = 1e-9; // Strict threshold for Poincaré Recurrence
+
+            for (let i = 0; i < fleet.length; i++) {
+                const currentAlpha = fleet[i].alpha;
+                const currentBeta = fleet[i].beta;
+                const baseAlpha = initialFleetState[i].alpha;
+                const baseBeta = initialFleetState[i].beta;
+
+                // Phase-space Euclidean distance for Alpha (Position + Momentum)
+                totalDrift += Math.sqrt(
+                    Math.pow(currentAlpha.x - baseAlpha.x, 2) + 
+                    Math.pow(currentAlpha.y - baseAlpha.y, 2) + 
+                    Math.pow(currentAlpha.vx - baseAlpha.vx, 2) + 
+                    Math.pow(currentAlpha.vy - baseAlpha.vy, 2)
+                );
+
+                // Phase-space Euclidean distance for Beta (Position + Momentum)
+                totalDrift += Math.sqrt(
+                    Math.pow(currentBeta.x - baseBeta.x, 2) + 
+                    Math.pow(currentBeta.y - baseBeta.y, 2) + 
+                    Math.pow(currentBeta.vx - baseBeta.vx, 2) + 
+                    Math.pow(currentBeta.vy - baseBeta.vy, 2)
+                );
+
+                // Early exit optimization: if drift breaks tolerance early, abort check
+                if (totalDrift > TOLERANCE) return false;
+            }
+            
+            return true; // The system has perfectly re-emerged
+        }
+
+        // --- CHUNK 3: GEOMETRIC INVERSION & SYMMETRY DETECTOR ---
+        function generateSwarmSignature() {
+            let cx = 0, cy = 0, lz = 0;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+            // 1. Calculate Center of Mass & Bounding Box
+            fleet.forEach(g => {
+                const a = g.alpha;
+                cx += a.x; cy += a.y;
+                if (a.x < minX) minX = a.x; if (a.x > maxX) maxX = a.x;
+                if (a.y < minY) minY = a.y; if (a.y > maxY) maxY = a.y;
+            });
+            cx /= fleet.length; cy /= fleet.length;
+
+            // 2. Calculate Total Angular Momentum around Center of Mass
+            fleet.forEach(g => {
+                const a = g.alpha;
+                const rx = a.x - cx; 
+                const ry = a.y - cy;
+                lz += (rx * a.vy - ry * a.vx); // Cross product for 2D angular momentum
+            });
+
+            return { cx, cy, lz, bounds: { minX, maxX, minY, maxY } };
+        }
+
+        function checkInversionIncidence() {
+            if (epochSignatures.length === 0) return false;
+            
+            const currentSig = generateSwarmSignature();
+            const TOL = 0.05; // Tolerance for symmetry detection
+
+            for (let i = 0; i < epochSignatures.length; i++) {
+                const past = epochSignatures[i];
+                
+                // Check 1: Temporal/Momentum Inversion (L ≈ -L_past)
+                const isMomentumInverted = Math.abs(currentSig.lz + past.lz) < TOL && Math.abs(currentSig.lz) > 0.01;
+                
+                // Check 2: Spatial X-Axis Reflection (cx ≈ -past.cx)
+                const isXReflected = Math.abs(currentSig.cx + past.cx) < TOL && Math.abs(currentSig.cy - past.cy) < TOL;
+                
+                // Check 3: Spatial Y-Axis Reflection (cy ≈ -past.cy)
+                const isYReflected = Math.abs(currentSig.cx - past.cx) < TOL && Math.abs(currentSig.cy + past.cy) < TOL;
+
+                if (isMomentumInverted || isXReflected || isYReflected) {
+                    let type = isMomentumInverted ? "MOMENTUM_REVERSAL" : (isXReflected ? "X_AXIS_REFLECTION" : "Y_AXIS_REFLECTION");
+                    return { matchedEpoch: past.id, type: type, sig: currentSig };
+                }
+            }
+            return false;
         }
 
         let fleet = initializeFleet(baseAngleShift, isEpochInverted);
@@ -519,6 +633,13 @@
                     isEpochInverted = saved.isEpochInverted || false;
                     baseAngleShift = saved.baseAngleShift || 0;
 
+                    // CHUNK 10: LOAD NEW TRACKERS
+                    firstRunRatio = saved.firstRunRatio !== undefined ? saved.firstRunRatio : null;
+                    reEmergenceCount = saved.reEmergenceCount || 0;
+                    inversionIncidences = saved.inversionIncidences || 0;
+                    epochSignatures = saved.epochSignatures || [];
+                    initialFleetState = saved.initialFleetState || [];
+
                     if (saved.fleet && saved.fleet.length === NUM_SWARMS) {
                         fleet = saved.fleet.map((g, i) => ({
                             id: i,
@@ -532,7 +653,12 @@
                     artifacts = (saved.artifacts || []).filter(art => 
                         art.kinematics && art.kinematics.alpha && !art.id.includes('undefined')
                     );
-                    fleet = initializeFleet(baseAngleShift, isEpochInverted); 
+                    
+                    // Do not overwrite our fresh initialFleetState if we loaded one
+                    if (!saved.initialFleetState || saved.initialFleetState.length === 0) {
+                        fleet = initializeFleet(baseAngleShift, isEpochInverted); 
+                    }
+                    
                     lastSaveBounce = stats.bounces;
                     
                     // NEW: Force the UI to instantly clear the empty state and render cloud data
@@ -566,6 +692,8 @@
                 const state = {
                     stats, zetaStats, virtualHits, 
                     simCount, epochBounces, isEpochInverted, baseAngleShift,
+                    // CHUNK 10: SAVE NEW TRACKERS
+                    firstRunRatio, reEmergenceCount, inversionIncidences, epochSignatures, initialFleetState,
                     fleet: fleet.map(g => ({
                         alpha: { x: g.alpha.x, y: g.alpha.y, vx: g.alpha.vx, vy: g.alpha.vy, theta: g.alpha.theta },
                         beta: { x: g.beta.x, y: g.beta.y, vx: g.beta.vx, vy: g.beta.vy, theta: g.beta.theta },
@@ -823,7 +951,6 @@
             return { bounced, cornerHit, originCross, zetaNum: currentZetaNum, zetaStr: currentZetaStr };
         }
 
-        // Add the missing function definition here
         function renderRatioChart() {
             // Check if active tab is STRUCTURE_RATIO to prevent unnecessary rendering
             if (activeTab === 'STRUCTURE_RATIO' && ratioCanvas) {
@@ -846,7 +973,6 @@
                 }
             }
         }
-
 
         function updatePhysics() {
             let swarmHitBoundary = false;
@@ -920,6 +1046,70 @@
 
                 let currentRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents/chaoticEvents;
 
+                // --- CHUNK 6/8: POINCARÉ RE-EMERGENCE HOOK & PAYLOAD ---
+                if (epochBounces > 5000 && checkReEmergence()) {
+                    reEmergenceCount++;
+                    
+                    let ratioDriftDesc = "Awaiting first baseline (Φ₀)";
+                    if (firstRunRatio !== null) {
+                        const drift = currentRatio - firstRunRatio;
+                        ratioDriftDesc = `Structural Drift (ΔΦ): ${drift > 0 ? '+' : ''}${drift.toFixed(5)}`;
+                    }
+
+                    // CHUNK 8: INJECT RE-EMERGENCE ARTIFACT
+                    artifacts.unshift({ 
+                        id: `RECURRENCE-${simCount}-${reEmergenceCount}`, 
+                        bounce: stats.bounces, 
+                        tick: globalTick,
+                        triggerSwarm: "ALL", 
+                        zetaStrAlpha: fleet[0].alpha.zetaStr || "0", 
+                        zetaStrBeta: fleet[0].beta.zetaStr || "0",
+                        desc: `POINCARÉ RE-EMERGENCE: System returned to absolute t=0 phase-space.<br/>${ratioDriftDesc}`,
+                        trailAlpha: [...fleet[0].alpha.trail], 
+                        trailBeta: [...fleet[0].beta.trail],
+                        kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
+                    });
+                    
+                    // Smart archive: Protect Epochs and Recurrences!
+                    if (artifacts.length > 20) {
+                        const nonCriticalIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
+                        if (nonCriticalIndex !== -1) artifacts.splice(artifacts.length - 1 - nonCriticalIndex, 1);
+                        else artifacts.pop();
+                    }
+                    
+                    epochBounces = 0;
+                }
+
+                // --- CHUNK 7/9: INVERSION INCIDENCE HOOK & PAYLOAD ---
+                if (epochBounces > 0 && epochBounces % 2000 === 0) {
+                    const inversionMatch = checkInversionIncidence();
+                    
+                    if (inversionMatch) {
+                        inversionIncidences++;
+                        
+                        // CHUNK 9: INJECT INVERSION INCIDENCE ARTIFACT
+                        artifacts.unshift({ 
+                            id: `INVERSION-${simCount}-${inversionIncidences}`, 
+                            bounce: stats.bounces, 
+                            tick: globalTick,
+                            triggerSwarm: "ALL", 
+                            zetaStrAlpha: fleet[0].alpha.zetaStr || "0", 
+                            zetaStrBeta: fleet[0].beta.zetaStr || "0",
+                            desc: `GEOMETRIC INVERSION DETECTED: The current phase-space flow is a direct mirror of ${inversionMatch.matchedEpoch}.<br/>Symmetry Type: <span class="text-magenta-400 font-bold">${inversionMatch.type}</span>`,
+                            trailAlpha: [...fleet[0].alpha.trail], 
+                            trailBeta: [...fleet[0].beta.trail],
+                            kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
+                        });
+                        
+                        // Smart archive: Protect Epochs, Recurrences, and Inversions!
+                        if (artifacts.length > 20) {
+                            const nonCriticalIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
+                            if (nonCriticalIndex !== -1) artifacts.splice(artifacts.length - 1 - nonCriticalIndex, 1);
+                            else artifacts.pop();
+                        }
+                    }
+                }
+
                 // --- EINSTEIN KAM DETECTOR ---
                 if (epochBounces > 20000 && Math.abs(currentRatio - 1.61803) < 0.005 && (epochBounces - lastKamBounce) > 5000) {
                     lastKamBounce = epochBounces;
@@ -931,7 +1121,7 @@
                         kinematics: { alpha: {...fleet[0].alpha}, beta: {...fleet[0].beta} }
                     });
                     if (artifacts.length > 20) {
-                        const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                        const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
                         if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
                         else artifacts.pop();
                     }
@@ -949,6 +1139,22 @@
                     if(progressEl) progressEl.style.width = `${Math.min(100, (epochBounces / (flatlineBaseline*2))*100)}%`;
 
                     if (variance < 1e-10) {
+                        // --- CHUNK 5: FIRST RUN RATIO & SIGNATURE CAPTURE ---
+                        if (firstRunRatio === null) {
+                            firstRunRatio = mean; 
+                        }
+
+                        const finalSig = generateSwarmSignature();
+                        epochSignatures.push({ 
+                            id: `EPOCH-${simCount}`, 
+                            cx: finalSig.cx, 
+                            cy: finalSig.cy, 
+                            lz: finalSig.lz, 
+                            bounds: finalSig.bounds 
+                        });
+                        
+                        if (epochSignatures.length > 50) epochSignatures.shift();
+
                         // CHUNK 3: FIXED MUSEUM PAYLOAD FOR MODAL REPLAY
                         artifacts.unshift({ 
                             id: `EPOCH-FLATLINE-${simCount}`, 
@@ -964,7 +1170,7 @@
                         });
                         
                         if (artifacts.length > 20) {
-                            const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                            const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
                             if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
                             else artifacts.pop();
                         }
@@ -1006,7 +1212,7 @@
                 });
 
                 if (artifacts.length > 20) {
-                    const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH'));
+                    const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
                     if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
                     else artifacts.pop();
                 }
@@ -1026,6 +1232,12 @@
                 document.getElementById('statCorners').innerText = stats.cornerHits.toLocaleString();
                 document.getElementById('statSim').innerText = `${simCount} / ${isEpochInverted ? 'TRUE' : 'FALSE'}`;
                 
+                // CHUNK 10: UPDATE NEW UI ELEMENTS
+                const invEl = document.getElementById('statInversions');
+                if(invEl) invEl.innerText = inversionIncidences.toLocaleString();
+                const recEl = document.getElementById('statRecurrences');
+                if(recEl) recEl.innerText = reEmergenceCount.toLocaleString();
+
                 const divEl = document.getElementById('statDivergence');
                 if (divEl) {
                     divEl.innerText = maxDivergence.toFixed(4);
@@ -1172,8 +1384,6 @@
                 ctx.beginPath(); ctx.arc(cx + group.beta.x * scale, cy + group.beta.y * scale, 3, 0, 2 * Math.PI); ctx.fillStyle = '#ff00ff'; ctx.fill(); ctx.closePath();
             });
 
-            // The rendering logic inside here was moved to the new function renderRatioChart
-            
             if (activeTab === 'VOIDS' && causticCanvas) {
                 const cCtx = causticCanvas.getContext('2d');
                 const cw = causticCanvas.width; const ch = causticCanvas.height;
