@@ -462,8 +462,8 @@
 
                 return {
                     id: i,
-                    alpha: { x: sx, y: sy, prevX: sx, prevY: sy, vx, vy, theta: angle, accumulatedTheta: 0, trail: [] },
-                    beta:  { x: sx + betaOffset, y: sy, prevX: sx + betaOffset, prevY: sy, vx, vy, theta: angle, accumulatedTheta: 0, trail: [] },
+                    alpha: { x: sx, y: sy, prevX: sx, prevY: sy, vx, vy, theta: angle, accumulatedTheta: 0, trail: [], zetaStr: "0" },
+                    beta:  { x: sx + betaOffset, y: sy, prevX: sx + betaOffset, prevY: sy, vx, vy, theta: angle, accumulatedTheta: 0, trail: [], zetaStr: "0" },
                     divergence: 0, bounces: 0
                 };
             });
@@ -549,7 +549,7 @@
             if (activeTab !== 'MUSEUM' || !c) return;
             const currentArtifacts = artifacts || [];
             if (currentArtifacts.length === 0) { 
-                c.innerHTML = '<div class="text-gray-600 text-center mt-10 uppercase text-[10px] tracking-widest font-bold border border-cyan-900/20 p-4">Awaiting Deep Thermalization (250k)...</div>'; 
+                c.innerHTML = '<div class="text-gray-600 text-center mt-10 uppercase text-[10px] tracking-widest font-bold border border-cyan-900/20 p-4">Awaiting Genesis Interactions...</div>'; 
                 return; 
             }
             c.innerHTML = currentArtifacts.map(a => {
@@ -680,6 +680,9 @@
                 if (globalTick % 100 === 0) speedHistory.push(speed);
 
                 let allAgents = [];
+                let triggerArtifact = false;
+                let artifactGroup = null;
+                let artifactDesc = "";
 
                 // Phase 1: Dynamic Boundary Interactions & Kinematics
                 fleet.forEach(g => {
@@ -693,15 +696,15 @@
                         if (ny > activeBounds.maxY - PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = activeBounds.maxY - PARTICLE_RADIUS; }
                         if (ny < activeBounds.minY + PARTICLE_RADIUS) { a.vy *= -1; b = true; ny = activeBounds.minY + PARTICLE_RADIUS; }
                         
-                        if (b && idx === 0) { 
-                            swarmHit = true; stats.bounces++; epochBounces++; 
+                        if (b) { 
+                            if (idx === 0) { swarmHit = true; stats.bounces++; epochBounces++; }
                             
                             // Corner hit dynamically adjusted to current bounds
                             const isCornerX = nx >= activeBounds.maxX - PARTICLE_RADIUS - CORNER_TOLERANCE || nx <= activeBounds.minX + PARTICLE_RADIUS + CORNER_TOLERANCE;
                             const isCornerY = ny >= activeBounds.maxY - PARTICLE_RADIUS - CORNER_TOLERANCE || ny <= activeBounds.minY + PARTICLE_RADIUS + CORNER_TOLERANCE;
                             if (isCornerX && isCornerY) { 
-                                stats.cornerHits++; 
-                                structuredEvents++; 
+                                if (idx === 0) { stats.cornerHits++; structuredEvents++; }
+                                if (!triggerArtifact) { triggerArtifact = true; artifactGroup = g; artifactDesc = "PRECISION SINGULARITY: Perfect corner mapped."; }
                             } 
 
                             // Phase-Space Poincare logging
@@ -709,6 +712,11 @@
                             const hyperX = Math.floor((nx + BOX_SIZE) * 20); 
                             const hyperTheta = Math.floor(((ht + Math.PI) / (2 * Math.PI)) * 40); 
                             hyperGrid.set(`${hyperX},${hyperTheta}`, { density: 1, lastVisit: globalTick });
+                        }
+
+                        // Spatial Inversion (Origin Crossing) Check
+                        if (Math.sign(nx) !== Math.sign(a.prevX) && Math.sign(ny) !== Math.sign(a.prevY) && Math.abs(nx) > 0.01 && Math.abs(ny) > 0.01) {
+                            if (!triggerArtifact) { triggerArtifact = true; artifactGroup = g; artifactDesc = "SPATIAL INVERSION: Perfect diagonal origin crossing."; }
                         }
 
                         const prevR2 = a.prevX*a.prevX + a.prevY*a.prevY;
@@ -770,7 +778,7 @@
                             let dx = tPoint.x - betaAgent.x;
                             let dy = tPoint.y - betaAgent.y;
                             let distSq = dx*dx + dy*dy;
-                            let memRadius = PARTICLE_RADIUS * 1.5; // Soft memory boundary
+                            let memRadius = PARTICLE_RADIUS * 1.5; 
                             
                             if(distSq < memRadius*memRadius && distSq > 0.00001) {
                                 let dist = Math.sqrt(distSq);
@@ -805,6 +813,7 @@
                         let fracY = Math.abs((a.y + BOX_SIZE) * 20 - gy - 0.5);
                         let microVariance = (0.5 - fracX) * (0.5 - fracY) * 0.39996; 
                         let currentZetaNum = baseZeta > 0 ? Math.min(1.0, baseZeta + microVariance) : 0;
+                        a.zetaStr = getHyperPrecisionZeta(currentZetaNum, a.x, a.y);
                         if (currentZetaNum >= 0.5) zetaStats.high++; else zetaStats.low++;
                     });
                     
@@ -818,6 +827,22 @@
                     if (recentRadii.length > 300) recentRadii.shift();
                     currentTickCaustic = Math.min(...recentRadii);
                 });
+
+                // --- NEW STANDARD ARTIFACT TRIGGER (CORNERS & ORIGIN CROSSES) ---
+                if (triggerArtifact && artifactGroup) {
+                    artifacts.unshift({ 
+                        id: `INV-${Math.floor(Math.random()*10000)}`, bounce: stats.bounces, tick: globalTick,
+                        triggerSwarm: artifactGroup.id + 1, zetaStrAlpha: artifactGroup.alpha.zetaStr || "0", zetaStrBeta: artifactGroup.beta.zetaStr || "0",
+                        desc: artifactDesc, trailAlpha: [...artifactGroup.alpha.trail], trailBeta: [...artifactGroup.beta.trail],
+                        kinematics: { alpha: {...artifactGroup.alpha}, beta: {...artifactGroup.beta} }
+                    });
+                    // Smart Archive: Keep Epochs, pop normal INVs if we hit the limit
+                    if (artifacts.length > 25) { 
+                        const nonEpochIndex = [...artifacts].reverse().findIndex(a => !a.id.includes('EPOCH') && !a.id.includes('RECURRENCE') && !a.id.includes('INVERSION'));
+                        if (nonEpochIndex !== -1) artifacts.splice(artifacts.length - 1 - nonEpochIndex, 1);
+                        else artifacts.pop();
+                    }
+                }
 
                 let curRatio = chaoticEvents === 0 ? structuredEvents : structuredEvents / chaoticEvents;
                 if (globalTick % 20 === 0) { ratioHistory.push(curRatio); if (ratioHistory.length > 300) ratioHistory.shift(); }
@@ -1135,7 +1160,7 @@
 
         window.onload = async () => {
             initBgGrid(window.innerWidth, window.innerHeight);
-            switchTab('STRUCTURE_RATIO'); // Default tab
+            switchTab('MUSEUM'); // Default tab set to MUSEUM to instantly see the new artifacts!
             document.getElementById('speedInput').oninput = (e) => { speed = parseInt(e.target.value); document.getElementById('speedLabel').innerText = `x${speed}`; };
             document.getElementById('trailInput').oninput = (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailLabel').innerText = `${trailLength} steps`; };
 
